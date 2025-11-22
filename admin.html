@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LMRA Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Bibliotheek voor Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 h-screen flex flex-col">
+
+    <!-- Login Scherm (Overlay) -->
+    <div id="loginScreen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm text-center">
+            <div class="text-4xl text-brand mb-4"><i class="fa-solid fa-user-shield"></i></div>
+            <h2 class="text-2xl font-bold mb-6">Admin Toegang</h2>
+            <input type="password" id="passwordInput" class="w-full p-3 border border-slate-300 rounded mb-4 text-center text-lg" placeholder="Wachtwoord">
+            <button onclick="login()" class="w-full bg-blue-900 text-white py-3 rounded font-bold hover:bg-blue-800">Inloggen</button>
+            <p id="loginError" class="text-red-500 mt-4 hidden">Verkeerd wachtwoord</p>
+        </div>
+    </div>
+
+    <!-- Dashboard Header -->
+    <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-chart-line text-2xl"></i>
+            <h1 class="font-bold text-xl">LMRA Dashboard</h1>
+        </div>
+        <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-sm font-bold flex items-center gap-2">
+            <i class="fa-solid fa-file-excel"></i> Export Excel
+        </button>
+    </header>
+
+    <!-- Data Tabel -->
+    <main class="flex-1 p-6 overflow-auto">
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-bold border-b">
+                    <tr>
+                        <th class="p-4">Datum</th>
+                        <th class="p-4">Monteur</th>
+                        <th class="p-4">Locatie</th>
+                        <th class="p-4">WO Nummer</th>
+                        <th class="p-4">Status</th>
+                        <th class="p-4">Opmerkingen</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody" class="text-sm divide-y divide-slate-100">
+                    <!-- Data komt hier -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // Dit is het simpele wachtwoord. In productie zet je dit in een Env Variable, maar voor nu is dit prima.
+        // Verander dit als je wilt!
+        const ADMIN_PASSWORD = "geheim123"; 
+
+        async function login() {
+            const input = document.getElementById('passwordInput').value;
+            if (input === ADMIN_PASSWORD) {
+                document.getElementById('loginScreen').classList.add('hidden');
+                loadData(input); // We sturen het wachtwoord mee als 'sleutel'
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        async function loadData(key) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Laden...</td></tr>';
+
+            try {
+                const response = await fetch('/.netlify/functions/get-reports', {
+                    headers: { 'x-admin-secret': key }
+                });
+                
+                if (!response.ok) throw new Error("Fout bij laden");
+                
+                const data = await response.json();
+                renderTable(data);
+                window.lastData = data; // Opslaan voor Excel export
+
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Error: ${e.message}</td></tr>`;
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Geen data gevonden</td></tr>';
+                return;
+            }
+
+            data.forEach(row => {
+                const date = new Date(row.created_at).toLocaleString('nl-NL');
+                const statusBadge = row.is_veilig 
+                    ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">VEILIG</span>'
+                    : '<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-bold">ONVEILIG</span>';
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-4 font-mono text-slate-500">${date}</td>
+                    <td class="p-4 font-bold">${row.monteur_naam}</td>
+                    <td class="p-4">${row.locatie}</td>
+                    <td class="p-4 text-slate-500">${row.werkorder || '-'}</td>
+                    <td class="p-4">${statusBadge}</td>
+                    <td class="p-4 text-slate-500 italic truncate max-w-xs">${row.opmerkingen || ''}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function exportToExcel() {
+            if (!window.lastData) return;
+            
+            // Maak een werkblad van de data
+            const ws = XLSX.utils.json_to_sheet(window.lastData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "LMRA Rapporten");
+
+            // Opslaan als bestand
+            XLSX.writeFile(wb, `LMRA_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+    </script>
+</body>
+</html>
