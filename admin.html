@@ -15,9 +15,24 @@
         <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm text-center">
             <div class="text-4xl text-brand mb-4"><i class="fa-solid fa-user-shield"></i></div>
             <h2 class="text-2xl font-bold mb-6">Admin Toegang</h2>
-            <!-- We voegen onkeydown toe zodat je ook op Enter kunt drukken -->
-            <input type="password" id="passwordInput" class="w-full p-3 border border-slate-300 rounded mb-4 text-center text-lg" placeholder="Wachtwoord" onkeydown="if(event.key==='Enter') login()">
-            <button onclick="login()" id="loginBtn" class="w-full bg-blue-900 text-white py-3 rounded font-bold hover:bg-blue-800">Inloggen</button>
+            
+            <!-- Formulier toegevoegd voor Password Managers -->
+            <form onsubmit="event.preventDefault(); login();">
+                <!-- Verborgen gebruikersnaam veld (zodat Google weet wie er inlogt) -->
+                <input type="text" name="username" value="admin" autocomplete="username" style="display:none;">
+                
+                <input 
+                    type="password" 
+                    id="passwordInput" 
+                    name="password"
+                    autocomplete="current-password"
+                    class="w-full p-3 border border-slate-300 rounded mb-4 text-center text-lg" 
+                    placeholder="Wachtwoord" 
+                    required
+                >
+                <button type="submit" id="loginBtn" class="w-full bg-blue-900 text-white py-3 rounded font-bold hover:bg-blue-800">Inloggen</button>
+            </form>
+            
             <p id="loginError" class="text-red-500 mt-4 hidden">Verkeerd wachtwoord</p>
         </div>
     </div>
@@ -58,15 +73,10 @@
             const btn = document.getElementById('loginBtn');
             const errorMsg = document.getElementById('loginError');
             
-            // UI Feedback
             btn.innerText = "Controleren...";
             btn.disabled = true;
             errorMsg.classList.add('hidden');
 
-            // We controleren het wachtwoord NIET meer hier, maar sturen het direct naar de kluis.
-            // Als de kluis open gaat (status 200), is het wachtwoord goed.
-            // Als de kluis dicht blijft (status 401), is het fout.
-            
             try {
                 const response = await fetch('/.netlify/functions/get-reports', {
                     headers: { 'x-admin-secret': input }
@@ -80,7 +90,6 @@
                     throw new Error("Server fout");
                 }
 
-                // Als we hier zijn, is het gelukt!
                 const data = await response.json();
                 document.getElementById('loginScreen').classList.add('hidden');
                 renderTable(data);
@@ -91,6 +100,9 @@
                 errorMsg.classList.remove('hidden');
                 btn.innerText = "Inloggen";
                 btn.disabled = false;
+                // Reset veld zodat je opnieuw kunt typen
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
             }
         }
 
