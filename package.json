@@ -1,0 +1,7 @@
+{
+  "name": "lmra-app",
+  "version": "1.0.0",
+  "dependencies": {
+    "@netlify/neon": "^1.0.0"
+  }
+}
