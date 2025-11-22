@@ -6,18 +6,18 @@
     <title>LMRA Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Bibliotheek voor Excel export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 h-screen flex flex-col">
 
-    <!-- Login Scherm (Overlay) -->
+    <!-- Login Scherm -->
     <div id="loginScreen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
         <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm text-center">
             <div class="text-4xl text-brand mb-4"><i class="fa-solid fa-user-shield"></i></div>
             <h2 class="text-2xl font-bold mb-6">Admin Toegang</h2>
-            <input type="password" id="passwordInput" class="w-full p-3 border border-slate-300 rounded mb-4 text-center text-lg" placeholder="Wachtwoord">
-            <button onclick="login()" class="w-full bg-blue-900 text-white py-3 rounded font-bold hover:bg-blue-800">Inloggen</button>
+            <!-- We voegen onkeydown toe zodat je ook op Enter kunt drukken -->
+            <input type="password" id="passwordInput" class="w-full p-3 border border-slate-300 rounded mb-4 text-center text-lg" placeholder="Wachtwoord" onkeydown="if(event.key==='Enter') login()">
+            <button onclick="login()" id="loginBtn" class="w-full bg-blue-900 text-white py-3 rounded font-bold hover:bg-blue-800">Inloggen</button>
             <p id="loginError" class="text-red-500 mt-4 hidden">Verkeerd wachtwoord</p>
         </div>
     </div>
@@ -47,45 +47,50 @@
                         <th class="p-4">Opmerkingen</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody" class="text-sm divide-y divide-slate-100">
-                    <!-- Data komt hier -->
-                </tbody>
+                <tbody id="tableBody" class="text-sm divide-y divide-slate-100"></tbody>
             </table>
         </div>
     </main>
 
     <script>
-        // Dit is het simpele wachtwoord. In productie zet je dit in een Env Variable, maar voor nu is dit prima.
-        // Verander dit als je wilt!
-        const ADMIN_PASSWORD = "geheim123"; 
-
         async function login() {
             const input = document.getElementById('passwordInput').value;
-            if (input === ADMIN_PASSWORD) {
-                document.getElementById('loginScreen').classList.add('hidden');
-                loadData(input); // We sturen het wachtwoord mee als 'sleutel'
-            } else {
-                document.getElementById('loginError').classList.remove('hidden');
-            }
-        }
+            const btn = document.getElementById('loginBtn');
+            const errorMsg = document.getElementById('loginError');
+            
+            // UI Feedback
+            btn.innerText = "Controleren...";
+            btn.disabled = true;
+            errorMsg.classList.add('hidden');
 
-        async function loadData(key) {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Laden...</td></tr>';
-
+            // We controleren het wachtwoord NIET meer hier, maar sturen het direct naar de kluis.
+            // Als de kluis open gaat (status 200), is het wachtwoord goed.
+            // Als de kluis dicht blijft (status 401), is het fout.
+            
             try {
                 const response = await fetch('/.netlify/functions/get-reports', {
-                    headers: { 'x-admin-secret': key }
+                    headers: { 'x-admin-secret': input }
                 });
+
+                if (response.status === 401) {
+                    throw new Error("Verkeerd wachtwoord");
+                }
                 
-                if (!response.ok) throw new Error("Fout bij laden");
-                
+                if (!response.ok) {
+                    throw new Error("Server fout");
+                }
+
+                // Als we hier zijn, is het gelukt!
                 const data = await response.json();
+                document.getElementById('loginScreen').classList.add('hidden');
                 renderTable(data);
-                window.lastData = data; // Opslaan voor Excel export
+                window.lastData = data;
 
             } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Error: ${e.message}</td></tr>`;
+                errorMsg.innerText = e.message;
+                errorMsg.classList.remove('hidden');
+                btn.innerText = "Inloggen";
+                btn.disabled = false;
             }
         }
 
@@ -120,13 +125,9 @@
 
         function exportToExcel() {
             if (!window.lastData) return;
-            
-            // Maak een werkblad van de data
             const ws = XLSX.utils.json_to_sheet(window.lastData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "LMRA Rapporten");
-
-            // Opslaan als bestand
             XLSX.writeFile(wb, `LMRA_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
         }
     </script>
