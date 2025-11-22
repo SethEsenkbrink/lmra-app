@@ -2,8 +2,10 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LMRA Pro 4.4</title>
+    <!-- Viewport aanpassing voor betere mobiele weergave -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Professionele LMRA Tool voor proces- en elektrotechniek">
+    <title>LMRA Pro 4.5</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23005596'%3E%3Cpath d='M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z'/%3E%3C/svg%3E">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -31,8 +33,6 @@
         .question-card:active { transform: scale(0.99); }
         .spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid #fff; width: 20px; height: 20px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* Animatie voor dropdowns */
         .rotate-180 { transform: rotate(180deg); }
         .accordion-content { transition: max-height 0.3s ease-in-out; overflow: hidden; }
     </style>
@@ -42,21 +42,21 @@
     <!-- Header -->
     <header class="bg-brand-DEFAULT text-white p-4 shadow-lg flex justify-between items-center z-50 sticky top-0">
         <div class="flex items-center gap-3">
-            <div class="bg-white/10 p-2 rounded-lg"><i class="fa-solid fa-shield-halved text-xl"></i></div>
+            <div class="bg-white/10 p-2 rounded-lg" aria-hidden="true"><i class="fa-solid fa-shield-halved text-xl"></i></div>
             <div>
                 <h1 class="font-bold text-lg leading-tight tracking-wide">LMRA <span class="text-blue-300">PRO</span></h1>
-                <p class="text-[10px] uppercase tracking-wider opacity-80">v4.4 - Week Overzicht</p>
+                <p class="text-[10px] uppercase tracking-wider opacity-80">v4.5 - Secure & Stable</p>
             </div>
         </div>
         <div class="flex gap-2">
-            <button onclick="openArchive()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"><i class="fa-solid fa-folder-open"></i></button>
-            <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"><i id="themeIcon" class="fa-solid fa-moon"></i></button>
-            <button onclick="resetApp()" class="w-10 h-10 rounded-full bg-red-500/80 hover:bg-red-600 flex items-center justify-center transition-colors text-white shadow-md"><i class="fa-solid fa-rotate-right"></i></button>
+            <button onclick="openArchive()" aria-label="Open Historie" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"><i class="fa-solid fa-folder-open"></i></button>
+            <button onclick="toggleDarkMode()" aria-label="Wissel Thema" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"><i id="themeIcon" class="fa-solid fa-moon"></i></button>
+            <button onclick="resetApp()" aria-label="Reset Formulier" class="w-10 h-10 rounded-full bg-red-500/80 hover:bg-red-600 flex items-center justify-center transition-colors text-white shadow-md"><i class="fa-solid fa-rotate-right"></i></button>
         </div>
     </header>
 
     <!-- Weather Widget -->
-    <div id="weatherWidget" class="relative z-40 bg-blue-50 dark:bg-slate-800 p-3 text-xs flex justify-between items-center border-b border-blue-200 dark:border-slate-700 hidden shadow-inner">
+    <div id="weatherWidget" class="relative z-40 bg-blue-50 dark:bg-slate-800 p-3 text-xs flex justify-between items-center border-b border-blue-200 dark:border-slate-700 hidden shadow-inner" aria-live="polite">
         <div class="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300">
             <i class="fa-solid fa-cloud-sun text-brand-light"></i>
             <span id="weatherText">Weer laden...</span>
@@ -67,7 +67,8 @@
     <!-- Main Content -->
     <main class="flex-1 overflow-y-auto p-4 pb-28 max-w-3xl mx-auto w-full" id="main-container">
         
-        <div id="pauseAlert" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-r shadow-sm">
+        <!-- Alerts -->
+        <div id="pauseAlert" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-r shadow-sm" role="alert">
             <div class="flex">
                 <div class="flex-shrink-0"><i class="fa-solid fa-clock text-red-500"></i></div>
                 <div class="ml-3">
@@ -77,25 +78,37 @@
             </div>
         </div>
 
-        <!-- Gegevens -->
+        <!-- Gegevens Sectie -->
         <div class="bg-white dark:bg-cardbg rounded-xl shadow-sm p-5 mb-5 border-l-4 border-brand-DEFAULT transition-colors">
             <h2 class="font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center text-sm uppercase tracking-wider"><i class="fa-solid fa-id-card mr-2 text-brand-light"></i>Werkgegevens</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Monteur</label><input type="text" id="userName" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-brand-DEFAULT focus:ring-2 focus:ring-brand-DEFAULT/20 outline-none transition-all dark:text-white font-medium" placeholder="Naam"></div>
-                <div><label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Locatie / Asset</label><input type="text" id="taskLocation" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-brand-DEFAULT focus:ring-2 focus:ring-brand-DEFAULT/20 outline-none transition-all dark:text-white font-medium" placeholder="Bijv. E-Motor 401"></div>
-                <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Werkorder Nr.</label><input type="text" id="workOrder" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-brand-DEFAULT focus:ring-2 focus:ring-brand-DEFAULT/20 outline-none transition-all dark:text-white font-medium" placeholder="Bijv. WO-2025-A"></div>
+                <!-- Validatie toegevoegd: Maxlength en Required -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-1" for="userName">Monteur</label>
+                    <input type="text" id="userName" maxlength="50" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-brand-DEFAULT focus:ring-2 focus:ring-brand-DEFAULT/20 outline-none transition-all dark:text-white font-medium invalid:border-red-500" placeholder="Naam">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-1" for="taskLocation">Locatie / Asset</label>
+                    <input type="text" id="taskLocation" maxlength="50" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-brand-DEFAULT focus:ring-2 focus:ring-brand-DEFAULT/20 outline-none transition-all dark:text-white font-medium" placeholder="Bijv. E-Motor 401">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-1" for="workOrder">Werkorder Nr.</label>
+                    <input type="text" id="workOrder" maxlength="20" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-brand-DEFAULT focus:ring-2 focus:ring-brand-DEFAULT/20 outline-none transition-all dark:text-white font-medium" placeholder="Bijv. WO-2025-A">
+                </div>
                 
+                <!-- Tijdsloten -->
                 <div class="md:col-span-2 grid grid-cols-2 gap-4 pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Starttijd</label>
                         <input type="time" id="timeStart" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm outline-none dark:text-white">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Geldig tot (Pauze/Eind)</label>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Geldig tot</label>
                         <input type="time" id="timeEnd" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm outline-none dark:text-white">
                     </div>
                 </div>
 
+                <!-- Opties -->
                 <div class="md:col-span-2 pt-3 border-t border-slate-200 dark:border-slate-700 mt-2 space-y-3">
                     <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
                         <label class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase flex items-center gap-2"><i class="fa-solid fa-temperature-half"></i> Omgeving</label>
@@ -106,14 +119,20 @@
                     </div>
 
                     <div class="flex items-center justify-between">
-                        <label class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">Buddy Check Vereist?</label>
+                        <label class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">Buddy Check</label>
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="buddyToggle" class="sr-only peer" onchange="toggleBuddyField()">
+                            <input type="checkbox" id="buddyToggle" class="sr-only peer" onchange="toggleBuddyField()" aria-label="Buddy Check Toggle">
                             <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-DEFAULT"></div>
                         </label>
                     </div>
                     <div id="buddyField" class="hidden mt-1 animate-fade-in">
-                        <input type="text" id="buddyName" class="w-full bg-blue-50 dark:bg-slate-800/50 border border-blue-200 dark:border-slate-600 rounded-lg p-3 text-sm outline-none dark:text-white" placeholder="Naam Buddy / Tweede Persoon">
+                        <input type="text" id="buddyName" maxlength="50" class="w-full bg-blue-50 dark:bg-slate-800/50 border border-blue-200 dark:border-slate-600 rounded-lg p-3 text-sm outline-none dark:text-white" placeholder="Naam Buddy">
+                    </div>
+                    
+                    <!-- GDPR / Privacy Toggle (Nieuw) -->
+                    <div class="flex items-center gap-2 mt-2">
+                        <input type="checkbox" id="gpsConsent" class="w-4 h-4 text-brand-DEFAULT rounded border-gray-300 focus:ring-brand-DEFAULT">
+                        <label for="gpsConsent" class="text-xs text-slate-500 dark:text-slate-400">Voeg GPS locatie toe (AVG: Alleen voor werklocatie)</label>
                     </div>
                 </div>
             </div>
@@ -123,7 +142,12 @@
         
         <div class="mt-6 bg-white dark:bg-cardbg rounded-xl shadow-sm p-4 transition-colors">
             <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">Opmerkingen</label>
-            <textarea id="comments" rows="2" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-brand-DEFAULT focus:ring-2 focus:ring-brand-DEFAULT/20 outline-none transition-all dark:text-white" placeholder="Bijv: Extra aardlekschakelaar geplaatst..."></textarea>
+            <textarea id="comments" rows="2" maxlength="200" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-brand-DEFAULT focus:ring-2 focus:ring-brand-DEFAULT/20 outline-none transition-all dark:text-white" placeholder="Bijv: Extra aardlekschakelaar geplaatst..."></textarea>
+        </div>
+        
+        <!-- Privacy Footer -->
+        <div class="text-center mt-8 mb-4 text-[10px] text-slate-400">
+            <p>Data verwerkt via Neon DB (Frankfurt). Persoonsgegevens conform bedrijfsbeleid.</p>
         </div>
     </main>
 
@@ -134,7 +158,7 @@
     </div>
 
     <!-- Resultaat Modal -->
-    <div id="resultModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div id="resultModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" role="dialog" aria-modal="true">
         <div class="bg-white dark:bg-cardbg w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
             <div id="resultHeader" class="p-8 text-center text-white shrink-0">
                 <div id="resultIcon" class="text-7xl mb-4 drop-shadow-md"><i class="fa-solid fa-check-circle"></i></div>
@@ -148,7 +172,7 @@
                         <i class="fa-solid fa-snowflake text-blue-500 text-xl"></i>
                         <div>
                             <p class="text-sm font-bold text-blue-900">Koud Weer Alarm!</p>
-                            <p class="text-xs text-blue-800">Het is < 10°C. Zorg voor warme kleding en handschoenen.</p>
+                            <p class="text-xs text-blue-800">Het is < 10°C. Zorg voor warme kleding.</p>
                         </div>
                     </div>
                 </div>
@@ -168,18 +192,16 @@
         <div class="bg-white dark:bg-cardbg w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative flex flex-col h-[85vh]">
             <div class="bg-brand-DEFAULT p-4 flex justify-between items-center text-white shrink-0">
                 <h2 class="font-bold text-lg"><i class="fa-solid fa-history mr-2"></i>Historie</h2>
-                <button onclick="closeArchive()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeArchive()" aria-label="Sluit Historie" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div id="archiveContainer" class="flex-1 overflow-y-auto p-4 bg-slate-50 dark:bg-slate-900/50">
-                <!-- Hier komen de weekgroepen -->
-            </div>
+            <div id="archiveContainer" class="flex-1 overflow-y-auto p-4 bg-slate-50 dark:bg-slate-900/50"></div>
             <div class="p-4 bg-white dark:bg-cardbg border-t border-slate-200 dark:border-slate-700 text-center shrink-0">
                 <button onclick="clearArchive()" class="text-red-500 text-xs font-bold uppercase hover:text-red-600">Geschiedenis Wissen</button>
             </div>
         </div>
     </div>
 
-    <!-- Detail Modal -->
+    <!-- Detail Modal (PDF) -->
     <div id="detailModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white dark:bg-cardbg w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
             <div id="pdfContent" class="bg-white p-6 text-slate-800">
@@ -198,7 +220,7 @@
                 <div id="detailStatusBox" class="bg-green-100 border border-green-300 text-green-800 p-3 rounded-lg text-center font-bold mb-6">VEILIG OM TE STARTEN</div>
                 <div class="mb-6"><span class="block font-bold text-slate-500 text-xs uppercase mb-1">Opmerkingen & Weer</span><p id="detailComments" class="text-sm bg-slate-50 p-3 rounded border border-slate-200 italic">Geen opmerkingen.</p></div>
                 <div id="detailFailsContainer" class="hidden mb-6"><span class="block font-bold text-red-600 text-xs uppercase mb-1">Afkeurpunten</span><ul id="detailFails" class="text-sm text-red-700 list-disc pl-5 bg-red-50 p-3 rounded border border-red-200"></ul></div>
-                <div class="text-center mt-8 pt-4 border-t border-slate-200"><p class="text-xs text-slate-400">Gegenereerd met LMRA Pro v4.4</p></div>
+                <div class="text-center mt-8 pt-4 border-t border-slate-200"><p class="text-xs text-slate-400">Gegenereerd met LMRA Pro v4.5</p></div>
             </div>
             <div class="p-4 bg-slate-50 dark:bg-cardbg border-t border-slate-200 dark:border-slate-700 flex gap-3 shrink-0">
                 <button onclick="generatePDF()" class="flex-1 bg-brand-DEFAULT text-white py-3 rounded-lg font-bold shadow hover:bg-brand-dark flex items-center justify-center gap-2"><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
@@ -210,22 +232,22 @@
     <div id="toast" class="fixed top-24 left-1/2 transform -translate-x-1/2 bg-slate-800 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-full text-sm font-bold shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none z-50 flex items-center gap-2"><i class="fa-solid fa-check"></i> <span id="toastMsg">Melding</span></div>
 
     <script>
+        /* --- CONFIGURATIE --- */
         const categories = [
             { title: "Algemeen & Fitheid", icon: "fa-user-clock", questions: [{ id: 1, text: "Voel ik mij fysiek en mentaal fit voor deze klus?", type: 'positive' }, { id: 2, text: "Weet ik wat te doen bij nood (alarmnummer, vluchtroute)?", type: 'positive' }] },
             { title: "Vergunningen & Procedures", icon: "fa-file-signature", questions: [{ id: 3, text: "Is de werkvergunning correct ingevuld en getekend?", type: 'positive' }, { id: 4, text: "Heb ik de taakrisicoanalyse (TRA) gelezen/begrepen?", type: 'positive' }] },
             { title: "Omgeving & Techniek", icon: "fa-bolt", questions: [{ id: 5, text: "Is de installatie veiliggesteld (LOTOTO / Vrij van spanning)?", type: 'positive' }, { id: 6, text: "Heb ik de juiste PBM's en gekeurd gereedschap?", type: 'positive' }, { id: 7, text: "Is de werkplek afgezet en vrij van struikelgevaar?", type: 'positive' }] }
         ];
         let answers = {}; let darkMode = false;
-        let currentEnv = 'binnen';
-        let currentTemp = null;
-        let gpsLocation = null;
+        let currentEnv = 'binnen'; let currentTemp = null; let gpsLocation = null;
 
+        /* --- INIT --- */
         document.addEventListener('DOMContentLoaded', () => { 
             renderCategories(); loadUserData(); checkTheme(); 
             setDefaultTimes(); checkValidity(); getWeather();
-            if("geolocation" in navigator) { navigator.geolocation.getCurrentPosition((pos) => { gpsLocation = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`; }, (err) => console.log("GPS Error:", err)); }
         });
 
+        /* --- HELPERS --- */
         function setDefaultTimes() {
             const now = new Date();
             const nowStr = now.toTimeString().slice(0,5);
@@ -240,7 +262,9 @@
             if (validUntil) {
                 const now = new Date();
                 const endTime = new Date(validUntil);
-                if (now > endTime) { document.getElementById('pauseAlert').classList.remove('hidden'); }
+                if (!isNaN(endTime) && now > endTime) { 
+                    document.getElementById('pauseAlert').classList.remove('hidden'); 
+                }
             }
         }
 
@@ -290,7 +314,7 @@
                 section.innerHTML = `<div class="bg-slate-50 dark:bg-slate-800/50 p-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2"><i class="fa-solid ${cat.icon} text-brand-light"></i> <span class="font-bold text-sm text-slate-700 dark:text-slate-300 uppercase">${cat.title}</span></div>`;
                 const qList = document.createElement('div'); qList.className = "p-2";
                 cat.questions.forEach(q => {
-                    qList.innerHTML += `<div class="question-card p-3 mb-2 last:mb-0 rounded-lg border border-transparent hover:border-slate-100 dark:hover:border-slate-700 transition-colors"><div class="text-sm font-medium text-slate-800 dark:text-slate-200 mb-3">${q.text}</div><div class="grid grid-cols-2 gap-2"><button onclick="setAnswer(${q.id}, 'yes')" id="btn-yes-${q.id}" class="py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-check"></i> JA</button><button onclick="setAnswer(${q.id}, 'no')" id="btn-no-${q.id}" class="py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-xmark"></i> NEE</button></div></div>`;
+                    qList.innerHTML += `<div class="question-card p-3 mb-2 last:mb-0 rounded-lg border border-transparent hover:border-slate-100 dark:hover:border-slate-700 transition-colors"><div class="text-sm font-medium text-slate-800 dark:text-slate-200 mb-3">${q.text}</div><div class="grid grid-cols-2 gap-2"><button onclick="setAnswer(${q.id}, 'yes')" id="btn-yes-${q.id}" aria-label="Antwoord Ja op vraag ${q.id}" class="py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-check"></i> JA</button><button onclick="setAnswer(${q.id}, 'no')" id="btn-no-${q.id}" aria-label="Antwoord Nee op vraag ${q.id}" class="py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-xmark"></i> NEE</button></div></div>`;
                 });
                 section.appendChild(qList); container.appendChild(section);
             });
@@ -306,6 +330,7 @@
             else btnNo.className = base + "bg-red-600 text-white shadow-md ring-2 ring-red-600/30";
         }
 
+        /* --- CORE LOGIC --- */
         async function evaluateLMRA() {
             const userName = document.getElementById('userName').value;
             const task = document.getElementById('taskLocation').value;
@@ -314,7 +339,10 @@
             const tStart = document.getElementById('timeStart').value;
             const tEnd = document.getElementById('timeEnd').value;
             
+            if(!userName) { showToast("Vul naam monteur in!"); return; }
+            if(!task) { showToast("Vul locatie in!"); document.getElementById('taskLocation').focus(); return; }
             if(!tStart || !tEnd) { showToast("Vul start- en eindtijd in!"); return; }
+            
             comments += ` [Geldig: ${tStart} - ${tEnd}]`;
 
             const now = new Date();
@@ -336,7 +364,6 @@
             localStorage.setItem('lmra_username', userName);
 
             if (Object.keys(answers).length < categories.reduce((acc, cat) => acc + cat.questions.length, 0)) { showToast("Beantwoord alle vragen!"); return; }
-            if(!task) { showToast("Vul locatie in!"); document.getElementById('taskLocation').focus(); return; }
 
             const btn = document.getElementById('submitBtn');
             const originalText = btn.innerHTML;
@@ -346,10 +373,24 @@
             let isSafe = true; let failedPoints = [];
             categories.forEach(cat => { cat.questions.forEach(q => { if (q.type === 'positive' && answers[q.id] === 'no') { isSafe = false; failedPoints.push(q.text); } }); });
 
+            // GPS Logic met Privacy Check
             let finalLocation = task;
-            if(gpsLocation) finalLocation += ` (📍 ${gpsLocation})`;
+            const consent = document.getElementById('gpsConsent').checked;
+            
+            if(consent) {
+                if(!gpsLocation && "geolocation" in navigator) {
+                    // Probeer nog snel te halen als niet beschikbaar
+                    try {
+                        const pos = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, {timeout: 2000}));
+                        gpsLocation = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+                    } catch(e) { console.log("GPS Fail", e); }
+                }
+                if(gpsLocation) finalLocation += ` (📍 ${gpsLocation})`;
+            }
 
             saveToLocalHistory(isSafe, userName, finalLocation, workOrder, comments, failedPoints, buddyRequired ? buddyName : null, `${tStart} - ${tEnd}`, validUntilDate.toISOString());
+            
+            // Cloud Fail-Safe: Als cloud faalt, gaat de app door (gebruiker merkt vertraging/foutmelding)
             await saveToCloud(isSafe, userName, finalLocation, workOrder, comments, failedPoints);
 
             btn.innerHTML = originalText;
@@ -362,6 +403,7 @@
             cloudStatus.classList.remove('hidden');
             cloudStatus.innerText = "Syncen...";
             try {
+                // Gebruik relatieve URL voor CORS
                 const response = await fetch('/.netlify/functions/submit-lmra', {
                     method: 'POST',
                     body: JSON.stringify({ monteur_naam, locatie, werkorder, is_veilig: isSafe, opmerkingen, afkeurpunten })
@@ -401,9 +443,7 @@
             }
         }
 
-        // --- NIEUW: Geavanceerde Historie met Weekindeling ---
-        
-        // Hulpfunctie om weeknummer te berekenen
+        /* --- HISTORY VIEW LOGIC (Robuust) --- */
         function getWeekNumber(d) {
             d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
             d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
@@ -419,105 +459,101 @@
             
             if(history.length === 0) { container.innerHTML = '<div class="text-center text-slate-400 p-8">Nog geen archief data</div>'; document.getElementById('archiveModal').classList.remove('hidden'); return; }
             
-            // Groepeer per week
+            // Groepeer per week met foutafhandeling
             const weeks = {};
             history.forEach((item, index) => {
-                const date = new Date(item.date);
+                let date;
+                // BUGFIX: Check of datum geldig is
+                try {
+                    if(!item.date) throw new Error("Geen datum");
+                    date = new Date(item.date);
+                    if(isNaN(date.getTime())) throw new Error("Ongeldige datum");
+                } catch(e) {
+                    // Fallback voor oude/corrupte data
+                    const key = "Onbekende Datum";
+                    if(!weeks[key]) weeks[key] = [];
+                    item.originalIndex = index;
+                    weeks[key].push(item);
+                    return;
+                }
+
                 const weekInfo = getWeekNumber(date);
                 const key = `Week ${weekInfo.week} - ${weekInfo.year}`;
                 
                 if(!weeks[key]) weeks[key] = [];
-                // Voeg index toe om later bij details te kunnen
                 item.originalIndex = index;
                 weeks[key].push(item);
             });
 
-            // Render per week
+            // Render
             Object.keys(weeks).forEach((weekKey, i) => {
                 const weekItems = weeks[weekKey];
-                const isOpen = i === 0; // Eerste week openklappen
+                const isOpen = i === 0; 
                 
                 const weekSection = document.createElement('div');
                 weekSection.className = "mb-3 bg-white dark:bg-cardbg rounded-lg shadow-sm overflow-hidden border border-slate-100 dark:border-slate-700";
-                
-                // Header van de week
                 weekSection.innerHTML = `
                     <div onclick="toggleWeek('${weekKey}')" class="p-3 bg-slate-50 dark:bg-slate-800 flex justify-between items-center cursor-pointer select-none">
                         <span class="font-bold text-slate-600 dark:text-slate-300 text-sm">${weekKey}</span>
-                        <i id="icon-${weekKey}" class="fa-solid fa-chevron-down text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}"></i>
+                        <i id="icon-${weekKey.replace(/\s/g,'')}" class="fa-solid fa-chevron-down text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}"></i>
                     </div>
-                    <div id="content-${weekKey}" class="accordion-content ${isOpen ? '' : 'max-h-0'}">
-                        <div class="p-2 space-y-2" id="list-${weekKey}"></div>
+                    <div id="content-${weekKey.replace(/\s/g,'')}" class="accordion-content ${isOpen ? '' : 'max-h-0'}">
+                        <div class="p-2 space-y-2" id="list-${weekKey.replace(/\s/g,'')}"></div>
                     </div>
                 `;
                 container.appendChild(weekSection);
 
-                // Items in de week
-                const listContainer = weekSection.querySelector(`#list-${weekKey}`);
+                const listContainer = weekSection.querySelector(`#list-${weekKey.replace(/\s/g,'')}`);
                 weekItems.forEach(item => {
-                    const date = new Date(item.date);
-                    const now = new Date();
+                    let dateStr = "??-??";
+                    let timeStr = "??:??";
+                    try {
+                        const d = new Date(item.date);
+                        dateStr = d.toLocaleDateString('nl-NL', {weekday:'short'});
+                        timeStr = d.toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'});
+                    } catch(e) {}
+
+                    let statusDot = item.isSafe ? 'bg-green-500' : 'bg-red-500';
+                    let statusText = item.isSafe ? 'Actief' : 'Afgekeurd';
                     
-                    // Status bepalen
-                    let statusDot = '';
-                    let statusText = '';
-                    
-                    if (item.isSafe) {
-                        // Check of geldigheidsduur verlopen is
-                        const validUntil = item.validUntil ? new Date(item.validUntil) : null;
-                        if (validUntil && validUntil > now) {
-                            statusDot = 'bg-green-500';
-                            statusText = 'Actief';
-                        } else {
-                            statusDot = 'bg-slate-400';
-                            statusText = 'Verlopen';
-                        }
-                    } else {
-                        statusDot = 'bg-red-500';
-                        statusText = 'Afgekeurd';
+                    if (item.isSafe && item.validUntil) {
+                        if (new Date() > new Date(item.validUntil)) { statusDot = 'bg-slate-400'; statusText = 'Verlopen'; }
                     }
 
                     listContainer.innerHTML += `
                         <div onclick="showDetail(${item.originalIndex})" class="cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-3 rounded border-l-4 ${item.isSafe ? "border-green-500" : "border-red-500"} hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                             <div class="flex justify-between items-start mb-1">
-                                <span class="font-bold text-slate-700 dark:text-slate-200 text-sm truncate w-2/3">${item.task}</span>
+                                <span class="font-bold text-slate-700 dark:text-slate-200 text-sm truncate w-2/3">${item.task || 'Onbekend'}</span>
                                 <div class="flex items-center gap-1.5">
                                     <span class="w-2 h-2 rounded-full ${statusDot}"></span>
                                     <span class="text-[10px] text-slate-400 uppercase font-bold">${statusText}</span>
                                 </div>
                             </div>
                             <div class="flex justify-between items-end">
-                                <div class="text-xs text-slate-500 dark:text-slate-400">
-                                    ${date.toLocaleDateString('nl-NL', {weekday:'short'})} ${date.toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'})}<br>
-                                    WO: ${item.wo}
-                                </div>
+                                <div class="text-xs text-slate-500 dark:text-slate-400">${dateStr} ${timeStr}<br>WO: ${item.wo || '-'}</div>
                                 <i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i>
                             </div>
                         </div>`;
                 });
             });
-
             document.getElementById('archiveModal').classList.remove('hidden');
         }
 
         function toggleWeek(key) {
-            const content = document.getElementById(`content-${key}`);
-            const icon = document.getElementById(`icon-${key}`);
-            
-            if (content.style.maxHeight) {
-                content.style.maxHeight = null;
-                icon.classList.remove('rotate-180');
-            } else {
-                // Auto-height voor animatie
-                content.style.maxHeight = content.scrollHeight + "px";
-                icon.classList.add('rotate-180');
-            }
+            const safeKey = key.replace(/\s/g,'');
+            const content = document.getElementById(`content-${safeKey}`);
+            const icon = document.getElementById(`icon-${safeKey}`);
+            if (content.style.maxHeight) { content.style.maxHeight = null; icon.classList.remove('rotate-180'); } 
+            else { content.style.maxHeight = content.scrollHeight + "px"; icon.classList.add('rotate-180'); }
         }
 
         function showDetail(index) {
-            const history = JSON.parse(localStorage.getItem('lmra_history') || '[]'); const item = history[index]; const date = new Date(item.date);
-            document.getElementById('detailDate').innerText = `${date.toLocaleDateString('nl-NL')} ${date.toLocaleTimeString('nl-NL')}`;
-            document.getElementById('detailTimeRange').innerText = item.timeRange || "Onbekend"; // Nieuw: Toon tijden
+            const history = JSON.parse(localStorage.getItem('lmra_history') || '[]'); const item = history[index]; 
+            let dateStr = "Onbekend";
+            try { dateStr = `${new Date(item.date).toLocaleDateString('nl-NL')} ${new Date(item.date).toLocaleTimeString('nl-NL')}`; } catch(e){}
+
+            document.getElementById('detailDate').innerText = dateStr;
+            document.getElementById('detailTimeRange').innerText = item.timeRange || "Onbekend"; 
             document.getElementById('detailName').innerText = item.name; document.getElementById('detailLoc').innerText = item.task; document.getElementById('detailWO').innerText = item.wo; document.getElementById('detailComments').innerText = item.comments || "Geen opmerkingen.";
             const buddyBox = document.getElementById('detailBuddyBox');
             if(item.buddy) { document.getElementById('detailBuddy').innerText = item.buddy; buddyBox.classList.remove('hidden'); } else { buddyBox.classList.add('hidden'); }
