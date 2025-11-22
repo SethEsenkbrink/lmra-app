@@ -1,24 +1,31 @@
 import { neon } from '@neondatabase/serverless';
 
-export default async (req, context) => {
-  // 1. Alleen POST verzoeken toestaan (veiligheid)
-  // Dit voorkomt dat mensen via de browserbalk per ongeluk data sturen
-  if (req.method !== "POST") {
-    return new Response("Method not allowed", { status: 405 });
+// We gebruiken hier de universele 'handler' schrijfwijze die altijd werkt op Netlify
+export const handler = async (event, context) => {
+  
+  // 1. Veiligheidscheck: Alleen POST verzoeken toestaan
+  // Let op: 'event.httpMethod' is de klassieke manier om dit te checken
+  if (event.httpMethod !== "POST") {
+    return { statusCode: 405, body: "Method Not Allowed" };
   }
 
   try {
-    // 2. Verbinden met de database
-    // We gebruiken nu de officiële Neon serverless driver
-    // Netlify haalt zelf de geheime sleutel (NETLIFY_DATABASE_URL) op uit de instellingen
-    const sql = neon(process.env.NETLIFY_DATABASE_URL);
+    // 2. Controleren of de database sleutel aanwezig is
+    const dbUrl = process.env.NETLIFY_DATABASE_URL;
+    if (!dbUrl) {
+      console.error("Geen database URL gevonden!");
+      throw new Error("Database configuratie ontbreekt in Netlify.");
+    }
 
-    // 3. De data uit de app lezen
-    const data = await req.json();
+    // 3. Verbinden met Neon
+    const sql = neon(dbUrl);
+
+    // 4. Data uitpakken (Parsing)
+    // We gebruiken JSON.parse(event.body), dit is de meest veilige manier
+    const data = JSON.parse(event.body);
     const { monteur_naam, locatie, werkorder, is_veilig, opmerkingen, afkeurpunten } = data;
 
-    // 4. De SQL Query uitvoeren
-    // We sturen de data naar de kolommen die je in Neon hebt aangemaakt
+    // 5. De SQL Query uitvoeren
     await sql`
       INSERT INTO lmra_reports 
       (monteur_naam, locatie, werkorder, is_veilig, opmerkingen, afkeurpunten) 
@@ -26,17 +33,21 @@ export default async (req, context) => {
       (${monteur_naam}, ${locatie}, ${werkorder}, ${is_veilig}, ${opmerkingen}, ${JSON.stringify(afkeurpunten)})
     `;
 
-    // 5. Succes terugmelden aan de app
-    return new Response(JSON.stringify({ message: "Opgeslagen in cloud!" }), {
-      status: 200,
+    // 6. Succes terugmelden
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "Succesvol opgeslagen in Neon DB!" }),
       headers: { "Content-Type": "application/json" }
-    });
+    };
 
   } catch (error) {
-    console.error("Database error:", error);
-    return new Response(JSON.stringify({ error: "Fout bij opslaan: " + error.message }), {
-      status: 500,
+    // Dit zorgt dat we de fout terugzien in de logs als het misgaat
+    console.error("Fout in backend functie:", error);
+    
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: "Server fout: " + error.message }),
       headers: { "Content-Type": "application/json" }
-    });
+    };
   }
 };
