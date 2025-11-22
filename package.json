@@ -1,7 +1,8 @@
 {
   "name": "lmra-app",
   "version": "1.0.0",
+  "type": "module",
   "dependencies": {
-    "@netlify/neon": "^1.0.0"
+    "@neondatabase/serverless": "^0.6.0"
   }
 }
