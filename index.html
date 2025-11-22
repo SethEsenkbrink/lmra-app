@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LMRA Pro 2.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            light: '#005596',
+                            DEFAULT: '#00447c',
+                            dark: '#003366',
+                        },
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        
+        .question-card:active { transform: scale(0.99); }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-darkbg text-slate-800 dark:text-slate-200 h-screen flex flex-col transition-colors duration-300">
+
+    <!-- Header -->
+    <header class="bg-brand-DEFAULT text-white p-4 shadow-lg flex justify-between items-center z-20 sticky top-0">
+        <div class="flex items-center gap-3">
+            <div class="bg-white/10 p-2 rounded-lg">
+                <i class="fa-solid fa-shield-halved text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight tracking-wide">LMRA <span class="text-blue-300">PRO</span></h1>
+                <p class="text-[10px] uppercase tracking-wider opacity-80">Veiligheid Eerst</p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <!-- Nieuwe Archief Knop -->
+            <button onclick="openArchive()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                <i class="fa-solid fa-folder-open"></i>
+            </button>
+            <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                <i id="themeIcon" class="fa-solid fa-moon"></i>
+            </button>
+            <button onclick="resetApp()" class="w-10 h-10 rounded-full bg-red-500/80 hover:bg-red-600 flex items-center justify-center transition-colors text-white shadow-md">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-4 pb-28 max-w-3xl mx-auto w-full" id="main-container">
+        
+        <!-- Info Sectie -->
+        <div class="bg-white dark:bg-cardbg rounded-xl shadow-sm p-5 mb-5 border-l-4 border-brand-DEFAULT transition-colors">
+            <h2 class="font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center text-sm uppercase tracking-wider">
+                <i class="fa-solid fa-id-card mr-2 text-brand-light"></i>Werkgegevens
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Monteur</label>
+                    <input type="text" id="userName" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm focus:border-brand-DEFAULT focus:ring-2 focus:ring-brand-DEFAULT/20 outline-none transition-all dark:text-white" placeholder="Naam">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Locatie / Asset</label>
+                    <input type="text" id="taskLocation" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm focus:border-brand-DEFAULT focus:ring-2 focus:ring-brand-DEFAULT/20 outline-none transition-all dark:text-white" placeholder="Bijv. E-Motor 401">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Werkorder Nr. (Optioneel)</label>
+                    <!-- Aangepast naar type="text" voor letters -->
+                    <input type="text" id="workOrder" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm focus:border-brand-DEFAULT focus:ring-2 focus:ring-brand-DEFAULT/20 outline-none transition-all dark:text-white" placeholder="Bijv. WO-2025-A">
+                </div>
+            </div>
+        </div>
+
+        <!-- Vragenlijst Container -->
+        <div id="questions-container" class="space-y-6"></div>
+
+        <!-- Opmerkingen Veld -->
+        <div class="mt-6 bg-white dark:bg-cardbg rounded-xl shadow-sm p-4 transition-colors">
+            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Opmerkingen</label>
+            <textarea id="comments" rows="2" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm focus:border-brand-DEFAULT focus:ring-2 focus:ring-brand-DEFAULT/20 outline-none transition-all dark:text-white" placeholder="Bijv: Extra aardlekschakelaar geplaatst..."></textarea>
+        </div>
+    </main>
+
+    <!-- Floating Action Button -->
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-100 via-slate-100 to-transparent dark:from-darkbg dark:via-darkbg z-10">
+        <button onclick="evaluateLMRA()" class="max-w-3xl mx-auto w-full bg-brand-DEFAULT hover:bg-brand-dark text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-DEFAULT/30 active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-lg uppercase tracking-wide">
+            <i class="fa-solid fa-clipboard-check text-xl"></i> Beoordeel Veiligheid
+        </button>
+    </div>
+
+    <!-- Resultaat Modal -->
+    <div id="resultModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-cardbg w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
+            <div id="resultHeader" class="p-8 text-center text-white shrink-0">
+                <div id="resultIcon" class="text-7xl mb-4 drop-shadow-md"><i class="fa-solid fa-check-circle"></i></div>
+                <h2 id="resultTitle" class="text-4xl font-black uppercase tracking-tighter">VEILIG</h2>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <p id="resultMessage" class="text-center text-slate-600 dark:text-slate-300 mb-6 font-medium text-lg">Je kunt veilig aan het werk.</p>
+                <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg text-xs text-slate-600 dark:text-slate-400 font-mono mb-6 break-words border border-slate-200 dark:border-slate-700" id="logText"></div>
+                <div class="grid grid-cols-2 gap-3 mt-auto">
+                    <button onclick="copyToClipboard()" class="bg-brand-DEFAULT text-white py-3.5 rounded-lg font-bold active:bg-brand-dark flex items-center justify-center gap-2 transition-colors"><i class="fa-regular fa-copy"></i> Kopieer</button>
+                    <button onclick="closeModal()" class="border-2 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 py-3.5 rounded-lg font-bold hover:bg-slate-50 dark:hover:bg-slate-700 active:bg-slate-100 transition-colors">Sluiten</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Archief Modal -->
+    <div id="archiveModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-cardbg w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative flex flex-col h-[80vh]">
+            <div class="bg-brand-DEFAULT p-4 flex justify-between items-center text-white shrink-0">
+                <h2 class="font-bold text-lg"><i class="fa-solid fa-history mr-2"></i>Geschiedenis</h2>
+                <button onclick="closeArchive()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="archiveList" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 dark:bg-slate-900/50">
+                <!-- Items worden hier geladen -->
+            </div>
+            <div class="p-4 bg-white dark:bg-cardbg border-t border-slate-100 dark:border-slate-700 text-center shrink-0">
+                <button onclick="clearArchive()" class="text-red-500 text-xs font-bold uppercase hover:text-red-600">Geschiedenis Wissen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed top-24 left-1/2 transform -translate-x-1/2 bg-slate-800 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-full text-sm font-bold shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none z-50 flex items-center gap-2">
+        <i class="fa-solid fa-check"></i> <span id="toastMsg">Melding</span>
+    </div>
+
+    <script>
+        const categories = [
+            { title: "Algemeen & Fitheid", icon: "fa-user-clock", questions: [{ id: 1, text: "Voel ik mij fysiek en mentaal fit voor deze klus?", type: 'positive' }, { id: 2, text: "Weet ik wat te doen bij nood (alarmnummer, vluchtroute)?", type: 'positive' }] },
+            { title: "Vergunningen & Procedures", icon: "fa-file-signature", questions: [{ id: 3, text: "Is de werkvergunning correct ingevuld en getekend?", type: 'positive' }, { id: 4, text: "Heb ik de taakrisicoanalyse (TRA) gelezen/begrepen?", type: 'positive' }] },
+            { title: "Omgeving & Techniek", icon: "fa-bolt", questions: [{ id: 5, text: "Is de installatie veiliggesteld (LOTOTO / Vrij van spanning)?", type: 'positive' }, { id: 6, text: "Heb ik de juiste PBM's en gekeurd gereedschap?", type: 'positive' }, { id: 7, text: "Is de werkplek afgezet en vrij van struikelgevaar?", type: 'positive' }] }
+        ];
+
+        let answers = {};
+        let darkMode = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCategories();
+            loadUserData();
+            checkTheme();
+        });
+
+        function renderCategories() {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+            categories.forEach(cat => {
+                const section = document.createElement('div');
+                section.className = "bg-white dark:bg-cardbg rounded-xl shadow-sm overflow-hidden transition-colors";
+                section.innerHTML = `<div class="bg-slate-50 dark:bg-slate-800/50 p-3 border-b border-slate-100 dark:border-slate-700 flex items-center gap-2"><i class="fa-solid ${cat.icon} text-brand-light"></i> <span class="font-bold text-sm text-slate-600 dark:text-slate-300 uppercase">${cat.title}</span></div>`;
+                const qList = document.createElement('div'); qList.className = "p-2";
+                cat.questions.forEach(q => {
+                    const qItem = document.createElement('div');
+                    qItem.className = "question-card p-3 mb-2 last:mb-0 rounded-lg border border-transparent hover:border-slate-100 dark:hover:border-slate-700 transition-colors";
+                    qItem.innerHTML = `<div class="text-sm font-medium text-slate-700 dark:text-slate-200 mb-3">${q.text}</div><div class="grid grid-cols-2 gap-2"><button onclick="setAnswer(${q.id}, 'yes')" id="btn-yes-${q.id}" class="py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-check"></i> JA</button><button onclick="setAnswer(${q.id}, 'no')" id="btn-no-${q.id}" class="py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-xmark"></i> NEE</button></div>`;
+                    qList.appendChild(qItem);
+                });
+                section.appendChild(qList);
+                container.appendChild(section);
+            });
+        }
+
+        function setAnswer(id, value) {
+            answers[id] = value;
+            const btnYes = document.getElementById(`btn-yes-${id}`);
+            const btnNo = document.getElementById(`btn-no-${id}`);
+            const base = "py-2.5 rounded-md text-sm font-bold transition-all flex items-center justify-center gap-2 ";
+            const inactive = "bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500";
+            btnYes.className = base + inactive; btnNo.className = base + inactive;
+            if (value === 'yes') btnYes.className = base + "bg-green-600 text-white shadow-md ring-2 ring-green-600/30";
+            else btnNo.className = base + "bg-red-600 text-white shadow-md ring-2 ring-red-600/30";
+        }
+
+        function evaluateLMRA() {
+            const userName = document.getElementById('userName').value;
+            const task = document.getElementById('taskLocation').value;
+            const workOrder = document.getElementById('workOrder').value || "N.v.t.";
+            const comments = document.getElementById('comments').value || "Geen";
+            localStorage.setItem('lmra_username', userName);
+
+            const totalQuestions = categories.reduce((acc, cat) => acc + cat.questions.length, 0);
+            if (Object.keys(answers).length < totalQuestions) { showToast("Beantwoord alle vragen A.U.B."); return; }
+            if(!task) { showToast("Vul locatie in!"); document.getElementById('taskLocation').focus(); return; }
+
+            let isSafe = true; let failedPoints = [];
+            categories.forEach(cat => { cat.questions.forEach(q => { if (q.type === 'positive' && answers[q.id] === 'no') { isSafe = false; failedPoints.push(q.text); } }); });
+
+            // Save to Archive
+            saveToHistory(isSafe, userName, task, workOrder, comments, failedPoints);
+            showResult(isSafe, failedPoints, userName, task, workOrder, comments);
+        }
+
+        function saveToHistory(isSafe, name, task, wo, comments, fails) {
+            const entry = {
+                date: new Date().toISOString(),
+                isSafe, name, task, wo, comments, fails
+            };
+            let history = JSON.parse(localStorage.getItem('lmra_history') || '[]');
+            history.unshift(entry); // Add to top
+            if(history.length > 50) history.pop(); // Keep max 50
+            localStorage.setItem('lmra_history', JSON.stringify(history));
+        }
+
+        function openArchive() {
+            const list = document.getElementById('archiveList');
+            const history = JSON.parse(localStorage.getItem('lmra_history') || '[]');
+            list.innerHTML = '';
+            
+            if(history.length === 0) {
+                list.innerHTML = '<div class="text-center text-slate-400 p-8">Nog geen archief data</div>';
+            } else {
+                history.forEach(item => {
+                    const date = new Date(item.date);
+                    const dateStr = date.toLocaleDateString('nl-NL');
+                    const timeStr = date.toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'});
+                    
+                    const el = document.createElement('div');
+                    el.className = "bg-white dark:bg-cardbg p-3 rounded-lg shadow-sm border-l-4 " + (item.isSafe ? "border-green-500" : "border-red-500");
+                    el.innerHTML = `
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="font-bold text-slate-700 dark:text-slate-200">${item.task}</span>
+                            <span class="text-xs text-slate-400">${dateStr} ${timeStr}</span>
+                        </div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400">WO: ${item.wo} | ${item.name}</div>
+                        ${!item.isSafe ? '<div class="mt-2 text-xs text-red-500 font-bold">⚠️ Afgekeurd op '+item.fails.length+' punten</div>' : ''}
+                    `;
+                    list.appendChild(el);
+                });
+            }
+            document.getElementById('archiveModal').classList.remove('hidden');
+        }
+
+        function closeArchive() { document.getElementById('archiveModal').classList.add('hidden'); }
+        function clearArchive() { if(confirm("Archief wissen?")) { localStorage.removeItem('lmra_history'); openArchive(); } }
+
+        function showResult(isSafe, failedPoints, name, task, workOrder, comments) {
+            const modal = document.getElementById('resultModal');
+            const header = document.getElementById('resultHeader');
+            const icon = document.getElementById('resultIcon');
+            const title = document.getElementById('resultTitle');
+            const message = document.getElementById('resultMessage');
+            const log = document.getElementById('logText');
+            
+            modal.classList.remove('hidden');
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('nl-NL');
+            const timeStr = now.toLocaleTimeString('nl-NL', {hour: '2-digit', minute:'2-digit'});
+
+            if (isSafe) {
+                header.className = "p-8 text-center text-white shrink-0 bg-green-600";
+                icon.innerHTML = '<i class="fa-solid fa-shield-check"></i>'; title.innerText = "VEILIG";
+                message.innerText = "Alle checks zijn akkoord. Opgeslagen in archief.";
+                log.innerHTML = `<strong>✅ LMRA GOEDGEKEURD</strong><br>---------------------------<br>📅 ${dateStr} ⏰ ${timeStr}<br>👤 ${name}<br>📍 ${task}<br>📋 WO: ${workOrder}<br>---------------------------<br>💬 ${comments}`;
+            } else {
+                header.className = "p-8 text-center text-white shrink-0 bg-red-600";
+                icon.innerHTML = '<i class="fa-solid fa-hand-paper"></i>'; title.innerText = "STOP!";
+                message.innerText = "Risico's aanwezig! Opgeslagen in archief.";
+                let failureText = failedPoints.map(p => `- ${p}`).join('<br>');
+                log.innerHTML = `<strong>🛑 LMRA AFGEKEURD</strong><br>---------------------------<br>📅 ${dateStr} ⏰ ${timeStr}<br>👤 ${name}<br>📍 ${task}<br>📋 WO: ${workOrder}<br>---------------------------<br>⚠️ <strong>Afkeurpunten:</strong><br>${failureText}<br>---------------------------<br>💬 ${comments}`;
+            }
+        }
+
+        function copyToClipboard() {
+            const html = document.getElementById('logText').innerHTML;
+            const text = html.replace(/<br>/g, "\n").replace(/<strong>|<\/strong>/g, "").replace(/&nbsp;/g, " ");
+            navigator.clipboard.writeText(text).then(() => showToast("Gekopieerd naar klembord!")).catch(() => showToast("Fout bij kopiëren"));
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            darkMode = !darkMode; localStorage.setItem('lmra_theme', darkMode ? 'dark' : 'light');
+            updateThemeIcon();
+        }
+        function checkTheme() {
+            const savedTheme = localStorage.getItem('lmra_theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); darkMode = true; } else { document.documentElement.classList.remove('dark'); darkMode = false; }
+            updateThemeIcon();
+        }
+        function updateThemeIcon() { document.getElementById('themeIcon').className = darkMode ? "fa-solid fa-sun" : "fa-solid fa-moon"; }
+        function closeModal() { document.getElementById('resultModal').classList.add('hidden'); }
+        function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg; t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 3000); }
+        function resetApp() { if(confirm('Velden leegmaken?')) { answers = {}; document.getElementById('taskLocation').value = ''; document.getElementById('workOrder').value = ''; document.getElementById('comments').value = ''; renderCategories(); } }
+        function loadUserData() { const sn = localStorage.getItem('lmra_username'); if(sn) document.getElementById('userName').value = sn; }
+    </script>
+</body>
+</html>
