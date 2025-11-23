@@ -3,145 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LMRA Admin Dashboard</title>
+    <title>LMRA Admin Dashboard 5.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { light: '#005596', DEFAULT: '#00447c', dark: '#002a4d' },
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+    </style>
 </head>
-<body class="bg-slate-100 text-slate-800 h-screen flex flex-col">
+<body class="bg-slate-100 dark:bg-darkbg text-slate-800 dark:text-slate-200 h-screen flex flex-col transition-colors duration-300">
 
     <!-- Login Scherm -->
     <div id="loginScreen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm text-center">
-            <div class="text-4xl text-brand mb-4"><i class="fa-solid fa-user-shield"></i></div>
-            <h2 class="text-2xl font-bold mb-6">Admin Toegang</h2>
+        <div class="bg-white dark:bg-cardbg p-8 rounded-xl shadow-2xl w-full max-w-sm text-center border border-slate-200 dark:border-slate-700 relative">
+            <!-- Thema knop op login scherm -->
+            <button onclick="toggleDarkMode()" class="absolute top-4 right-4 text-slate-400 hover:text-brand-DEFAULT dark:hover:text-white transition-colors">
+                <i id="loginThemeIcon" class="fa-solid fa-moon"></i>
+            </button>
+
+            <div class="text-4xl text-brand-DEFAULT mb-4"><i class="fa-solid fa-user-shield"></i></div>
+            <h2 class="text-2xl font-bold mb-6 dark:text-white">Admin Toegang</h2>
             
-            <!-- Formulier toegevoegd voor Password Managers -->
             <form onsubmit="event.preventDefault(); login();">
-                <!-- Verborgen gebruikersnaam veld (zodat Google weet wie er inlogt) -->
                 <input type="text" name="username" value="admin" autocomplete="username" style="display:none;">
-                
-                <input 
-                    type="password" 
-                    id="passwordInput" 
-                    name="password"
-                    autocomplete="current-password"
-                    class="w-full p-3 border border-slate-300 rounded mb-4 text-center text-lg" 
-                    placeholder="Wachtwoord" 
-                    required
-                >
-                <button type="submit" id="loginBtn" class="w-full bg-blue-900 text-white py-3 rounded font-bold hover:bg-blue-800">Inloggen</button>
+                <input type="password" id="passwordInput" name="password" autocomplete="current-password" class="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded mb-4 text-center text-lg focus:ring-2 focus:ring-brand-DEFAULT outline-none transition-colors" placeholder="Wachtwoord" required>
+                <button type="submit" id="loginBtn" class="w-full bg-brand-DEFAULT text-white py-3 rounded font-bold hover:bg-brand-light transition-colors shadow-md">Inloggen</button>
             </form>
-            
-            <p id="loginError" class="text-red-500 mt-4 hidden">Verkeerd wachtwoord</p>
+            <p id="loginError" class="text-red-500 mt-4 hidden text-sm font-bold animate-pulse">Verkeerd wachtwoord</p>
         </div>
     </div>
 
     <!-- Dashboard Header -->
-    <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center">
+    <header class="bg-brand-DEFAULT text-white p-4 shadow-md flex flex-col md:flex-row justify-between items-center gap-4 z-20 sticky top-0">
         <div class="flex items-center gap-3">
-            <i class="fa-solid fa-chart-line text-2xl"></i>
-            <h1 class="font-bold text-xl">LMRA Dashboard</h1>
+            <div class="bg-white/10 p-2 rounded-lg"><i class="fa-solid fa-chart-line text-2xl"></i></div>
+            <h1 class="font-bold text-xl tracking-wide">LMRA Dashboard</h1>
         </div>
-        <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-sm font-bold flex items-center gap-2">
-            <i class="fa-solid fa-file-excel"></i> Export Excel
-        </button>
+        
+        <div class="flex flex-wrap gap-3 w-full md:w-auto items-center justify-center">
+            <!-- Zoekbalk met Icoon -->
+            <div class="relative group">
+                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-light transition-colors"></i>
+                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Zoek op naam, locatie, WO..." class="pl-9 pr-3 py-2 rounded-lg text-slate-800 text-sm outline-none focus:ring-2 focus:ring-blue-300 w-full md:w-64 shadow-sm">
+            </div>
+            
+            <button onclick="toggleDarkMode()" class="bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-colors w-10 h-10 flex items-center justify-center border border-white/10" title="Wissel Thema"><i id="themeIcon" class="fa-solid fa-moon"></i></button>
+            <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-sm border border-green-700"><i class="fa-solid fa-file-excel"></i> Excel</button>
+            <button onclick="logout()" class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-sm border border-red-700"><i class="fa-solid fa-right-from-bracket"></i> Uit</button>
+        </div>
     </header>
 
     <!-- Data Tabel -->
-    <main class="flex-1 p-6 overflow-auto">
-        <div class="bg-white rounded-lg shadow overflow-hidden">
+    <main class="flex-1 p-4 md:p-6 overflow-auto bg-slate-100 dark:bg-darkbg">
+        <div class="bg-white dark:bg-cardbg rounded-xl shadow-lg overflow-hidden border border-slate-200 dark:border-slate-700 transition-colors">
             <table class="w-full text-left border-collapse">
-                <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-bold border-b">
+                <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase text-xs font-bold border-b dark:border-slate-700 sticky top-0 z-10 shadow-sm">
                     <tr>
-                        <th class="p-4">Datum</th>
+                        <th class="p-4 whitespace-nowrap">Datum</th>
                         <th class="p-4">Monteur</th>
                         <th class="p-4">Locatie</th>
                         <th class="p-4">WO Nummer</th>
                         <th class="p-4">Status</th>
-                        <th class="p-4">Opmerkingen</th>
+                        <th class="p-4 hidden md:table-cell">Opmerkingen</th>
+                        <th class="p-4 text-right">Acties</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody" class="text-sm divide-y divide-slate-100"></tbody>
+                <tbody id="tableBody" class="text-sm divide-y divide-slate-100 dark:divide-slate-700">
+                    <!-- Data komt hier -->
+                </tbody>
             </table>
         </div>
     </main>
 
     <script>
+        let sessionKey = null; 
+        let allData = [];
+
+        // --- Thema Logic (werkt op beide schermen) ---
+        function checkTheme() {
+            const st = localStorage.getItem('lmra_theme');
+            if (st === 'dark' || (!st && window.matchMedia('(prefers-color-scheme: dark)').matches)) { 
+                document.documentElement.classList.add('dark'); 
+            } else { 
+                document.documentElement.classList.remove('dark'); 
+            }
+            updateIcons();
+        }
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('lmra_theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            updateIcons();
+        }
+        function updateIcons() {
+            const iconClass = document.documentElement.classList.contains('dark') ? "fa-solid fa-sun" : "fa-solid fa-moon";
+            if(document.getElementById('themeIcon')) document.getElementById('themeIcon').className = iconClass;
+            if(document.getElementById('loginThemeIcon')) document.getElementById('loginThemeIcon').className = iconClass;
+        }
+
+        // --- Login Logic (Veilig via Backend) ---
         async function login() {
             const input = document.getElementById('passwordInput').value;
             const btn = document.getElementById('loginBtn');
             const errorMsg = document.getElementById('loginError');
             
-            btn.innerText = "Controleren...";
-            btn.disabled = true;
-            errorMsg.classList.add('hidden');
+            btn.innerText = "Controleren..."; btn.disabled = true; errorMsg.classList.add('hidden');
 
             try {
-                const response = await fetch('/.netlify/functions/get-reports', {
-                    headers: { 'x-admin-secret': input }
+                const response = await fetch('/.netlify/functions/get-reports', { 
+                    headers: { 'x-admin-secret': input } 
                 });
-
-                if (response.status === 401) {
-                    throw new Error("Verkeerd wachtwoord");
-                }
                 
-                if (!response.ok) {
-                    throw new Error("Server fout");
-                }
+                if (response.status === 401) throw new Error("Verkeerd wachtwoord");
+                if (!response.ok) throw new Error("Server fout (" + response.status + ")");
 
                 const data = await response.json();
+                sessionKey = input; // Sla op in geheugen voor latere acties (verwijderen)
                 document.getElementById('loginScreen').classList.add('hidden');
+                allData = data;
                 renderTable(data);
-                window.lastData = data;
-
             } catch (e) {
-                errorMsg.innerText = e.message;
-                errorMsg.classList.remove('hidden');
-                btn.innerText = "Inloggen";
-                btn.disabled = false;
-                // Reset veld zodat je opnieuw kunt typen
+                console.error(e);
+                errorMsg.innerText = e.message; errorMsg.classList.remove('hidden');
+                btn.innerText = "Inloggen"; btn.disabled = false;
                 document.getElementById('passwordInput').value = '';
                 document.getElementById('passwordInput').focus();
             }
         }
 
+        function logout() {
+            sessionKey = null;
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('loginBtn').innerText = "Inloggen";
+            document.getElementById('loginBtn').disabled = false;
+        }
+
+        // --- Tabel Logic ---
         function renderTable(data) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
-            if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Geen data gevonden</td></tr>';
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 dark:text-slate-500 italic">Geen rapporten gevonden in de database.</td></tr>';
                 return;
             }
 
             data.forEach(row => {
                 const date = new Date(row.created_at).toLocaleString('nl-NL');
                 const statusBadge = row.is_veilig 
-                    ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">VEILIG</span>'
-                    : '<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-bold">ONVEILIG</span>';
+                    ? '<span class="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 px-2 py-1 rounded text-xs font-bold border border-green-200 dark:border-green-800 flex items-center gap-1 w-fit"><i class="fa-solid fa-check"></i> VEILIG</span>'
+                    : '<span class="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 px-2 py-1 rounded text-xs font-bold border border-red-200 dark:border-red-800 flex items-center gap-1 w-fit"><i class="fa-solid fa-triangle-exclamation"></i> ONVEILIG</span>';
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group";
                 tr.innerHTML = `
-                    <td class="p-4 font-mono text-slate-500">${date}</td>
-                    <td class="p-4 font-bold">${row.monteur_naam}</td>
-                    <td class="p-4">${row.locatie}</td>
-                    <td class="p-4 text-slate-500">${row.werkorder || '-'}</td>
+                    <td class="p-4 font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs">${date}</td>
+                    <td class="p-4 font-bold text-slate-700 dark:text-slate-200">${row.monteur_naam}</td>
+                    <td class="p-4 text-slate-700 dark:text-slate-300 text-sm">${row.locatie}</td>
+                    <td class="p-4 text-slate-500 dark:text-slate-400 font-mono text-sm">${row.werkorder || '-'}</td>
                     <td class="p-4">${statusBadge}</td>
-                    <td class="p-4 text-slate-500 italic truncate max-w-xs">${row.opmerkingen || ''}</td>
+                    <td class="p-4 text-slate-500 dark:text-slate-400 italic text-sm truncate max-w-xs hidden md:table-cell">${row.opmerkingen || '-'}</td>
+                    <td class="p-4 text-right">
+                        <button onclick="deleteReport(${row.id})" class="text-slate-300 hover:text-red-500 dark:hover:text-red-400 p-2 rounded transition-colors opacity-0 group-hover:opacity-100" title="Verwijder Rapport">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
+        // --- Zoek Functie ---
+        function filterTable() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allData.filter(row => 
+                (row.monteur_naam && row.monteur_naam.toLowerCase().includes(term)) || 
+                (row.locatie && row.locatie.toLowerCase().includes(term)) || 
+                (row.werkorder && row.werkorder.toLowerCase().includes(term))
+            );
+            renderTable(filtered);
+        }
+
+        // --- Verwijder Logic ---
+        async function deleteReport(id) {
+            if(!confirm("⚠️ WAARSCHUWING\n\nWeet je zeker dat je dit rapport definitief wilt verwijderen?\nDit kan niet ongedaan gemaakt worden.")) return;
+
+            try {
+                const response = await fetch('/.netlify/functions/delete-report', {
+                    method: 'POST',
+                    headers: { 'x-admin-secret': sessionKey },
+                    body: JSON.stringify({ id: id })
+                });
+
+                if (response.ok) {
+                    allData = allData.filter(item => item.id !== id);
+                    filterTable();
+                    // Toon even een succes indicatie (optioneel)
+                } else {
+                    alert("Fout bij verwijderen: " + await response.text());
+                }
+            } catch (e) {
+                alert("Netwerkfout: " + e.message);
+            }
+        }
+
         function exportToExcel() {
-            if (!window.lastData) return;
-            const ws = XLSX.utils.json_to_sheet(window.lastData);
+            if (!allData.length) return alert("Geen data om te exporteren!");
+            const ws = XLSX.utils.json_to_sheet(allData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "LMRA Rapporten");
             XLSX.writeFile(wb, `LMRA_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
         }
+
+        // Init
+        checkTheme();
     </script>
 </body>
 </html>
