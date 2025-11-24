@@ -1,17 +1,17 @@
-# Netlify Configuratie voor Beveiliging
-# Dit bestand vertelt de server welke regels er gelden
+# Netlify Configuratie voor Beveiliging (v6.3)
 
 [[headers]]
-  # Geldt voor alle pagina's
   for = "/*"
   [headers.values]
-    # Bescherming tegen XSS (Cross-Site Scripting)
+    # CSP: Sta unsafe-inline toe (voor Tailwind) en externe bronnen voor scripts/styles/fonts
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self' https://api.open-meteo.com;"
+    # XSS Protectie
     X-XSS-Protection = "1; mode=block"
-    # Voorkomt dat jouw site in een iFrame op een andere site wordt geladen (Clickjacking)
+    # Voorkom clickjacking
     X-Frame-Options = "DENY"
-    # Voorkomt dat browsers bestanden raden (MIME-sniffing)
+    # Voorkom MIME-sniffing
     X-Content-Type-Options = "nosniff"
     # Forceer HTTPS
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    # Referrer Policy (Privacy: stuur geen data mee als je wegklikt)
+    # Referrer Policy
     Referrer-Policy = "strict-origin-when-cross-origin"
