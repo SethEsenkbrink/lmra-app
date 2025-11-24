@@ -1,4 +1,4 @@
-🛡️ LMRA Pro - Digitale Veiligheidstool (v5.0)
+🛡️ LMRA Pro - Digitale Veiligheidstool (v6.2)
 
 LMRA Pro is een professionele Progressive Web App (PWA) ontwikkeld voor technici in de proces- en elektrotechniek. De applicatie digitaliseert de Laatste Minuut Risico Analyse en vervangt papieren boekjes door een slim, cloud-connected systeem.
 
