@@ -1,17 +1,15 @@
-# Netlify Configuratie voor Beveiliging (v6.3)
+# Netlify Configuratie v6.4
 
 [[headers]]
   for = "/*"
   [headers.values]
-    # CSP: Sta unsafe-inline toe (voor Tailwind) en externe bronnen voor scripts/styles/fonts
+    # CSP:
+    # - script-src: Sta tailwind en andere CDNs toe. 'unsafe-inline' is nodig voor Tailwind CDN werking.
+    # - style-src: 'unsafe-inline' nodig voor Tailwind.
+    # - font-src: Specifiek cdnjs toestaan voor FontAwesome icoontjes.
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self' https://api.open-meteo.com;"
-    # XSS Protectie
     X-XSS-Protection = "1; mode=block"
-    # Voorkom clickjacking
     X-Frame-Options = "DENY"
-    # Voorkom MIME-sniffing
     X-Content-Type-Options = "nosniff"
-    # Forceer HTTPS
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    # Referrer Policy
     Referrer-Policy = "strict-origin-when-cross-origin"
