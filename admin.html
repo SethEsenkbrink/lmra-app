@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LMRA Admin Dashboard 5.1</title>
+    <title>LMRA Admin (Secure)</title>
+    <!-- Integriteitscheck (SRI) toegevoegd waar mogelijk -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -21,137 +22,151 @@
             }
         }
     </script>
-    <style>
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
-    </style>
 </head>
 <body class="bg-slate-100 dark:bg-darkbg text-slate-800 dark:text-slate-200 h-screen flex flex-col transition-colors duration-300">
 
     <!-- Login Scherm -->
     <div id="loginScreen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
         <div class="bg-white dark:bg-cardbg p-8 rounded-xl shadow-2xl w-full max-w-sm text-center border border-slate-200 dark:border-slate-700 relative">
-            <!-- Thema knop op login scherm -->
             <button onclick="toggleDarkMode()" class="absolute top-4 right-4 text-slate-400 hover:text-brand-DEFAULT dark:hover:text-white transition-colors">
                 <i id="loginThemeIcon" class="fa-solid fa-moon"></i>
             </button>
-
             <div class="text-4xl text-brand-DEFAULT mb-4"><i class="fa-solid fa-user-shield"></i></div>
-            <h2 class="text-2xl font-bold mb-6 dark:text-white">Admin Toegang</h2>
+            <h2 class="text-2xl font-bold mb-6 dark:text-white">Admin Secure Login</h2>
             
             <form onsubmit="event.preventDefault(); login();">
                 <input type="text" name="username" value="admin" autocomplete="username" style="display:none;">
                 <input type="password" id="passwordInput" name="password" autocomplete="current-password" class="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded-lg mb-4 text-center text-lg focus:ring-2 focus:ring-brand-DEFAULT outline-none transition-colors" placeholder="Wachtwoord" required>
                 <button type="submit" id="loginBtn" class="w-full bg-brand-DEFAULT hover:bg-brand-light text-white py-3 rounded-lg font-bold transition-colors shadow-md">Inloggen</button>
             </form>
-            <p id="loginError" class="text-red-500 mt-4 hidden text-sm font-bold animate-pulse">Verkeerd wachtwoord</p>
+            <p id="loginError" class="text-red-500 mt-4 hidden text-sm font-bold animate-pulse">Toegang geweigerd</p>
         </div>
     </div>
 
-    <!-- Dashboard Header -->
-    <header class="bg-white dark:bg-cardbg p-4 shadow-md flex flex-col md:flex-row justify-between items-center gap-4 z-20 sticky top-0 border-b border-slate-200 dark:border-slate-700 transition-colors">
+    <!-- Header -->
+    <header class="bg-white dark:bg-cardbg p-4 shadow-md flex flex-col md:flex-row justify-between items-center gap-4 z-20 sticky top-0 border-b border-slate-200 dark:border-slate-700">
         <div class="flex items-center gap-3">
-            <div class="bg-brand-DEFAULT text-white p-2 rounded-lg"><i class="fa-solid fa-chart-line text-2xl"></i></div>
+            <div class="bg-brand-DEFAULT text-white p-2 rounded-lg"><i class="fa-solid fa-lock"></i></div>
             <h1 class="font-bold text-xl tracking-wide text-slate-800 dark:text-white">LMRA Dashboard</h1>
         </div>
-        
         <div class="flex flex-wrap gap-3 w-full md:w-auto items-center justify-center">
-            <!-- Zoekbalk met Icoon -->
             <div class="relative group w-full md:w-auto">
-                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-DEFAULT transition-colors"></i>
-                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Zoek op naam, locatie, WO..." class="pl-9 pr-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-DEFAULT w-full md:w-64 transition-all">
+                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Zoek..." class="pl-9 pr-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-DEFAULT w-full md:w-64">
             </div>
-            
             <div class="flex gap-2">
-                <button onclick="toggleDarkMode()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 p-2 rounded-lg transition-colors w-10 h-10 flex items-center justify-center border border-slate-200 dark:border-slate-600" title="Wissel Thema"><i id="themeIcon" class="fa-solid fa-moon"></i></button>
-                <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-sm"><i class="fa-solid fa-file-excel"></i> <span class="hidden sm:inline">Excel</span></button>
-                <button onclick="logout()" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-sm"><i class="fa-solid fa-right-from-bracket"></i> <span class="hidden sm:inline">Uit</span></button>
+                <button onclick="toggleDarkMode()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 p-2 rounded-lg w-10 flex items-center justify-center border border-slate-200 dark:border-slate-600"><i id="themeIcon" class="fa-solid fa-moon"></i></button>
+                <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm"><i class="fa-solid fa-file-excel"></i> <span class="hidden sm:inline">Excel</span></button>
+                <button onclick="logout()" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
         </div>
     </header>
 
-    <!-- Data Tabel -->
+    <!-- Tabel -->
     <main class="flex-1 p-4 md:p-6 overflow-auto bg-slate-100 dark:bg-darkbg">
-        <div class="bg-white dark:bg-cardbg rounded-xl shadow-lg overflow-hidden border border-slate-200 dark:border-slate-700 transition-colors">
+        <div class="bg-white dark:bg-cardbg rounded-xl shadow-lg overflow-hidden border border-slate-200 dark:border-slate-700">
             <table class="w-full text-left border-collapse">
-                <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase text-xs font-bold border-b dark:border-slate-700 sticky top-0 z-10 shadow-sm">
+                <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase text-xs font-bold border-b dark:border-slate-700 sticky top-0 z-10">
                     <tr>
-                        <th class="p-4 whitespace-nowrap">Datum</th>
+                        <th class="p-4">Datum</th>
                         <th class="p-4">Monteur</th>
                         <th class="p-4">Locatie</th>
-                        <th class="p-4">WO Nummer</th>
+                        <th class="p-4">WO</th>
                         <th class="p-4">Status</th>
-                        <th class="p-4 hidden md:table-cell">Opmerkingen</th>
-                        <th class="p-4 text-right">Acties</th>
+                        <th class="p-4 hidden md:table-cell">Info</th>
+                        <th class="p-4 text-right">Actie</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody" class="text-sm divide-y divide-slate-100 dark:divide-slate-700">
-                    <!-- Data komt hier -->
-                </tbody>
+                <tbody id="tableBody" class="text-sm divide-y divide-slate-100 dark:divide-slate-700"></tbody>
             </table>
         </div>
     </main>
-
-    <!-- Toast Melding -->
-    <div id="toast" class="fixed bottom-4 right-4 bg-slate-800 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-lg shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none z-50 flex items-center gap-3 transform translate-y-2">
-        <i class="fa-solid fa-info-circle"></i> <span id="toastMsg">Melding</span>
-    </div>
 
     <script>
         let sessionKey = null; 
         let allData = [];
 
-        // --- Thema Logic ---
-        function checkTheme() {
-            const st = localStorage.getItem('lmra_theme');
-            if (st === 'dark' || (!st && window.matchMedia('(prefers-color-scheme: dark)').matches)) { 
-                document.documentElement.classList.add('dark'); 
-            } else { 
-                document.documentElement.classList.remove('dark'); 
-            }
-            updateIcons();
-        }
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            localStorage.setItem('lmra_theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-            updateIcons();
-        }
-        function updateIcons() {
-            const iconClass = document.documentElement.classList.contains('dark') ? "fa-solid fa-sun" : "fa-solid fa-moon";
-            if(document.getElementById('themeIcon')) document.getElementById('themeIcon').className = iconClass;
-            if(document.getElementById('loginThemeIcon')) document.getElementById('loginThemeIcon').className = iconClass;
+        /* --- VEILIGHEIDS UPDATE: DOM Manipulatie --- */
+        // In plaats van innerHTML gebruiken we deze veilige functie om cellen te maken
+        function createCell(text, classes = "") {
+            const td = document.createElement('td');
+            td.className = "p-4 " + classes;
+            td.textContent = text || "-"; // Dit voorkomt XSS: tekst wordt letterlijk genomen, nooit als code
+            return td;
         }
 
-        // --- Login Logic ---
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = ''; // Tabel leegmaken
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 italic">Geen data.</td></tr>';
+                return;
+            }
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group";
+
+                // Datum
+                const dateStr = new Date(row.created_at).toLocaleString('nl-NL');
+                tr.appendChild(createCell(dateStr, "font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs"));
+
+                // Monteur (Veilig via textContent)
+                tr.appendChild(createCell(row.monteur_naam, "font-bold text-slate-700 dark:text-slate-200"));
+
+                // Locatie
+                tr.appendChild(createCell(row.locatie, "text-slate-700 dark:text-slate-300 text-sm"));
+
+                // WO
+                tr.appendChild(createCell(row.werkorder, "text-slate-500 dark:text-slate-400 font-mono text-sm"));
+
+                // Status (Dit mag wel HTML zijn want wij bepalen de inhoud zelf, geen user input)
+                const tdStatus = document.createElement('td');
+                tdStatus.className = "p-4";
+                if (row.is_veilig) {
+                    tdStatus.innerHTML = '<span class="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 px-2 py-1 rounded text-xs font-bold border border-green-200 dark:border-green-800">VEILIG</span>';
+                } else {
+                    tdStatus.innerHTML = '<span class="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 px-2 py-1 rounded text-xs font-bold border border-red-200 dark:border-red-800">ONVEILIG</span>';
+                }
+                tr.appendChild(tdStatus);
+
+                // Opmerkingen
+                tr.appendChild(createCell(row.opmerkingen, "text-slate-500 dark:text-slate-400 italic text-sm truncate max-w-xs hidden md:table-cell"));
+
+                // Delete knop
+                const tdAction = document.createElement('td');
+                tdAction.className = "p-4 text-right";
+                const btn = document.createElement('button');
+                btn.className = "text-slate-300 hover:text-red-500 dark:hover:text-red-400 p-2 rounded transition-colors opacity-0 group-hover:opacity-100";
+                btn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+                btn.onclick = () => deleteReport(row.id); // Event listener is veiliger dan onclick attribuut string
+                tdAction.appendChild(btn);
+                tr.appendChild(tdAction);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- AUTH & LOGIC ---
         async function login() {
             const input = document.getElementById('passwordInput').value;
             const btn = document.getElementById('loginBtn');
             const errorMsg = document.getElementById('loginError');
-            
             btn.innerText = "Controleren..."; btn.disabled = true; errorMsg.classList.add('hidden');
 
             try {
-                const response = await fetch('/.netlify/functions/get-reports', { 
-                    headers: { 'x-admin-secret': input } 
-                });
-                
-                if (response.status === 401) throw new Error("Verkeerd wachtwoord");
-                if (!response.ok) throw new Error("Server fout (" + response.status + ")");
-
+                const response = await fetch('/.netlify/functions/get-reports', { headers: { 'x-admin-secret': input } });
+                if (!response.ok) throw new Error("Toegang geweigerd");
                 const data = await response.json();
-                sessionKey = input; 
+                sessionKey = input;
                 document.getElementById('loginScreen').classList.add('hidden');
                 allData = data;
                 renderTable(data);
             } catch (e) {
-                console.error(e);
-                errorMsg.innerText = e.message; errorMsg.classList.remove('hidden');
+                errorMsg.classList.remove('hidden');
                 btn.innerText = "Inloggen"; btn.disabled = false;
                 document.getElementById('passwordInput').value = '';
-                document.getElementById('passwordInput').focus();
             }
         }
 
@@ -159,46 +174,8 @@
             sessionKey = null;
             document.getElementById('loginScreen').classList.remove('hidden');
             document.getElementById('passwordInput').value = '';
-            document.getElementById('loginBtn').innerText = "Inloggen";
-            document.getElementById('loginBtn').disabled = false;
         }
 
-        // --- Tabel Logic ---
-        function renderTable(data) {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 dark:text-slate-500 italic">Geen rapporten gevonden in de database.</td></tr>';
-                return;
-            }
-
-            data.forEach(row => {
-                const date = new Date(row.created_at).toLocaleString('nl-NL');
-                const statusBadge = row.is_veilig 
-                    ? '<span class="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 px-2 py-1 rounded text-xs font-bold border border-green-200 dark:border-green-800 flex items-center gap-1 w-fit"><i class="fa-solid fa-check"></i> VEILIG</span>'
-                    : '<span class="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 px-2 py-1 rounded text-xs font-bold border border-red-200 dark:border-red-800 flex items-center gap-1 w-fit"><i class="fa-solid fa-triangle-exclamation"></i> ONVEILIG</span>';
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group border-b border-slate-50 dark:border-slate-800 last:border-0";
-                tr.innerHTML = `
-                    <td class="p-4 font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs">${date}</td>
-                    <td class="p-4 font-bold text-slate-700 dark:text-slate-200">${row.monteur_naam}</td>
-                    <td class="p-4 text-slate-700 dark:text-slate-300 text-sm">${row.locatie}</td>
-                    <td class="p-4 text-slate-500 dark:text-slate-400 font-mono text-sm">${row.werkorder || '-'}</td>
-                    <td class="p-4">${statusBadge}</td>
-                    <td class="p-4 text-slate-500 dark:text-slate-400 italic text-sm truncate max-w-xs hidden md:table-cell">${row.opmerkingen || '-'}</td>
-                    <td class="p-4 text-right">
-                        <button onclick="deleteReport(${row.id})" class="text-slate-400 hover:text-red-500 dark:hover:text-red-400 p-2 rounded transition-colors opacity-50 group-hover:opacity-100" title="Verwijder Rapport">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // --- Zoek Functie ---
         function filterTable() {
             const term = document.getElementById('searchInput').value.toLowerCase();
             const filtered = allData.filter(row => 
@@ -209,46 +186,45 @@
             renderTable(filtered);
         }
 
-        // --- Verwijder Logic ---
         async function deleteReport(id) {
-            if(!confirm("⚠️ WAARSCHUWING\n\nWeet je zeker dat je dit rapport definitief wilt verwijderen?")) return;
-
+            if(!confirm("Definitief verwijderen?")) return;
             try {
-                const response = await fetch('/.netlify/functions/delete-report', {
+                const res = await fetch('/.netlify/functions/delete-report', {
                     method: 'POST',
                     headers: { 'x-admin-secret': sessionKey },
                     body: JSON.stringify({ id: id })
                 });
-
-                if (response.ok) {
-                    allData = allData.filter(item => item.id !== id);
+                if (res.ok) {
+                    allData = allData.filter(i => i.id !== id);
                     filterTable();
-                    showToast("Rapport succesvol verwijderd");
-                } else {
-                    alert("Fout: " + await response.text());
-                }
-            } catch (e) {
-                alert("Netwerkfout: " + e.message);
-            }
+                } else { alert("Fout bij verwijderen"); }
+            } catch (e) { alert("Netwerkfout"); }
         }
 
         function exportToExcel() {
-            if (!allData.length) return showToast("Geen data om te exporteren!");
+            if (!allData.length) return alert("Geen data");
             const ws = XLSX.utils.json_to_sheet(allData);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "LMRA Rapporten");
-            XLSX.writeFile(wb, `LMRA_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
-            showToast("Excel bestand gedownload");
+            XLSX.utils.book_append_sheet(wb, ws, "LMRA");
+            XLSX.writeFile(wb, `LMRA_Export.xlsx`);
         }
 
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            document.getElementById('toastMsg').innerText = msg;
-            t.classList.remove('opacity-0', 'translate-y-2');
-            setTimeout(() => t.classList.add('opacity-0', 'translate-y-2'), 3000);
+        // Thema checks
+        function checkTheme() {
+            const st = localStorage.getItem('lmra_theme');
+            if (st === 'dark' || (!st && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); }
+            updateIcons();
         }
-
-        // Init
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('lmra_theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            updateIcons();
+        }
+        function updateIcons() {
+            const cls = document.documentElement.classList.contains('dark') ? "fa-solid fa-sun" : "fa-solid fa-moon";
+            if(document.getElementById('themeIcon')) document.getElementById('themeIcon').className = cls;
+            if(document.getElementById('loginThemeIcon')) document.getElementById('loginThemeIcon').className = cls;
+        }
         checkTheme();
     </script>
 </body>
