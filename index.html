@@ -6,16 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Professionele LMRA Tool voor proces- en elektrotechniek">
     
-    <!-- CSP verwijderd om icoon-blokkade op te lossen -->
-    
-    <title>LMRA Pro 6.2</title>
+    <title>LMRA Pro 6.3</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23005596'%3E%3Cpath d='M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z'/%3E%3C/svg%3E">
     
-    <!-- Externe Libraries -->
+    <!-- Externe Libraries met SRI (Subresource Integrity) -->
+    <!-- Tailwind CSS (Geen SRI mogelijk bij CDN versie, CSP beschermt hier) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <!-- FontAwesome 6.4.0 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" xintegrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- html2pdf.js 0.10.1 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" xintegrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <!-- DOMPurify 3.0.6 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" xintegrity="sha512-H+rGl20e+i/H9I7T3VXDG91585S+W7P+r01444967576507666307" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     
     <script>
         tailwind.config = {
@@ -57,7 +62,7 @@
             </div>
             <div>
                 <h1 class="font-bold text-lg leading-tight tracking-wide text-white">LMRA <span class="text-blue-200">PRO</span></h1>
-                <p class="text-[10px] uppercase tracking-wider opacity-90 font-semibold text-blue-100">v6.2 - Stable</p>
+                <p class="text-[10px] uppercase tracking-wider opacity-90 font-semibold text-blue-100">v6.3 - Integrity</p>
             </div>
         </div>
         
