@@ -5,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LMRA Admin (Secure)</title>
     
-    <!-- SRI Hashes toegevoegd -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome (Correcte integrity) -->
+    <!-- FontAwesome met SRI -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <!-- xlsx (Correcte integrity) -->
+    <!-- xlsx met SRI -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjTEaPEvr6DxmPhxkqLA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     
     <script>
@@ -26,13 +25,6 @@
             }
         }
     </script>
-    <style>
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
-    </style>
 </head>
 <body class="bg-slate-100 dark:bg-darkbg text-slate-800 dark:text-slate-200 h-screen flex flex-col transition-colors duration-300">
 
@@ -97,18 +89,17 @@
         let sessionKey = null; 
         let allData = [];
 
-        /* --- VEILIGHEIDS UPDATE: DOM Manipulatie --- */
-        // In plaats van innerHTML gebruiken we deze veilige functie om cellen te maken
+        /* --- VEILIGHEID: DOM Manipulatie Helper --- */
         function createCell(text, classes = "") {
             const td = document.createElement('td');
             td.className = "p-4 " + classes;
-            td.textContent = text || "-"; // Dit voorkomt XSS: tekst wordt letterlijk genomen, nooit als code
+            td.textContent = text || "-";
             return td;
         }
 
         function renderTable(data) {
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = ''; // Tabel leegmaken
+            tbody.innerHTML = '';
 
             if (!data || data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 italic">Geen data.</td></tr>';
@@ -119,20 +110,12 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group";
 
-                // Datum
                 const dateStr = new Date(row.created_at).toLocaleString('nl-NL');
                 tr.appendChild(createCell(dateStr, "font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs"));
-
-                // Monteur (Veilig via textContent)
                 tr.appendChild(createCell(row.monteur_naam, "font-bold text-slate-700 dark:text-slate-200"));
-
-                // Locatie
                 tr.appendChild(createCell(row.locatie, "text-slate-700 dark:text-slate-300 text-sm"));
-
-                // WO
                 tr.appendChild(createCell(row.werkorder, "text-slate-500 dark:text-slate-400 font-mono text-sm"));
 
-                // Status (Dit mag wel HTML zijn want wij bepalen de inhoud zelf, geen user input)
                 const tdStatus = document.createElement('td');
                 tdStatus.className = "p-4";
                 if (row.is_veilig) {
@@ -142,16 +125,14 @@
                 }
                 tr.appendChild(tdStatus);
 
-                // Opmerkingen
                 tr.appendChild(createCell(row.opmerkingen, "text-slate-500 dark:text-slate-400 italic text-sm truncate max-w-xs hidden md:table-cell"));
 
-                // Delete knop
                 const tdAction = document.createElement('td');
                 tdAction.className = "p-4 text-right";
                 const btn = document.createElement('button');
                 btn.className = "text-slate-300 hover:text-red-500 dark:hover:text-red-400 p-2 rounded transition-colors opacity-0 group-hover:opacity-100";
                 btn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
-                btn.onclick = () => deleteReport(row.id); // Event listener is veiliger dan onclick attribuut string
+                btn.onclick = () => deleteReport(row.id);
                 tdAction.appendChild(btn);
                 tr.appendChild(tdAction);
 
@@ -159,7 +140,6 @@
             });
         }
 
-        // --- AUTH & LOGIC ---
         async function login() {
             const input = document.getElementById('passwordInput').value;
             const btn = document.getElementById('loginBtn');
@@ -220,7 +200,6 @@
             XLSX.writeFile(wb, `LMRA_Export.xlsx`);
         }
 
-        // Thema checks
         function checkTheme() {
             const st = localStorage.getItem('lmra_theme');
             if (st === 'dark' || (!st && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); }
