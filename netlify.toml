@@ -1,0 +1,17 @@
+# Netlify Configuratie voor Beveiliging
+# Dit bestand vertelt de server welke regels er gelden
+
+[[headers]]
+  # Geldt voor alle pagina's
+  for = "/*"
+  [headers.values]
+    # Bescherming tegen XSS (Cross-Site Scripting)
+    X-XSS-Protection = "1; mode=block"
+    # Voorkomt dat jouw site in een iFrame op een andere site wordt geladen (Clickjacking)
+    X-Frame-Options = "DENY"
+    # Voorkomt dat browsers bestanden raden (MIME-sniffing)
+    X-Content-Type-Options = "nosniff"
+    # Forceer HTTPS
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    # Referrer Policy (Privacy: stuur geen data mee als je wegklikt)
+    Referrer-Policy = "strict-origin-when-cross-origin"
