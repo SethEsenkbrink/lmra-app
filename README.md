@@ -4,7 +4,7 @@ LMRA Pro is een professionele Progressive Web App (PWA) ontwikkeld voor technici
 
 De focus ligt op gebruiksgemak, datavisualisatie en veiligheid.
 
-🚀 Belangrijkste Functionaliteiten (v5.0)
+🚀 Belangrijkste Functionaliteiten (v6.2)
 
 👷 Voor de Monteur (Frontend)
 
@@ -81,6 +81,8 @@ Data: Gegevens worden verwerkt via versleutelde verbindingen (HTTPS) en opgeslag
 Toegang: Het admin-paneel is afgeschermd en wachtwoorden worden nooit in de browser opgeslagen (alleen in het sessiegeheugen).
 
 Ontwikkeld door SIEV - 2025
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 🛡️ LMRA Pro - Digitale Veiligheidstool (v6.3)
 
