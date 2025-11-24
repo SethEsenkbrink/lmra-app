@@ -2,23 +2,13 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <!-- Viewport aanpassing voor betere mobiele weergave -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Professionele LMRA Tool voor proces- en elektrotechniek">
-    
-    <title>LMRA Pro 6.3</title>
+    <title>LMRA Pro 6.4</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23005596'%3E%3Cpath d='M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z'/%3E%3C/svg%3E">
     
-    <!-- Externe Libraries met SRI (Subresource Integrity) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- FontAwesome (Correcte integrity) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    
-    <!-- html2pdf (Correcte integrity) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    
-    <!-- DOMPurify (Correcte integrity) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" integrity="sha512-H+rGl20e+i/H9I7T3VXDG91585S+W7P+r01444967576507666307" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     
     <script>
@@ -41,7 +31,6 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
-        .question-card:active { transform: scale(0.99); }
         .spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid #fff; width: 20px; height: 20px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .rotate-180 { transform: rotate(180deg); }
@@ -52,20 +41,16 @@
 </head>
 <body class="bg-slate-100 dark:bg-darkbg text-slate-900 dark:text-slate-200 h-screen flex flex-col transition-colors duration-300">
 
-    <!-- Header: Geforceerd donkerblauw voor altijd goed contrast -->
     <header class="bg-[#00447c] text-white p-4 shadow-lg flex justify-between items-center z-50 sticky top-0 border-b border-[#002a4d]">
         <div class="flex items-center gap-3">
-            <!-- Logo Container -->
             <div class="bg-white/20 p-2 rounded-lg border border-white/30 shadow-sm backdrop-blur-sm">
                 <i class="fa-solid fa-shield-halved text-xl text-white"></i>
             </div>
             <div>
                 <h1 class="font-bold text-lg leading-tight tracking-wide text-white">LMRA <span class="text-blue-200">PRO</span></h1>
-                <p class="text-[10px] uppercase tracking-wider opacity-90 font-semibold text-blue-100">v6.3 - Productie</p>
+                <p class="text-[10px] uppercase tracking-wider opacity-90 font-semibold text-blue-100">v6.4 - Privacy First</p>
             </div>
         </div>
-        
-        <!-- Knoppen -->
         <div class="flex gap-2">
             <button onclick="openArchive()" aria-label="Open Historie" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center justify-center transition-all border border-white/20 text-white shadow-sm">
                 <i class="fa-solid fa-folder-open"></i>
@@ -79,7 +64,7 @@
         </div>
     </header>
 
-    <!-- Weather Widget -->
+    <!-- Weather Widget (Standaard verborgen, pas zichtbaar na GPS toestemming) -->
     <div id="weatherWidget" class="relative z-40 bg-blue-50 dark:bg-slate-800 p-3 text-xs flex justify-between items-center border-b border-blue-200 dark:border-slate-700 hidden shadow-inner" aria-live="polite">
         <div class="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300">
             <i class="fa-solid fa-cloud-sun text-[#00447c]"></i>
@@ -88,21 +73,18 @@
         <span id="weatherWarning" class="font-bold text-red-600 hidden"><i class="fa-solid fa-triangle-exclamation"></i> Harde Wind!</span>
     </div>
 
-    <!-- Main Content -->
     <main class="flex-1 overflow-y-auto p-4 pb-28 max-w-3xl mx-auto w-full" id="main-container">
         
-        <!-- Alerts -->
         <div id="pauseAlert" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-r shadow-sm" role="alert">
             <div class="flex">
                 <div class="flex-shrink-0"><i class="fa-solid fa-clock text-red-500"></i></div>
                 <div class="ml-3">
                     <p class="text-sm text-red-800 font-bold">Geldigheid Verlopen</p>
-                    <p class="text-xs text-red-700 mt-1">De eindtijd van je vorige LMRA is verstreken. Start een nieuwe check.</p>
+                    <p class="text-xs text-red-700 mt-1">Start een nieuwe check.</p>
                 </div>
             </div>
         </div>
 
-        <!-- Gegevens Sectie -->
         <div class="bg-white dark:bg-cardbg rounded-xl shadow-sm p-5 mb-5 border-l-4 border-[#00447c] transition-colors">
             <h2 class="font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center text-sm uppercase tracking-wider"><i class="fa-solid fa-id-card mr-2 text-[#00447c] dark:text-blue-400"></i>Werkgegevens</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -119,7 +101,6 @@
                     <input type="text" id="workOrder" maxlength="20" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white font-medium" placeholder="Bijv. WO-2025-A">
                 </div>
                 
-                <!-- Tijdsloten -->
                 <div class="md:col-span-2 grid grid-cols-2 gap-4 pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Starttijd *</label>
@@ -131,7 +112,6 @@
                     </div>
                 </div>
 
-                <!-- Opties -->
                 <div class="md:col-span-2 pt-3 border-t border-slate-200 dark:border-slate-700 mt-2 space-y-3">
                     <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
                         <label class="text-xs font-bold text-slate-700 dark:text-slate-400 uppercase flex items-center gap-2"><i class="fa-solid fa-temperature-half"></i> Omgeving</label>
@@ -152,10 +132,10 @@
                         <input type="text" id="buddyName" maxlength="50" class="w-full bg-blue-50 dark:bg-slate-800/50 border border-blue-200 dark:border-slate-600 rounded-lg p-3 text-sm outline-none dark:text-white" placeholder="Naam Buddy">
                     </div>
                     
-                    <!-- GDPR / Privacy Toggle -->
+                    <!-- GDPR: GPS wordt pas actief na aanvinken -->
                     <div class="flex items-center gap-2 mt-2">
-                        <input type="checkbox" id="gpsConsent" class="w-4 h-4 text-[#00447c] rounded border-gray-300 focus:ring-[#00447c]">
-                        <label for="gpsConsent" class="text-xs text-slate-500 dark:text-slate-400">Voeg GPS locatie toe (AVG: Alleen voor werklocatie)</label>
+                        <input type="checkbox" id="gpsConsent" class="w-4 h-4 text-[#00447c] rounded border-gray-300 focus:ring-[#00447c]" onchange="toggleGPS()">
+                        <label for="gpsConsent" class="text-xs text-slate-500 dark:text-slate-400 cursor-pointer">Activeer GPS & Weer (Werklocatie)</label>
                     </div>
                 </div>
             </div>
@@ -169,7 +149,7 @@
         </div>
         
         <div class="text-center mt-8 mb-4 text-[10px] text-slate-400">
-            <p>Data verwerkt via Neon DB (Frankfurt). Persoonsgegevens conform bedrijfsbeleid.</p>
+            <p>Data verwerkt via Neon DB. Persoonsgegevens conform bedrijfsbeleid.</p>
         </div>
     </main>
 
@@ -241,7 +221,7 @@
                 <div id="detailStatusBox" class="bg-green-100 border border-green-300 text-green-800 p-3 rounded-lg text-center font-bold mb-6">VEILIG OM TE STARTEN</div>
                 <div class="mb-6"><span class="block font-bold text-slate-500 text-xs uppercase mb-1">Opmerkingen & Weer</span><p id="detailComments" class="text-sm bg-slate-50 p-3 rounded border border-slate-200 italic">Geen opmerkingen.</p></div>
                 <div id="detailFailsContainer" class="hidden mb-6"><span class="block font-bold text-red-600 text-xs uppercase mb-1">Afkeurpunten & Acties</span><ul id="detailFails" class="text-sm text-red-700 list-disc pl-5 bg-red-50 p-3 rounded border border-red-200"></ul></div>
-                <div class="text-center mt-8 pt-4 border-t border-slate-200"><p class="text-xs text-slate-400">Gegenereerd met LMRA Pro v5.0</p></div>
+                <div class="text-center mt-8 pt-4 border-t border-slate-200"><p class="text-xs text-slate-400">Gegenereerd met LMRA Pro v6.4</p></div>
             </div>
             <div class="p-4 bg-slate-50 dark:bg-cardbg border-t border-slate-200 dark:border-slate-700 flex gap-3 shrink-0">
                 <button onclick="generatePDF()" class="flex-1 bg-[#00447c] text-white py-3 rounded-lg font-bold shadow hover:bg-[#003366] flex items-center justify-center gap-2"><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
@@ -253,7 +233,7 @@
     <div id="toast" class="fixed top-24 left-1/2 transform -translate-x-1/2 bg-slate-800 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-full text-sm font-bold shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none z-50 flex items-center gap-2"><i class="fa-solid fa-check"></i> <span id="toastMsg">Melding</span></div>
 
     <script>
-        /* --- CONFIGURATIE MET VEILIGHEIDSACTIES --- */
+        /* --- CONFIGURATIE --- */
         const categories = [
             { title: "Algemeen & Fitheid", icon: "fa-user-clock", questions: [{ id: 1, text: "Voel ik mij fysiek en mentaal fit voor deze klus?", type: 'positive' }, { id: 2, text: "Weet ik wat te doen bij nood (alarmnummer, vluchtroute)?", type: 'positive' }] },
             { title: "Vergunningen & Procedures", icon: "fa-file-signature", questions: [{ id: 3, text: "Is de werkvergunning correct ingevuld en getekend?", type: 'positive' }, { id: 4, text: "Heb ik de taakrisicoanalyse (TRA) gelezen/begrepen?", type: 'positive' }] },
@@ -262,29 +242,77 @@
         let answers = {}; let actions = {}; let darkMode = false;
         let currentEnv = 'binnen'; let currentTemp = null; let gpsLocation = null;
 
+        /* --- VEILIGE OPSLAG --- */
+        // Eenvoudige obfuscation voor local storage (Geen zware crypto in frontend, backend is leading)
+        const safeStorage = {
+            set: (key, value) => localStorage.setItem(key, btoa(unescape(encodeURIComponent(JSON.stringify(value))))),
+            get: (key) => {
+                const item = localStorage.getItem(key);
+                if (!item) return null;
+                try { return JSON.parse(decodeURIComponent(escape(atob(item)))); } catch(e) { return null; }
+            },
+            removeItem: (key) => localStorage.removeItem(key)
+        };
+
         /* --- INIT --- */
         document.addEventListener('DOMContentLoaded', () => { 
-            renderCategories(); loadUserData(); checkTheme(); 
-            // Reset logic: alleen melding tonen als het dezelfde dag is
+            renderCategories(); 
+            // Load data via safeStorage
+            const sn = safeStorage.get('lmra_username'); if(sn) document.getElementById('userName').value = sn;
+            
+            checkTheme(); 
             checkDailyReset();
-            getWeather();
-            if("geolocation" in navigator) { navigator.geolocation.getCurrentPosition((pos) => { gpsLocation = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`; }, (err) => console.log("GPS Error:", err)); }
+            // Geen getWeather() hier! Wachten op user consent.
         });
+
+        /* --- GPS & WEER --- */
+        function toggleGPS() {
+            const checkbox = document.getElementById('gpsConsent');
+            if (checkbox.checked) {
+                // Nu pas opvragen!
+                if("geolocation" in navigator) { 
+                    navigator.geolocation.getCurrentPosition((pos) => { 
+                        gpsLocation = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+                        getWeather(pos.coords.latitude, pos.coords.longitude);
+                    }, (err) => {
+                        console.log("GPS Error:", err);
+                        showToast("Locatie niet beschikbaar");
+                        checkbox.checked = false;
+                    }); 
+                }
+            } else {
+                gpsLocation = null;
+                document.getElementById('weatherWidget').classList.add('hidden');
+            }
+        }
+
+        async function getWeather(lat, lon) {
+            try {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&windspeed_unit=kmh`);
+                const data = await res.json();
+                currentTemp = Math.round(data.current_weather.temperature);
+                const wind = data.current_weather.windspeed;
+                const widget = document.getElementById('weatherWidget');
+                const text = document.getElementById('weatherText');
+                const warn = document.getElementById('weatherWarning');
+                
+                widget.classList.remove('hidden');
+                text.innerText = `${currentTemp}°C | Wind: ${wind} km/u`;
+                if(wind > 40) warn.classList.remove('hidden');
+            } catch (e) { console.error("Weer fout", e); }
+        }
 
         /* --- HELPERS --- */
         function checkDailyReset() {
-            const lastDate = localStorage.getItem('lmra_last_date');
+            const lastDate = safeStorage.get('lmra_last_date');
             const today = new Date().toDateString();
             
             if (lastDate !== today) {
-                // Nieuwe dag = nieuwe start. Reset tijden en verberg alerts
                 setDefaultTimes();
-                localStorage.setItem('lmra_last_date', today);
+                safeStorage.set('lmra_last_date', today);
                 document.getElementById('pauseAlert').classList.add('hidden');
             } else {
-                // Zelfde dag: check of timer verlopen is
                 checkValidity();
-                // Herstel tijden uit formulier indien nodig (hier simpel gehouden: altijd default)
                 setDefaultTimes(); 
             }
         }
@@ -299,7 +327,7 @@
         }
 
         function checkValidity() {
-            const validUntil = localStorage.getItem('lmra_valid_until');
+            const validUntil = safeStorage.get('lmra_valid_until');
             if (validUntil) {
                 const now = new Date();
                 const endTime = new Date(validUntil);
@@ -322,54 +350,90 @@
             }
         }
 
-        async function getWeather() {
-            if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(async (position) => {
-                    try {
-                        const lat = position.coords.latitude; const lon = position.coords.longitude;
-                        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&windspeed_unit=kmh`);
-                        const data = await res.json();
-                        currentTemp = Math.round(data.current_weather.temperature);
-                        const wind = data.current_weather.windspeed;
-                        const widget = document.getElementById('weatherWidget');
-                        const text = document.getElementById('weatherText');
-                        const warn = document.getElementById('weatherWarning');
-                        widget.classList.remove('hidden');
-                        text.innerText = `${currentTemp}°C | Wind: ${wind} km/u`;
-                        if(wind > 40) warn.classList.remove('hidden');
-                    } catch (e) { console.error("Weer fout", e); }
-                });
-            }
-        }
-
         function toggleBuddyField() {
             const check = document.getElementById('buddyToggle').checked;
             const field = document.getElementById('buddyField');
             if(check) { field.classList.remove('hidden'); } else { field.classList.add('hidden'); }
         }
 
+        /* --- RENDERING VEILIG (innerHTML vervangen) --- */
+        // Hulpfunctie om elementen te maken i.p.v. HTML strings
+        function createEl(tag, classes, text) {
+            const el = document.createElement(tag);
+            if(classes) el.className = classes;
+            if(text) el.textContent = text;
+            return el;
+        }
+
         function renderCategories() {
             const container = document.getElementById('questions-container'); container.innerHTML = '';
             categories.forEach(cat => {
-                const section = document.createElement('div'); section.className = "bg-white dark:bg-cardbg rounded-xl shadow-sm overflow-hidden transition-colors";
-                section.innerHTML = `<div class="bg-slate-50 dark:bg-slate-800/50 p-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2"><i class="fa-solid ${cat.icon} text-[#00447c] dark:text-blue-400"></i> <span class="font-bold text-sm text-slate-700 dark:text-slate-300 uppercase">${cat.title}</span></div>`;
+                const section = document.createElement('div'); 
+                section.className = "bg-white dark:bg-cardbg rounded-xl shadow-sm overflow-hidden transition-colors";
+                
+                // Header bouwen
+                const header = document.createElement('div');
+                header.className = "bg-slate-50 dark:bg-slate-800/50 p-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2";
+                const icon = document.createElement('i');
+                icon.className = `fa-solid ${cat.icon} text-[#00447c] dark:text-blue-400`;
+                const title = document.createElement('span');
+                title.className = "font-bold text-sm text-slate-700 dark:text-slate-300 uppercase";
+                title.textContent = cat.title;
+                header.appendChild(icon);
+                header.appendChild(title);
+                section.appendChild(header);
+
                 const qList = document.createElement('div'); qList.className = "p-2";
+                
                 cat.questions.forEach(q => {
-                    qList.innerHTML += `
-                        <div class="question-card p-3 mb-2 last:mb-0 rounded-lg border border-transparent hover:border-slate-100 dark:hover:border-slate-700 transition-colors">
-                            <div class="text-sm font-medium text-slate-800 dark:text-slate-200 mb-3">${q.text}</div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <button onclick="setAnswer(${q.id}, 'yes')" id="btn-yes-${q.id}" aria-label="Antwoord Ja op vraag ${q.id}" class="py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-check"></i> JA</button>
-                                <button onclick="setAnswer(${q.id}, 'no')" id="btn-no-${q.id}" aria-label="Antwoord Nee op vraag ${q.id}" class="py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-xmark"></i> NEE</button>
-                            </div>
-                            <!-- Actie Veld (Verborgen) -->
-                            <div id="action-box-${q.id}" class="hidden mt-3 bg-red-50 dark:bg-red-900/20 p-3 rounded border border-red-200 dark:border-red-800 action-required">
-                                <label class="block text-[10px] font-bold text-red-700 dark:text-red-400 uppercase mb-1">Verplichte Actie / Maatregel</label>
-                                <input type="text" id="action-input-${q.id}" oninput="saveAction(${q.id}, this.value)" class="w-full bg-white dark:bg-slate-800 border border-red-300 dark:border-red-700 rounded p-2 text-xs focus:outline-none focus:ring-1 focus:ring-red-500" placeholder="Wat doe je om dit veilig te maken?">
-                            </div>
-                        </div>`;
+                    // Vraag item
+                    const item = document.createElement('div');
+                    item.className = "question-card p-3 mb-2 last:mb-0 rounded-lg border border-transparent hover:border-slate-100 dark:hover:border-slate-700 transition-colors";
+                    
+                    const textDiv = createEl('div', "text-sm font-medium text-slate-800 dark:text-slate-200 mb-3", q.text);
+                    item.appendChild(textDiv);
+
+                    const btnGrid = document.createElement('div');
+                    btnGrid.className = "grid grid-cols-2 gap-2";
+                    
+                    const btnYes = document.createElement('button');
+                    btnYes.id = `btn-yes-${q.id}`;
+                    btnYes.className = "py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2";
+                    btnYes.innerHTML = '<i class="fa-solid fa-check"></i> JA'; // Icoon mag wel innerHTML zijn, vaste string
+                    btnYes.onclick = () => setAnswer(q.id, 'yes');
+                    
+                    const btnNo = document.createElement('button');
+                    btnNo.id = `btn-no-${q.id}`;
+                    btnNo.className = "py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2";
+                    btnNo.innerHTML = '<i class="fa-solid fa-xmark"></i> NEE';
+                    btnNo.onclick = () => setAnswer(q.id, 'no');
+
+                    btnGrid.appendChild(btnYes);
+                    btnGrid.appendChild(btnNo);
+                    item.appendChild(btnGrid);
+
+                    // Actie veld
+                    const actionBox = document.createElement('div');
+                    actionBox.id = `action-box-${q.id}`;
+                    actionBox.className = "hidden mt-3 bg-red-50 dark:bg-red-900/20 p-3 rounded border border-red-200 dark:border-red-800 action-required";
+                    
+                    const label = createEl('label', "block text-[10px] font-bold text-red-700 dark:text-red-400 uppercase mb-1", "Verplichte Actie / Maatregel");
+                    
+                    const input = document.createElement('input');
+                    input.type = "text";
+                    input.id = `action-input-${q.id}`;
+                    input.className = "w-full bg-white dark:bg-slate-800 border border-red-300 dark:border-red-700 rounded p-2 text-xs focus:outline-none focus:ring-1 focus:ring-red-500";
+                    input.placeholder = "Wat doe je om dit veilig te maken?";
+                    input.oninput = (e) => saveAction(q.id, e.target.value);
+
+                    actionBox.appendChild(label);
+                    actionBox.appendChild(input);
+                    item.appendChild(actionBox);
+
+                    qList.appendChild(item);
                 });
-                section.appendChild(qList); container.appendChild(section);
+                section.appendChild(qList); 
+                container.appendChild(section);
             });
         }
 
@@ -386,17 +450,16 @@
             if (value === 'yes') {
                 btnYes.className = base + "bg-green-600 text-white shadow-md ring-2 ring-green-600/30";
                 actionBox.classList.add('hidden');
-                delete actions[id]; // Geen actie nodig bij Ja
+                delete actions[id];
             } else {
                 btnNo.className = base + "bg-red-600 text-white shadow-md ring-2 ring-red-600/30";
                 actionBox.classList.remove('hidden');
-                // Focus op input voor actie
                 setTimeout(() => document.getElementById(`action-input-${id}`).focus(), 100);
             }
         }
 
         function saveAction(id, text) {
-            actions[id] = DOMPurify.sanitize(text); // Veiligheid: Input zuiveren
+            actions[id] = DOMPurify.sanitize(text);
         }
 
         /* --- CORE LOGIC --- */
@@ -412,11 +475,9 @@
             if(!task) { showToast("Vul locatie in!"); document.getElementById('taskLocation').focus(); return; }
             if(!tStart || !tEnd) { showToast("Vul start- en eindtijd in!"); return; }
             
-            // Validatie: Zijn alle vragen beantwoord?
             const totalQuestions = categories.reduce((acc, cat) => acc + cat.questions.length, 0);
             if (Object.keys(answers).length < totalQuestions) { showToast("Beantwoord alle vragen!"); return; }
 
-            // Validatie: Zijn alle acties ingevuld bij NEE?
             let missingActions = false;
             for (const [id, val] of Object.entries(answers)) {
                 if (val === 'no' && (!actions[id] || actions[id].trim() === '')) {
@@ -432,7 +493,7 @@
             const validUntilDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endH, endM);
             if(validUntilDate < now && parseInt(endH) < 12) validUntilDate.setDate(validUntilDate.getDate() + 1);
             
-            localStorage.setItem('lmra_valid_until', validUntilDate.toISOString());
+            safeStorage.set('lmra_valid_until', validUntilDate.toISOString());
             document.getElementById('pauseAlert').classList.add('hidden');
 
             const buddyRequired = document.getElementById('buddyToggle').checked;
@@ -443,7 +504,7 @@
             }
 
             if(currentTemp !== null) comments += ` | Weer: ${currentEnv.toUpperCase()}, ${currentTemp}°C`;
-            localStorage.setItem('lmra_username', userName);
+            safeStorage.set('lmra_username', userName);
 
             const btn = document.getElementById('submitBtn');
             const originalText = btn.innerHTML;
@@ -453,7 +514,6 @@
             let isSafe = true; 
             let failedPoints = [];
             
-            // Verzamel falen én acties
             categories.forEach(cat => { 
                 cat.questions.forEach(q => { 
                     if (q.type === 'positive' && answers[q.id] === 'no') { 
@@ -505,9 +565,9 @@
 
         function saveToLocalHistory(isSafe, name, task, wo, comments, fails, buddy, timeRange, validUntilISO) {
             const entry = { date: new Date().toISOString(), isSafe, name, task, wo, comments, fails, buddy, timeRange, validUntil: validUntilISO };
-            let history = JSON.parse(localStorage.getItem('lmra_history') || '[]');
+            let history = safeStorage.get('lmra_history') || [];
             history.unshift(entry); if(history.length > 50) history.pop();
-            localStorage.setItem('lmra_history', JSON.stringify(history));
+            safeStorage.set('lmra_history', history);
         }
 
         function showResult(isSafe, failedPoints, name, task, workOrder, comments, buddy, timeRange) {
@@ -540,7 +600,7 @@
 
         function openArchive() {
             const container = document.getElementById('archiveContainer'); 
-            const history = JSON.parse(localStorage.getItem('lmra_history') || '[]');
+            const history = safeStorage.get('lmra_history') || [];
             container.innerHTML = '';
             if(history.length === 0) { container.innerHTML = '<div class="text-center text-slate-400 p-8">Nog geen archief data</div>'; document.getElementById('archiveModal').classList.remove('hidden'); return; }
             
@@ -570,38 +630,50 @@
                 const isOpen = i === 0; 
                 const weekSection = document.createElement('div');
                 weekSection.className = "mb-3 bg-white dark:bg-cardbg rounded-lg shadow-sm overflow-hidden border border-slate-100 dark:border-slate-700";
-                weekSection.innerHTML = `
-                    <div onclick="toggleWeek('${weekKey}')" class="p-3 bg-slate-50 dark:bg-slate-800 flex justify-between items-center cursor-pointer select-none">
-                        <span class="font-bold text-slate-600 dark:text-slate-300 text-sm">${weekKey}</span>
-                        <i id="icon-${weekKey.replace(/\s/g,'')}" class="fa-solid fa-chevron-down text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}"></i>
-                    </div>
-                    <div id="content-${weekKey.replace(/\s/g,'')}" class="accordion-content ${isOpen ? '' : 'max-h-0'}">
-                        <div class="p-2 space-y-2" id="list-${weekKey.replace(/\s/g,'')}"></div>
-                    </div>
-                `;
-                container.appendChild(weekSection);
-                const listContainer = weekSection.querySelector(`#list-${weekKey.replace(/\s/g,'')}`);
+                
+                const headerDiv = document.createElement('div');
+                headerDiv.className = "p-3 bg-slate-50 dark:bg-slate-800 flex justify-between items-center cursor-pointer select-none";
+                headerDiv.onclick = () => toggleWeek(weekKey.replace(/\s/g,''));
+                headerDiv.innerHTML = `<span class="font-bold text-slate-600 dark:text-slate-300 text-sm">${weekKey}</span><i id="icon-${weekKey.replace(/\s/g,'')}" class="fa-solid fa-chevron-down text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}"></i>`;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.id = `content-${weekKey.replace(/\s/g,'')}`;
+                contentDiv.className = `accordion-content ${isOpen ? '' : 'max-h-0'}`;
+                
+                const listDiv = document.createElement('div');
+                listDiv.className = "p-2 space-y-2";
+                
                 weekItems.forEach(item => {
                     let dateStr = "??-??"; let timeStr = "??:??";
                     try { const d = new Date(item.date); dateStr = d.toLocaleDateString('nl-NL', {weekday:'short'}); timeStr = d.toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'}); } catch(e){}
                     let statusDot = item.isSafe ? 'bg-green-500' : 'bg-red-500'; let statusText = item.isSafe ? 'Actief' : 'Afgekeurd';
                     if (item.isSafe && item.validUntil && new Date() > new Date(item.validUntil)) { statusDot = 'bg-slate-400'; statusText = 'Verlopen'; }
-                    listContainer.innerHTML += `<div onclick="showDetail(${item.originalIndex})" class="cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-3 rounded border-l-4 ${item.isSafe ? "border-green-500" : "border-red-500"} hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><div class="flex justify-between items-start mb-1"><span class="font-bold text-slate-700 dark:text-slate-200 text-sm truncate w-2/3">${item.task || 'Onbekend'}</span><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${statusDot}"></span><span class="text-[10px] text-slate-400 uppercase font-bold">${statusText}</span></div></div><div class="flex justify-between items-end"><div class="text-xs text-slate-500 dark:text-slate-400">${dateStr} ${timeStr}<br>WO: ${item.wo || '-'}</div><i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i></div></div>`;
+                    
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = `cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-3 rounded border-l-4 ${item.isSafe ? "border-green-500" : "border-red-500"} hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors`;
+                    itemDiv.onclick = () => showDetail(item.originalIndex);
+                    itemDiv.innerHTML = `<div class="flex justify-between items-start mb-1"><span class="font-bold text-slate-700 dark:text-slate-200 text-sm truncate w-2/3">${item.task || 'Onbekend'}</span><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${statusDot}"></span><span class="text-[10px] text-slate-400 uppercase font-bold">${statusText}</span></div></div><div class="flex justify-between items-end"><div class="text-xs text-slate-500 dark:text-slate-400">${dateStr} ${timeStr}<br>WO: ${item.wo || '-'}</div><i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i></div>`;
+                    
+                    listDiv.appendChild(itemDiv);
                 });
+                
+                contentDiv.appendChild(listDiv);
+                weekSection.appendChild(headerDiv);
+                weekSection.appendChild(contentDiv);
+                container.appendChild(weekSection);
             });
             document.getElementById('archiveModal').classList.remove('hidden');
         }
 
         function toggleWeek(key) {
-            const safeKey = key.replace(/\s/g,'');
-            const content = document.getElementById(`content-${safeKey}`);
-            const icon = document.getElementById(`icon-${safeKey}`);
+            const content = document.getElementById(`content-${key}`);
+            const icon = document.getElementById(`icon-${key}`);
             if (content.style.maxHeight) { content.style.maxHeight = null; icon.classList.remove('rotate-180'); } 
             else { content.style.maxHeight = content.scrollHeight + "px"; icon.classList.add('rotate-180'); }
         }
 
         function showDetail(index) {
-            const history = JSON.parse(localStorage.getItem('lmra_history') || '[]'); const item = history[index]; 
+            const history = safeStorage.get('lmra_history') || []; const item = history[index]; 
             let dateStr = "Onbekend"; try { dateStr = `${new Date(item.date).toLocaleDateString('nl-NL')} ${new Date(item.date).toLocaleTimeString('nl-NL')}`; } catch(e){}
             document.getElementById('detailDate').innerText = dateStr;
             document.getElementById('detailTimeRange').innerText = item.timeRange || "Onbekend"; 
@@ -620,8 +692,8 @@
         function checkTheme() { const st = localStorage.getItem('lmra_theme'); if (st === 'dark' || (!st && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); darkMode = true; } else { document.documentElement.classList.remove('dark'); darkMode = false; } document.getElementById('themeIcon').className = darkMode ? "fa-solid fa-sun" : "fa-solid fa-moon"; }
         function closeArchive() { document.getElementById('archiveModal').classList.add('hidden'); } function closeDetail() { document.getElementById('detailModal').classList.add('hidden'); } function closeModal() { document.getElementById('resultModal').classList.add('hidden'); } function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg; t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 3000); }
         function resetApp() { if(confirm('Velden leegmaken?')) { answers = {}; actions = {}; document.getElementById('taskLocation').value = ''; document.getElementById('workOrder').value = ''; document.getElementById('comments').value = ''; renderCategories(); setDefaultTimes(); } }
-        function loadUserData() { const sn = localStorage.getItem('lmra_username'); if(sn) document.getElementById('userName').value = sn; }
-        function clearArchive() { if(confirm("Archief wissen?")) { localStorage.removeItem('lmra_history'); openArchive(); } }
+        function loadUserData() { const sn = safeStorage.get('lmra_username'); if(sn) document.getElementById('userName').value = sn; }
+        function clearArchive() { if(confirm("Archief wissen?")) { safeStorage.removeItem('lmra_history'); openArchive(); } }
     </script>
 </body>
 </html>
