@@ -1,7 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 
 // Hulpfunctie: Maak input onschadelijk (Sanitization)
-// Dit verandert <script> in &lt;script&gt; zodat het niet uitvoerbaar is
 const escapeHtml = (unsafe) => {
     if (typeof unsafe !== 'string') return unsafe;
     return unsafe
@@ -12,7 +11,25 @@ const escapeHtml = (unsafe) => {
          .replace(/'/g, "&#039;");
 };
 
+// Rate Limiting (Simpel in-memory, let op: resets bij nieuwe lambda instance)
+const rateLimit = new Map();
+
 export const handler = async (event, context) => {
+  // Rate Limit Check (5 requests per minuut per IP)
+  const ip = event.headers['client-ip'] || 'unknown';
+  const now = Date.now();
+  const windowStart = now - 60000;
+  const requestTimestamps = rateLimit.get(ip) || [];
+  const recentRequests = requestTimestamps.filter(t => t > windowStart);
+  
+  if (recentRequests.length >= 5) {
+    return { statusCode: 429, body: "Te veel verzoeken. Probeer het later opnieuw." };
+  }
+  
+  recentRequests.push(now);
+  rateLimit.set(ip, recentRequests);
+
+  // Methode check
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
@@ -20,14 +37,12 @@ export const handler = async (event, context) => {
   try {
     const dbUrl = process.env.NETLIFY_DATABASE_URL;
     if (!dbUrl) {
-      // Geen specifieke error naar buiten lekken, alleen in server log
       console.error("CRITICAL: Database URL ontbreekt.");
       return { statusCode: 500, body: "Server Fout" };
     }
 
     const sql = neon(dbUrl);
     
-    // Data parsen
     let data;
     try {
       data = JSON.parse(event.body);
@@ -35,19 +50,16 @@ export const handler = async (event, context) => {
       return { statusCode: 400, body: "Ongeldige data" };
     }
 
-    // Input valideren & schoonmaken (Sanitization)
-    // We cleanen ELK veld dat tekst bevat
+    // Input valideren & schoonmaken
     const cleanNaam = escapeHtml(data.monteur_naam);
     const cleanLocatie = escapeHtml(data.locatie);
     const cleanWO = escapeHtml(data.werkorder);
     const cleanOpmerkingen = escapeHtml(data.opmerkingen);
-    const cleanAfkeur = escapeHtml(JSON.stringify(data.afkeurpunten)); // Eerst stringify, dan cleanen
+    const cleanAfkeur = escapeHtml(JSON.stringify(data.afkeurpunten));
 
-    // Server-side validatie (lengte checks)
     if (!cleanNaam || cleanNaam.length > 100) return { statusCode: 400, body: "Naam ongeldig" };
     if (!cleanLocatie || cleanLocatie.length > 100) return { statusCode: 400, body: "Locatie ongeldig" };
 
-    // Opslaan in DB met de SCHONE variabelen
     await sql`
       INSERT INTO lmra_reports 
       (monteur_naam, locatie, werkorder, is_veilig, opmerkingen, afkeurpunten) 
