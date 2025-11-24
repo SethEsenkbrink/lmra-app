@@ -1,31 +1,42 @@
 import { neon } from '@neondatabase/serverless';
 
-// We gebruiken hier de universele 'handler' schrijfwijze die altijd werkt op Netlify
 export const handler = async (event, context) => {
-  
-  // 1. Veiligheidscheck: Alleen POST verzoeken toestaan
-  // Let op: 'event.httpMethod' is de klassieke manier om dit te checken
+  // 1. Veiligheidscheck: Alleen POST
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
   try {
-    // 2. Controleren of de database sleutel aanwezig is
+    // 2. Database configuratie check
     const dbUrl = process.env.NETLIFY_DATABASE_URL;
     if (!dbUrl) {
-      console.error("Geen database URL gevonden!");
-      throw new Error("Database configuratie ontbreekt in Netlify.");
+      console.error("CRITICAL: Geen database URL geconfigureerd in Netlify.");
+      return { statusCode: 500, body: JSON.stringify({ error: "Server configuratie fout" }) };
     }
 
-    // 3. Verbinden met Neon
     const sql = neon(dbUrl);
+    
+    // 3. Data uitpakken
+    let data;
+    try {
+      data = JSON.parse(event.body);
+    } catch (e) {
+      return { statusCode: 400, body: JSON.stringify({ error: "Ongeldige JSON data" }) };
+    }
 
-    // 4. Data uitpakken (Parsing)
-    // We gebruiken JSON.parse(event.body), dit is de meest veilige manier
-    const data = JSON.parse(event.body);
     const { monteur_naam, locatie, werkorder, is_veilig, opmerkingen, afkeurpunten } = data;
 
-    // 5. De SQL Query uitvoeren
+    // --- NIEUW: Server-side Validatie (Extra slot op de deur) ---
+    // We vertrouwen de frontend niet blindelings.
+    if (!monteur_naam || monteur_naam.length > 100) {
+      return { statusCode: 400, body: JSON.stringify({ error: "Naam ongeldig of te lang" }) };
+    }
+    if (!locatie || locatie.length > 100) {
+      return { statusCode: 400, body: JSON.stringify({ error: "Locatie ongeldig of te lang" }) };
+    }
+    // -----------------------------------------------------------
+
+    // 4. Opslaan
     await sql`
       INSERT INTO lmra_reports 
       (monteur_naam, locatie, werkorder, is_veilig, opmerkingen, afkeurpunten) 
@@ -33,20 +44,17 @@ export const handler = async (event, context) => {
       (${monteur_naam}, ${locatie}, ${werkorder}, ${is_veilig}, ${opmerkingen}, ${JSON.stringify(afkeurpunten)})
     `;
 
-    // 6. Succes terugmelden
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "Succesvol opgeslagen in Neon DB!" }),
+      body: JSON.stringify({ message: "Succesvol en veilig opgeslagen!" }),
       headers: { "Content-Type": "application/json" }
     };
 
   } catch (error) {
-    // Dit zorgt dat we de fout terugzien in de logs als het misgaat
-    console.error("Fout in backend functie:", error);
-    
+    console.error("Backend Fout:", error); // Dit komt in je Netlify logs
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Server fout: " + error.message }),
+      body: JSON.stringify({ error: "Server fout verwerking" }), // Geef geen technische details terug aan gebruiker
       headers: { "Content-Type": "application/json" }
     };
   }
