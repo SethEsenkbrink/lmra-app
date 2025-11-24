@@ -1,15 +1,29 @@
 import { neon } from '@neondatabase/serverless';
+import crypto from 'crypto';
 
 export const handler = async (event, context) => {
-  // 1. Alleen POST toestaan
   if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
 
-  // 2. Beveiliging: Check wachtwoord
-  const secretKey = event.headers['x-admin-secret'];
-  const mySecret = process.env.ADMIN_PASSWORD || "geheim123";
+  // 1. Veilige Authenticatie
+  const secretInput = event.headers['x-admin-secret'] || "";
+  const realSecret = process.env.ADMIN_PASSWORD;
 
-  if (secretKey !== mySecret) {
-    return { statusCode: 401, body: JSON.stringify({ error: "Niet geautoriseerd" }) };
+  if (!realSecret) {
+    console.error("CRITICAL: ADMIN_PASSWORD ontbreekt");
+    return { statusCode: 500, body: "Configuratie Fout" };
+  }
+
+  const bufferInput = Buffer.from(secretInput + "");
+  const bufferReal = Buffer.from(realSecret + "");
+  
+  let match = false;
+  if (bufferInput.length === bufferReal.length) {
+      match = crypto.timingSafeEqual(bufferInput, bufferReal);
+  }
+
+  if (!match) {
+    await new Promise(resolve => setTimeout(resolve, 500)); // 500ms vertraging bij delete
+    return { statusCode: 401, body: "Niet geautoriseerd" };
   }
 
   try {
@@ -17,26 +31,19 @@ export const handler = async (event, context) => {
     const data = JSON.parse(event.body);
     const id = data.id;
 
-    if (!id) throw new Error("Geen ID meegegeven");
+    if (!id) return { statusCode: 400, body: "Geen ID" };
 
-    // 3. Verwijder record uit DB
-    await sql`
-      DELETE FROM lmra_reports 
-      WHERE id = ${id}
-    `;
+    // SQL Parameterization (voorkomt SQL Injection, zat er al in, maar belangrijk)
+    await sql`DELETE FROM lmra_reports WHERE id = ${id}`;
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "Deleted" }),
+      body: JSON.stringify({ message: "Verwijderd" }),
       headers: { "Content-Type": "application/json" }
     };
 
   } catch (error) {
-    console.error("Delete error:", error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
-      headers: { "Content-Type": "application/json" }
-    };
+    console.error("Delete Fout:", error);
+    return { statusCode: 500, body: "Fout bij verwijderen" };
   }
 };
