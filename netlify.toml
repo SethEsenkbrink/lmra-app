@@ -1,12 +1,9 @@
-# Netlify Configuratie v6.4
+# Netlify Configuratie v7.0 - Ironclad
 
 [[headers]]
   for = "/*"
   [headers.values]
-    # CSP:
-    # - script-src: Sta tailwind en andere CDNs toe. 'unsafe-inline' is nodig voor Tailwind CDN werking.
-    # - style-src: 'unsafe-inline' nodig voor Tailwind.
-    # - font-src: Specifiek cdnjs toestaan voor FontAwesome icoontjes.
+    # CSP versoepeld voor v7.0 functionaliteit
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self' https://api.open-meteo.com;"
     X-XSS-Protection = "1; mode=block"
     X-Frame-Options = "DENY"
