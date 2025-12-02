@@ -1,21 +1,9 @@
 import { neon } from '@neondatabase/serverless';
 
-// Hulpfunctie: Maak input onschadelijk (Sanitization)
-const escapeHtml = (unsafe) => {
-    if (typeof unsafe !== 'string') return unsafe;
-    return unsafe
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#039;");
-};
-
-// Rate Limiting (Simpel in-memory, let op: resets bij nieuwe lambda instance)
+// Rate Limiting (5 requests per minuut per IP)
 const rateLimit = new Map();
 
 export const handler = async (event, context) => {
-  // Rate Limit Check (5 requests per minuut per IP)
   const ip = event.headers['client-ip'] || 'unknown';
   const now = Date.now();
   const windowStart = now - 60000;
@@ -29,7 +17,6 @@ export const handler = async (event, context) => {
   recentRequests.push(now);
   rateLimit.set(ip, recentRequests);
 
-  // Methode check
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
@@ -50,21 +37,17 @@ export const handler = async (event, context) => {
       return { statusCode: 400, body: "Ongeldige data" };
     }
 
-    // Input valideren & schoonmaken
-    const cleanNaam = escapeHtml(data.monteur_naam);
-    const cleanLocatie = escapeHtml(data.locatie);
-    const cleanWO = escapeHtml(data.werkorder);
-    const cleanOpmerkingen = escapeHtml(data.opmerkingen);
-    const cleanAfkeur = escapeHtml(JSON.stringify(data.afkeurpunten));
+    // Validatie (Backend)
+    if (!data.monteur_naam || data.monteur_naam.length > 100) return { statusCode: 400, body: "Naam ongeldig" };
+    if (!data.locatie || data.locatie.length > 100) return { statusCode: 400, body: "Locatie ongeldig" };
 
-    if (!cleanNaam || cleanNaam.length > 100) return { statusCode: 400, body: "Naam ongeldig" };
-    if (!cleanLocatie || cleanLocatie.length > 100) return { statusCode: 400, body: "Locatie ongeldig" };
-
+    // Data opslaan (Neon driver regelt de SQL-injectie preventie automatisch)
+    // Let op: we slaan afkeurpunten nu op als JSON string
     await sql`
       INSERT INTO lmra_reports 
       (monteur_naam, locatie, werkorder, is_veilig, opmerkingen, afkeurpunten) 
       VALUES 
-      (${cleanNaam}, ${cleanLocatie}, ${cleanWO}, ${data.is_veilig}, ${cleanOpmerkingen}, ${cleanAfkeur})
+      (${data.monteur_naam}, ${data.locatie}, ${data.werkorder}, ${data.is_veilig}, ${data.opmerkingen}, ${JSON.stringify(data.afkeurpunten)})
     `;
 
     return {

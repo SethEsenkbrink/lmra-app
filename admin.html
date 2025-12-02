@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LMRA Admin 7.0</title>
+    <title>LMRA Admin 7.1</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous" />
@@ -38,7 +38,7 @@
                 <i id="loginThemeIcon" class="fa-solid fa-moon"></i>
             </button>
             <div class="text-4xl text-brand-DEFAULT mb-4"><i class="fa-solid fa-user-shield"></i></div>
-            <h2 class="text-2xl font-bold mb-6 dark:text-white">Admin Login v7.0</h2>
+            <h2 class="text-2xl font-bold mb-6 dark:text-white">Admin Login v7.1</h2>
             
             <form onsubmit="event.preventDefault(); login();">
                 <input type="text" name="username" value="admin" autocomplete="username" style="display:none;">
@@ -77,7 +77,7 @@
                         <th class="p-4">Locatie</th>
                         <th class="p-4">WO</th>
                         <th class="p-4">Status</th>
-                        <th class="p-4 hidden md:table-cell">Info</th>
+                        <th class="p-4 hidden md:table-cell w-1/3">Info / Afkeurpunten</th>
                         <th class="p-4 text-right">Actie</th>
                     </tr>
                 </thead>
@@ -90,10 +90,11 @@
         let sessionKey = null; 
         let allData = [];
 
-        function createCell(text, classes = "") {
+        function createCell(content, classes = "") {
             const td = document.createElement('td');
             td.className = "p-4 " + classes;
-            td.textContent = text || "-";
+            if(typeof content === 'string') td.textContent = content || "-";
+            else td.appendChild(content);
             return td;
         }
 
@@ -108,10 +109,12 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group";
                 const dateStr = new Date(row.created_at).toLocaleString('nl-NL');
+                
                 tr.appendChild(createCell(dateStr, "font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs"));
                 tr.appendChild(createCell(row.monteur_naam, "font-bold text-slate-700 dark:text-slate-200"));
                 tr.appendChild(createCell(row.locatie, "text-slate-700 dark:text-slate-300 text-sm"));
                 tr.appendChild(createCell(row.werkorder, "text-slate-500 dark:text-slate-400 font-mono text-sm"));
+                
                 const tdStatus = document.createElement('td');
                 tdStatus.className = "p-4";
                 if (row.is_veilig) {
@@ -120,7 +123,40 @@
                     tdStatus.innerHTML = '<span class="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 px-2 py-1 rounded text-xs font-bold border border-red-200 dark:border-red-800">ONVEILIG</span>';
                 }
                 tr.appendChild(tdStatus);
-                tr.appendChild(createCell(row.opmerkingen, "text-slate-500 dark:text-slate-400 italic text-sm truncate max-w-xs hidden md:table-cell"));
+
+                // INFO & AFKEURPUNTEN KOLOM
+                const infoDiv = document.createElement('div');
+                infoDiv.className = "flex flex-col gap-1";
+                
+                // Opmerkingen
+                if(row.opmerkingen && row.opmerkingen !== "Geen") {
+                    const opm = document.createElement('span');
+                    opm.className = "text-slate-500 dark:text-slate-400 italic text-sm";
+                    opm.textContent = row.opmerkingen;
+                    infoDiv.appendChild(opm);
+                }
+
+                // Afkeurpunten tonen
+                if(!row.is_veilig && row.afkeurpunten) {
+                    let points = [];
+                    try {
+                        // Support voor zowel JSON string als object (als driver het al geparsed heeft)
+                        points = typeof row.afkeurpunten === 'string' ? JSON.parse(row.afkeurpunten) : row.afkeurpunten;
+                    } catch(e) { points = ["Fout bij laden punten"]; }
+                    
+                    if(points && points.length > 0) {
+                        const ul = document.createElement('ul');
+                        ul.className = "mt-1 text-xs text-red-600 dark:text-red-400 list-disc pl-4 font-bold bg-red-50 dark:bg-red-900/10 p-2 rounded border border-red-100 dark:border-red-900/30";
+                        points.forEach(p => {
+                            const li = document.createElement('li');
+                            li.textContent = p;
+                            ul.appendChild(li);
+                        });
+                        infoDiv.appendChild(ul);
+                    }
+                }
+                tr.appendChild(createCell(infoDiv, "hidden md:table-cell"));
+
                 const tdAction = document.createElement('td');
                 tdAction.className = "p-4 text-right";
                 const btn = document.createElement('button');
