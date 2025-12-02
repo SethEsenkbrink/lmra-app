@@ -1,6 +1,9 @@
-/* app.js - LMRA Pro Logica v7.1 */
+/* app.js - LMRA Pro Logica v8.0 (Codename: Sentinel) */
 
 /* --- CONFIGURATIE --- */
+const APP_VERSION = "v8.0 - Sentinel";
+const SYNC_QUEUE_KEY = 'lmra_sync_queue';
+
 const categories = [
     { title: "Algemeen & Fitheid", icon: "fa-user-clock", questions: [{ id: 1, text: "Voel ik mij fysiek en mentaal fit voor deze klus?", type: 'positive' }, { id: 2, text: "Weet ik wat te doen bij nood (alarmnummer, vluchtroute)?", type: 'positive' }] },
     { title: "Vergunningen & Procedures", icon: "fa-file-signature", questions: [{ id: 3, text: "Is de werkvergunning correct ingevuld en getekend?", type: 'positive' }, { id: 4, text: "Heb ik de taakrisicoanalyse (TRA) gelezen/begrepen?", type: 'positive' }] },
@@ -21,9 +24,19 @@ const safeStorage = {
 
 /* --- INIT --- */
 document.addEventListener('DOMContentLoaded', () => { 
+    console.log(`LMRA Pro ${APP_VERSION} starting...`);
     renderCategories(); 
     const sn = safeStorage.get('lmra_username'); if(sn) document.getElementById('userName').value = sn;
     checkTheme(); checkDailyReset(); setDefaultTimes();
+    
+    // Sentinel: Start synchronisatie check bij opstarten
+    processSyncQueue();
+});
+
+// Sentinel: Luister naar netwerk status wijzigingen
+window.addEventListener('online', () => {
+    showToast("Verbinding hersteld. Synchroniseren...");
+    processSyncQueue();
 });
 
 /* --- HELPERS --- */
@@ -220,29 +233,98 @@ async function evaluateLMRA() {
 
     let finalLocation = task;
     
+    // Altijd lokaal opslaan (Historie)
     saveToLocalHistory(isSafe, userName, finalLocation, workOrder, comments, failedPoints, buddyRequired ? buddyName : null, `${tStart} - ${tEnd}`, validUntilDate.toISOString());
-    await saveToCloud(isSafe, userName, finalLocation, workOrder, comments, failedPoints);
+    
+    // Probeer cloud opslag (Sentinel Logic)
+    await saveToCloudWithRetry(isSafe, userName, finalLocation, workOrder, comments, failedPoints);
 
     btn.innerHTML = originalText; btn.disabled = false;
     showResult(isSafe, failedPoints, userName, finalLocation, workOrder, comments, buddyRequired ? buddyName : null, `${tStart} - ${tEnd}`);
 }
 
-async function saveToCloud(isSafe, monteur_naam, locatie, werkorder, opmerkingen, afkeurpunten) {
+/* --- SENTINEL SYNC LOGIC --- */
+
+// Functie 1: Probeer op te slaan, bij falen -> in wachtrij
+async function saveToCloudWithRetry(isSafe, monteur_naam, locatie, werkorder, opmerkingen, afkeurpunten) {
     const cloudStatus = document.getElementById('cloudStatus');
     cloudStatus.classList.remove('hidden');
     cloudStatus.innerText = "Syncen...";
+    
+    const payload = { monteur_naam, locatie, werkorder, is_veilig: isSafe, opmerkingen, afkeurpunten };
+
+    if (!navigator.onLine) {
+        addToSyncQueue(payload);
+        cloudStatus.innerText = "💾 Offline opgeslagen (Wachtrij)";
+        cloudStatus.classList.add("text-yellow-200");
+        return;
+    }
+
     try {
         const response = await fetch('/.netlify/functions/submit-lmra', {
             method: 'POST',
-            body: JSON.stringify({ monteur_naam, locatie, werkorder, is_veilig: isSafe, opmerkingen, afkeurpunten })
+            body: JSON.stringify(payload)
         });
+        
         if(response.ok) {
             cloudStatus.innerText = "☁️ Opgeslagen in Neon DB";
             cloudStatus.classList.add("text-green-200");
+            cloudStatus.classList.remove("text-yellow-200");
         } else {
-            cloudStatus.innerText = "⚠️ Cloud fout (wel lokaal opgeslagen)";
+            throw new Error("Server error");
         }
-    } catch (e) { cloudStatus.innerText = "⚠️ Netwerkfout"; }
+    } catch (e) { 
+        console.warn("Cloud fout, toevoegen aan wachtrij", e);
+        addToSyncQueue(payload);
+        cloudStatus.innerText = "💾 Cloud fout (In Wachtrij)";
+        cloudStatus.classList.add("text-yellow-200");
+    }
+}
+
+// Functie 2: Toevoegen aan wachtrij
+function addToSyncQueue(data) {
+    let queue = safeStorage.get(SYNC_QUEUE_KEY) || [];
+    queue.push(data);
+    safeStorage.set(SYNC_QUEUE_KEY, queue);
+    showToast(`Offline! Rapport in wachtrij gezet (${queue.length})`);
+}
+
+// Functie 3: Verwerk wachtrij (wordt aangeroepen bij load & online event)
+async function processSyncQueue() {
+    let queue = safeStorage.get(SYNC_QUEUE_KEY) || [];
+    if (queue.length === 0) return;
+
+    if (!navigator.onLine) return; // Nog steeds offline
+
+    showToast(`🔄 Synchroniseren van ${queue.length} rapporten...`);
+    
+    const remainingQueue = [];
+    let successCount = 0;
+
+    for (const item of queue) {
+        try {
+            const response = await fetch('/.netlify/functions/submit-lmra', {
+                method: 'POST',
+                body: JSON.stringify(item)
+            });
+            if (response.ok) {
+                successCount++;
+            } else {
+                remainingQueue.push(item); // Server fout, bewaren
+            }
+        } catch (e) {
+            remainingQueue.push(item); // Netwerk fout, bewaren
+        }
+    }
+
+    safeStorage.set(SYNC_QUEUE_KEY, remainingQueue);
+
+    if (successCount > 0) {
+        showToast(`✅ ${successCount} rapporten alsnog verzonden!`);
+    }
+    if (remainingQueue.length > 0) {
+        showToast(`⚠️ ${remainingQueue.length} nog niet verzonden (Server busy)`);
+    }
 }
 
 function saveToLocalHistory(isSafe, name, task, wo, comments, fails, buddy, timeRange, validUntilISO) {
@@ -362,3 +444,16 @@ function closeArchive() { document.getElementById('archiveModal').classList.add(
 function resetApp() { if(confirm('Velden leegmaken?')) { answers = {}; actions = {}; document.getElementById('taskLocation').value = ''; document.getElementById('workOrder').value = ''; document.getElementById('comments').value = ''; renderCategories(); setDefaultTimes(); } }
 function loadUserData() { const sn = safeStorage.get('lmra_username'); if(sn) document.getElementById('userName').value = sn; }
 function clearArchive() { if(confirm("Archief wissen?")) { safeStorage.removeItem('lmra_history'); openArchive(); } }
+
+/* --- PWA SERVICE WORKER REGISTRATIE --- */
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('ServiceWorker geregistreerd met scope:', registration.scope);
+            })
+            .catch(error => {
+                console.log('ServiceWorker registratie mislukt:', error);
+            });
+    });
+}
