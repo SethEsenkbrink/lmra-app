@@ -1,9 +1,9 @@
-/* app.js - LMRA Pro Logica v8.0 (Codename: Sentinel) */
+/* app.js - LMRA Pro Logica v8.1 (Codename: Sentinel) */
 
 /* --- CONFIGURATIE --- */
-const APP_VERSION = "8.0"; // Versienummer voor Changelog detectie
+const APP_VERSION = "8.1"; 
 const SYNC_QUEUE_KEY = 'lmra_sync_queue';
-const ACTIVE_SESSION_KEY = 'lmra_active_session'; // Opslag voor actieve dag-sessie
+const ACTIVE_SESSION_KEY = 'lmra_active_session'; 
 
 const categories = [
     { title: "Algemeen & Fitheid", icon: "fa-user-clock", questions: [{ id: 1, text: "Voel ik mij fysiek en mentaal fit voor deze klus?", type: 'positive' }, { id: 2, text: "Weet ik wat te doen bij nood (alarmnummer, vluchtroute)?", type: 'positive' }] },
@@ -36,13 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
     checkDailyReset(); 
     setDefaultTimes();
     
-    // Sentinel Functies
-    processSyncQueue();     // Probeer offline wachtrij te legen
-    checkChangelog();       // Check of er een update is geweest
-    checkResumeState();     // Check of er een sessie hervat kan worden
+    processSyncQueue();     
+    checkChangelog();       
+    checkResumeState();     
 });
 
-// Luister naar netwerk herstel
 window.addEventListener('online', () => {
     showToast("Verbinding hersteld. Synchroniseren...");
     processSyncQueue();
@@ -52,12 +50,16 @@ window.addEventListener('online', () => {
 function checkDailyReset() {
     const lastDate = safeStorage.get('lmra_last_date');
     const today = new Date().toDateString();
+    
     if (lastDate !== today) {
-        // Nieuwe dag = nieuwe sessie
+        console.log("Nieuwe dag gedetecteerd. Resetting...");
+        // Nieuwe dag = Oude sessie wissen en meldingen weghalen
         safeStorage.removeItem(ACTIVE_SESSION_KEY);
-        setDefaultTimes();
+        safeStorage.removeItem('lmra_valid_until'); // Wis ook de oude geldigheid
         safeStorage.set('lmra_last_date', today);
+        
         document.getElementById('pauseAlert').classList.add('hidden');
+        resetApp(false); // Reset velden zonder confirm
     } else {
         checkValidity();
         setDefaultTimes(); 
@@ -67,20 +69,23 @@ function checkDailyReset() {
 function setDefaultTimes() {
     const now = new Date();
     const nowStr = now.toTimeString().slice(0,5);
-    const end = new Date(now.getTime() + 4*60*60*1000); // Standaard 4 uur geldig
+    const end = new Date(now.getTime() + 4*60*60*1000); 
     const endStr = end.toTimeString().slice(0,5);
     
     const timeStart = document.getElementById('timeStart');
     const timeEnd = document.getElementById('timeEnd');
     
-    // Alleen invullen als ze leeg zijn (zodat we resume tijden niet overschrijven)
-    if(timeStart && !timeStart.value) timeStart.value = nowStr;
-    if(timeEnd && !timeEnd.value) timeEnd.value = endStr;
+    // Alleen invullen als velden nog niet vergrendeld zijn of leeg zijn
+    if(timeStart && !timeStart.disabled && !timeStart.value) timeStart.value = nowStr;
+    if(timeEnd && !timeEnd.disabled && !timeEnd.value) timeEnd.value = endStr;
 }
 
 function checkValidity() {
     const validUntil = safeStorage.get('lmra_valid_until');
-    if (validUntil) {
+    // Alleen tonen als er GEEN actieve sessie meer is (dus echt verlopen)
+    const session = safeStorage.get(ACTIVE_SESSION_KEY);
+    
+    if (validUntil && !session) {
         const now = new Date();
         const endTime = new Date(validUntil);
         if (!isNaN(endTime) && now > endTime) { 
@@ -93,6 +98,35 @@ function toggleBuddyField() {
     const check = document.getElementById('buddyToggle').checked;
     const field = document.getElementById('buddyField');
     if(check) { field.classList.remove('hidden'); } else { field.classList.add('hidden'); }
+}
+
+function toggleFormLock(locked) {
+    const elements = document.querySelectorAll('#userName, #taskLocation, #workOrder, #comments, #timeStart, #timeEnd, #buddyToggle, #buddyName');
+    elements.forEach(el => el.disabled = locked);
+    
+    // Lock ook de Ja/Nee knoppen
+    const buttons = document.querySelectorAll('.question-card button');
+    buttons.forEach(btn => btn.disabled = locked);
+    
+    // Lock actievelden
+    const actionInputs = document.querySelectorAll('.action-required input');
+    actionInputs.forEach(inp => inp.disabled = locked);
+
+    // Pas de grote knop aan
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitBtnText');
+    
+    if (locked) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('bg-slate-500', 'cursor-not-allowed');
+        submitBtn.classList.remove('bg-[#00447c]', 'hover:bg-[#003366]');
+        submitText.innerText = "LMRA Loopt - Wijzigen niet mogelijk";
+    } else {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('bg-slate-500', 'cursor-not-allowed');
+        submitBtn.classList.add('bg-[#00447c]', 'hover:bg-[#003366]');
+        submitText.innerText = "Beoordeel Veiligheid";
+    }
 }
 
 /* --- RENDERING --- */
@@ -138,13 +172,13 @@ function renderCategories() {
             
             const btnYes = document.createElement('button');
             btnYes.id = `btn-yes-${q.id}`;
-            btnYes.className = "py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2";
+            btnYes.className = "py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
             btnYes.innerHTML = '<i class="fa-solid fa-check"></i> JA'; 
             btnYes.onclick = () => setAnswer(q.id, 'yes');
             
             const btnNo = document.createElement('button');
             btnNo.id = `btn-no-${q.id}`;
-            btnNo.className = "py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2";
+            btnNo.className = "py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
             btnNo.innerHTML = '<i class="fa-solid fa-xmark"></i> NEE';
             btnNo.onclick = () => setAnswer(q.id, 'no');
 
@@ -157,7 +191,7 @@ function renderCategories() {
             const input = document.createElement('input');
             input.type = "text";
             input.id = `action-input-${q.id}`;
-            input.className = "w-full bg-white dark:bg-slate-800 border border-red-300 dark:border-red-700 rounded p-2 text-xs focus:outline-none focus:ring-1 focus:ring-red-500";
+            input.className = "w-full bg-white dark:bg-slate-800 border border-red-300 dark:border-red-700 rounded p-2 text-xs focus:outline-none focus:ring-1 focus:ring-red-500 disabled:opacity-60";
             input.placeholder = "Wat doe je om dit veilig te maken?";
             input.oninput = (e) => saveAction(q.id, e.target.value);
 
@@ -169,10 +203,13 @@ function renderCategories() {
 }
 
 function setAnswer(id, value) {
+    // Stop als formulier gelockt is (extra check)
+    if(document.getElementById('submitBtn').disabled && document.getElementById('submitBtnText').innerText.includes("Loopt")) return;
+
     answers[id] = value;
     const btnYes = document.getElementById(`btn-yes-${id}`); const btnNo = document.getElementById(`btn-no-${id}`);
     const actionBox = document.getElementById(`action-box-${id}`);
-    const base = "py-2.5 rounded-md text-sm font-bold transition-all flex items-center justify-center gap-2 ";
+    const base = "py-2.5 rounded-md text-sm font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ";
     const inactive = "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600";
     btnYes.className = base + inactive; btnNo.className = base + inactive;
     if (value === 'yes') {
@@ -188,7 +225,7 @@ function setAnswer(id, value) {
 
 function saveAction(id, text) { actions[id] = DOMPurify.sanitize(text); }
 
-/* --- CORE LOGIC (Beoordelen) --- */
+/* --- CORE LOGIC --- */
 async function evaluateLMRA() {
     const userName = DOMPurify.sanitize(document.getElementById('userName').value);
     const task = DOMPurify.sanitize(document.getElementById('taskLocation').value);
@@ -197,7 +234,6 @@ async function evaluateLMRA() {
     const tStart = document.getElementById('timeStart').value;
     const tEnd = document.getElementById('timeEnd').value;
     
-    // Validatie
     if(!userName) { showToast("Vul naam monteur in!"); return; }
     if(!task) { showToast("Vul locatie in!"); document.getElementById('taskLocation').focus(); return; }
     if(!tStart || !tEnd) { showToast("Vul start- en eindtijd in!"); return; }
@@ -213,15 +249,11 @@ async function evaluateLMRA() {
 
     comments += ` [Geldig: ${tStart} - ${tEnd}]`;
 
-    // Geldigheid instellen
     const now = new Date();
     const [endH, endM] = tEnd.split(':');
     const validUntilDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endH, endM);
     if(validUntilDate < now && parseInt(endH) < 12) validUntilDate.setDate(validUntilDate.getDate() + 1);
     
-    safeStorage.set('lmra_valid_until', validUntilDate.toISOString());
-    document.getElementById('pauseAlert').classList.add('hidden');
-
     // Buddy Check
     const buddyRequired = document.getElementById('buddyToggle').checked;
     const buddyName = DOMPurify.sanitize(document.getElementById('buddyName').value);
@@ -232,13 +264,12 @@ async function evaluateLMRA() {
 
     safeStorage.set('lmra_username', userName);
 
-    // Button Status
     const btn = document.getElementById('submitBtn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<div class="spinner"></div> Verwerken...';
+    const btnText = document.getElementById('submitBtnText');
+    const originalText = btnText.innerText;
+    btnText.innerText = 'Verwerken...';
     btn.disabled = true;
 
-    // Evaluatie
     let isSafe = true; let failedPoints = [];
     categories.forEach(cat => { 
         cat.questions.forEach(q => { 
@@ -252,28 +283,35 @@ async function evaluateLMRA() {
 
     let finalLocation = task;
     
-    // 1. Sla op in lokale historie (telefoon)
+    // Save to local history
     saveToLocalHistory(isSafe, userName, finalLocation, workOrder, comments, failedPoints, buddyRequired ? buddyName : null, `${tStart} - ${tEnd}`, validUntilDate.toISOString());
     
-    // 2. Sla op in de Cloud (Sentinel)
+    // Save to cloud
     await saveToCloudWithRetry(isSafe, userName, finalLocation, workOrder, comments, failedPoints);
 
-    // 3. (NIEUW) Sla op als actieve sessie voor 'Hervatten' (alleen als veilig)
+    // ALLEEN als het veilig is, starten we de sessie en locken we de boel
     if (isSafe) {
+        safeStorage.set('lmra_valid_until', validUntilDate.toISOString());
+        document.getElementById('pauseAlert').classList.add('hidden');
+        
         safeStorage.set(ACTIVE_SESSION_KEY, {
             date: new Date().toDateString(),
             name: userName,
             task: finalLocation,
             wo: workOrder
         });
-        checkResumeState(); // Update UI direct
+        checkResumeState(); // Dit triggert ook de lock
+    } else {
+        // Als het NIET veilig is, locken we NIET.
+        // We resetten de knop zodat ze het kunnen aanpassen.
+        btnText.innerText = originalText;
+        btn.disabled = false;
+        // We slaan geen validUntil en geen sessie op.
     }
 
-    btn.innerHTML = originalText; btn.disabled = false;
     showResult(isSafe, failedPoints, userName, finalLocation, workOrder, comments, buddyRequired ? buddyName : null, `${tStart} - ${tEnd}`);
 }
 
-/* --- SENTINEL SYNC LOGIC --- */
 async function saveToCloudWithRetry(isSafe, monteur_naam, locatie, werkorder, opmerkingen, afkeurpunten) {
     const cloudStatus = document.getElementById('cloudStatus');
     cloudStatus.classList.remove('hidden');
@@ -302,7 +340,7 @@ async function saveToCloudWithRetry(isSafe, monteur_naam, locatie, werkorder, op
             throw new Error("Server error");
         }
     } catch (e) { 
-        console.warn("Cloud fout, toevoegen aan wachtrij", e);
+        console.warn("Cloud fout", e);
         addToSyncQueue(payload);
         cloudStatus.innerText = "💾 Cloud fout (In Wachtrij)";
         cloudStatus.classList.add("text-yellow-200");
@@ -345,10 +383,8 @@ async function processSyncQueue() {
     safeStorage.set(SYNC_QUEUE_KEY, remainingQueue);
 
     if (successCount > 0) { showToast(`✅ ${successCount} rapporten alsnog verzonden!`); }
-    if (remainingQueue.length > 0) { showToast(`⚠️ ${remainingQueue.length} nog niet verzonden (Server busy)`); }
 }
 
-/* --- CHANGELOG FUNCTIES (NIEUW) --- */
 function checkChangelog() {
     const storedVersion = localStorage.getItem('lmra_version');
     if (storedVersion !== APP_VERSION) {
@@ -361,7 +397,6 @@ function closeUpdateModal() {
     document.getElementById('updateModal').classList.add('hidden');
 }
 
-/* --- HERVAT FUNCTIES (NIEUW) --- */
 function checkResumeState() {
     const session = safeStorage.get(ACTIVE_SESSION_KEY);
     const resumeBar = document.getElementById('resumeBar');
@@ -375,12 +410,17 @@ function checkResumeState() {
             document.getElementById('userName').value = session.name || '';
             document.getElementById('taskLocation').value = session.task || '';
             document.getElementById('workOrder').value = session.wo || '';
+            
+            // VERGRENDEL DE DATA!
+            toggleFormLock(true);
         } else {
             safeStorage.removeItem(ACTIVE_SESSION_KEY);
             resumeBar.classList.add('hidden');
+            toggleFormLock(false);
         }
     } else {
         resumeBar.classList.add('hidden');
+        toggleFormLock(false);
     }
 }
 
@@ -392,6 +432,8 @@ function cancelResume() {
     document.getElementById('resumeCheckModal').classList.add('hidden');
     document.getElementById('resumeBar').classList.add('hidden');
     safeStorage.removeItem(ACTIVE_SESSION_KEY);
+    safeStorage.removeItem('lmra_valid_until');
+    toggleFormLock(false);
     resetApp();
 }
 
@@ -415,10 +457,10 @@ function confirmResume() {
     }
 
     showToast("✅ Werkzaamheden hervat. Tijd verlengd.");
-    document.getElementById('resumeBar').classList.add('hidden');
+    // We laten de balk staan en het slot erop, want ze werken nog steeds onder de oude sessie.
+    // Alleen de eindtijd is nu visueel geupdate.
 }
 
-/* --- OVERIGE UI LOGICA --- */
 function saveToLocalHistory(isSafe, name, task, wo, comments, fails, buddy, timeRange, validUntilISO) {
     const entry = { date: new Date().toISOString(), isSafe, name, task, wo, comments, fails, buddy, timeRange, validUntil: validUntilISO };
     let history = safeStorage.get('lmra_history') || [];
@@ -441,6 +483,14 @@ function showResult(isSafe, failedPoints, name, task, workOrder, comments, buddy
         header.className = "p-8 text-center text-white shrink-0 bg-red-600"; icon.innerHTML = '<i class="fa-solid fa-hand-paper"></i>'; title.innerText = "STOP!"; message.innerText = "Risico's aanwezig! Niet starten.";
         let failureText = failedPoints.map(p => `- ${p}`).join('<br>');
         log.innerHTML = `<strong>🛑 LMRA AFGEKEURD</strong><br>---------------------------<br>📅 ${dateStr} ⏰ ${timeStr}<br>👤 ${name}<br>📍 ${task}<br>📋 WO: ${workOrder}<br>---------------------------<br>⚠️ <strong>Afkeurpunten & Acties:</strong><br>${failureText}<br>---------------------------<br>💬 ${comments}`;
+    }
+}
+
+function closeModal() { 
+    document.getElementById('resultModal').classList.add('hidden'); 
+    // Als het formulier NIET gelockt is (dus bij afkeur), scroll naar boven zodat ze kunnen editen
+    if(!document.getElementById('submitBtn').disabled) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
@@ -489,7 +539,6 @@ function openArchive() {
             let statusDot = item.isSafe ? 'bg-green-500' : 'bg-red-500'; let statusText = item.isSafe ? 'Actief' : 'Afgekeurd';
             if (item.isSafe && item.validUntil && new Date() > new Date(item.validUntil)) { statusDot = 'bg-slate-400'; statusText = 'Verlopen'; }
             
-            // Toon rechecks indien aanwezig
             let recheckBadge = "";
             if(item.rechecks && item.rechecks.length > 0) {
                 recheckBadge = `<span class="ml-2 bg-orange-100 text-orange-700 text-[9px] px-1.5 py-0.5 rounded border border-orange-200">Hervat (${item.rechecks.length}x)</span>`;
@@ -518,7 +567,6 @@ function showDetail(index) {
     const buddyBox = document.getElementById('detailBuddyBox');
     if(item.buddy) { document.getElementById('detailBuddy').innerText = item.buddy; buddyBox.classList.remove('hidden'); } else { buddyBox.classList.add('hidden'); }
     
-    // Hervat info toevoegen aan comments veld in detail weergave
     if(item.rechecks && item.rechecks.length > 0) {
         document.getElementById('detailComments').innerText += `\n\n[INFO] Werkzaamheden hervat om: ${item.rechecks.join(', ')}`;
     }
@@ -533,12 +581,11 @@ function generatePDF() { const element = document.getElementById('pdfContent'); 
 function copyToClipboard() { const html = document.getElementById('logText').innerHTML; const text = html.replace(/<br>/g, "\n").replace(/<strong>|<\/strong>/g, "").replace(/&nbsp;/g, " "); navigator.clipboard.writeText(text).then(() => showToast("Gekopieerd!")).catch(() => showToast("Fout")); }
 function toggleDarkMode() { document.documentElement.classList.toggle('dark'); darkMode = !darkMode; localStorage.setItem('lmra_theme', darkMode ? 'dark' : 'light'); checkTheme(); }
 function checkTheme() { const st = localStorage.getItem('lmra_theme'); if (st === 'dark' || (!st && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); darkMode = true; } else { document.documentElement.classList.remove('dark'); darkMode = false; } document.getElementById('themeIcon').className = darkMode ? "fa-solid fa-sun" : "fa-solid fa-moon"; }
-function closeArchive() { document.getElementById('archiveModal').classList.add('hidden'); } function closeDetail() { document.getElementById('detailModal').classList.add('hidden'); } function closeModal() { document.getElementById('resultModal').classList.add('hidden'); } function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg; t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 3000); }
-function resetApp() { if(confirm('Velden leegmaken?')) { answers = {}; actions = {}; document.getElementById('taskLocation').value = ''; document.getElementById('workOrder').value = ''; document.getElementById('comments').value = ''; renderCategories(); setDefaultTimes(); } }
+function closeArchive() { document.getElementById('archiveModal').classList.add('hidden'); } function closeDetail() { document.getElementById('detailModal').classList.add('hidden'); } function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg; t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 3000); }
+function resetApp(confirmNeeded = true) { if(!confirmNeeded || confirm('Velden leegmaken?')) { answers = {}; actions = {}; document.getElementById('taskLocation').value = ''; document.getElementById('workOrder').value = ''; document.getElementById('comments').value = ''; renderCategories(); setDefaultTimes(); toggleFormLock(false); safeStorage.removeItem(ACTIVE_SESSION_KEY); document.getElementById('resumeBar').classList.add('hidden'); } }
 function loadUserData() { const sn = safeStorage.get('lmra_username'); if(sn) document.getElementById('userName').value = sn; }
 function clearArchive() { if(confirm("Archief wissen?")) { safeStorage.removeItem('lmra_history'); openArchive(); } }
 
-/* --- PWA SERVICE WORKER REGISTRATIE --- */
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
