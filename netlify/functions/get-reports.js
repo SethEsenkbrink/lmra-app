@@ -1,31 +1,28 @@
 import { neon } from '@neondatabase/serverless';
-import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+import { parse } from 'cookie';
 
-// LMRA Pro v8.0 - Admin Backend
 export const handler = async (event, context) => {
-  const secretInput = event.headers['x-admin-secret'] || "";
-  const realSecret = process.env.ADMIN_PASSWORD;
+  // 1. Haal de cookies uit de request headers
+  const cookies = parse(event.headers.cookie || "");
+  const token = cookies.auth_token;
 
-  if (!realSecret) {
-    console.error("CRITICAL: ADMIN_PASSWORD ontbreekt.");
-    return { statusCode: 500, body: "Config Fout" };
-  }
-
-  const bufferInput = Buffer.from(secretInput + "");
-  const bufferReal = Buffer.from(realSecret + "");
-  
-  let match = false;
-  if (bufferInput.length === bufferReal.length) {
-      match = crypto.timingSafeEqual(bufferInput, bufferReal);
-  }
-
-  if (!match) {
-    await new Promise(resolve => setTimeout(resolve, 200)); 
-    return { statusCode: 401, body: "Niet geautoriseerd" };
+  // 2. Check of er een token is en of deze geldig is (met jouw JWT_SECRET)
+  if (!token) {
+    return { statusCode: 401, body: JSON.stringify({ message: "Niet ingelogd" }) };
   }
 
   try {
+    // Dit verifieert de handtekening van de cookie. Als er mee geknoeid is, faalt dit.
+    jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    return { statusCode: 401, body: JSON.stringify({ message: "Sessie verlopen of ongeldig" }) };
+  }
+
+  // 3. Als we hier zijn, is de gebruiker veilig ingelogd. Haal data op.
+  try {
     const sql = neon(process.env.NETLIFY_DATABASE_URL);
+    // Haal de 100 nieuwste rapporten op
     const reports = await sql`SELECT * FROM lmra_reports ORDER BY created_at DESC LIMIT 100`;
 
     return {

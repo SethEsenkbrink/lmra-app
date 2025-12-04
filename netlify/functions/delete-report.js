@@ -1,28 +1,23 @@
 import { neon } from '@neondatabase/serverless';
-import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+import { parse } from 'cookie';
 
-// LMRA Pro v8.0 - Admin Backend (Delete)
 export const handler = async (event, context) => {
   if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
 
-  const secretInput = event.headers['x-admin-secret'] || "";
-  const realSecret = process.env.ADMIN_PASSWORD;
+  // 1. Beveiliging: Check de cookie
+  const cookies = parse(event.headers.cookie || "");
+  const token = cookies.auth_token;
 
-  if (!realSecret) return { statusCode: 500, body: "Config Fout" };
+  if (!token) return { statusCode: 401, body: "Niet ingelogd" };
 
-  const bufferInput = Buffer.from(secretInput + "");
-  const bufferReal = Buffer.from(realSecret + "");
-  
-  let match = false;
-  if (bufferInput.length === bufferReal.length) {
-      match = crypto.timingSafeEqual(bufferInput, bufferReal);
+  try {
+    jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    return { statusCode: 401, body: "Ongeldige sessie" };
   }
 
-  if (!match) {
-    await new Promise(resolve => setTimeout(resolve, 500)); 
-    return { statusCode: 401, body: "Niet geautoriseerd" };
-  }
-
+  // 2. Uitvoeren van de verwijdering
   try {
     const sql = neon(process.env.NETLIFY_DATABASE_URL);
     const data = JSON.parse(event.body);

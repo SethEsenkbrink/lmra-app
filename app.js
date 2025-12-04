@@ -1,8 +1,9 @@
 /* app.js - LMRA Pro Logica v8.0 (Codename: Sentinel) */
 
 /* --- CONFIGURATIE --- */
-const APP_VERSION = "v8.0 - Sentinel";
+const APP_VERSION = "8.0"; // Versienummer voor Changelog detectie
 const SYNC_QUEUE_KEY = 'lmra_sync_queue';
+const ACTIVE_SESSION_KEY = 'lmra_active_session'; // Opslag voor actieve dag-sessie
 
 const categories = [
     { title: "Algemeen & Fitheid", icon: "fa-user-clock", questions: [{ id: 1, text: "Voel ik mij fysiek en mentaal fit voor deze klus?", type: 'positive' }, { id: 2, text: "Weet ik wat te doen bij nood (alarmnummer, vluchtroute)?", type: 'positive' }] },
@@ -24,16 +25,24 @@ const safeStorage = {
 
 /* --- INIT --- */
 document.addEventListener('DOMContentLoaded', () => { 
-    console.log(`LMRA Pro ${APP_VERSION} starting...`);
+    console.log(`LMRA Pro v${APP_VERSION} Sentinel starting...`);
     renderCategories(); 
-    const sn = safeStorage.get('lmra_username'); if(sn) document.getElementById('userName').value = sn;
-    checkTheme(); checkDailyReset(); setDefaultTimes();
     
-    // Sentinel: Start synchronisatie check bij opstarten
-    processSyncQueue();
+    // Laad laatst gebruikte naam
+    const sn = safeStorage.get('lmra_username'); 
+    if(sn) document.getElementById('userName').value = sn;
+    
+    checkTheme(); 
+    checkDailyReset(); 
+    setDefaultTimes();
+    
+    // Sentinel Functies
+    processSyncQueue();     // Probeer offline wachtrij te legen
+    checkChangelog();       // Check of er een update is geweest
+    checkResumeState();     // Check of er een sessie hervat kan worden
 });
 
-// Sentinel: Luister naar netwerk status wijzigingen
+// Luister naar netwerk herstel
 window.addEventListener('online', () => {
     showToast("Verbinding hersteld. Synchroniseren...");
     processSyncQueue();
@@ -44,6 +53,8 @@ function checkDailyReset() {
     const lastDate = safeStorage.get('lmra_last_date');
     const today = new Date().toDateString();
     if (lastDate !== today) {
+        // Nieuwe dag = nieuwe sessie
+        safeStorage.removeItem(ACTIVE_SESSION_KEY);
         setDefaultTimes();
         safeStorage.set('lmra_last_date', today);
         document.getElementById('pauseAlert').classList.add('hidden');
@@ -56,10 +67,13 @@ function checkDailyReset() {
 function setDefaultTimes() {
     const now = new Date();
     const nowStr = now.toTimeString().slice(0,5);
-    const end = new Date(now.getTime() + 4*60*60*1000);
+    const end = new Date(now.getTime() + 4*60*60*1000); // Standaard 4 uur geldig
     const endStr = end.toTimeString().slice(0,5);
+    
     const timeStart = document.getElementById('timeStart');
     const timeEnd = document.getElementById('timeEnd');
+    
+    // Alleen invullen als ze leeg zijn (zodat we resume tijden niet overschrijven)
     if(timeStart && !timeStart.value) timeStart.value = nowStr;
     if(timeEnd && !timeEnd.value) timeEnd.value = endStr;
 }
@@ -174,7 +188,7 @@ function setAnswer(id, value) {
 
 function saveAction(id, text) { actions[id] = DOMPurify.sanitize(text); }
 
-/* --- CORE LOGIC --- */
+/* --- CORE LOGIC (Beoordelen) --- */
 async function evaluateLMRA() {
     const userName = DOMPurify.sanitize(document.getElementById('userName').value);
     const task = DOMPurify.sanitize(document.getElementById('taskLocation').value);
@@ -183,6 +197,7 @@ async function evaluateLMRA() {
     const tStart = document.getElementById('timeStart').value;
     const tEnd = document.getElementById('timeEnd').value;
     
+    // Validatie
     if(!userName) { showToast("Vul naam monteur in!"); return; }
     if(!task) { showToast("Vul locatie in!"); document.getElementById('taskLocation').focus(); return; }
     if(!tStart || !tEnd) { showToast("Vul start- en eindtijd in!"); return; }
@@ -198,6 +213,7 @@ async function evaluateLMRA() {
 
     comments += ` [Geldig: ${tStart} - ${tEnd}]`;
 
+    // Geldigheid instellen
     const now = new Date();
     const [endH, endM] = tEnd.split(':');
     const validUntilDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endH, endM);
@@ -206,6 +222,7 @@ async function evaluateLMRA() {
     safeStorage.set('lmra_valid_until', validUntilDate.toISOString());
     document.getElementById('pauseAlert').classList.add('hidden');
 
+    // Buddy Check
     const buddyRequired = document.getElementById('buddyToggle').checked;
     const buddyName = DOMPurify.sanitize(document.getElementById('buddyName').value);
     if(buddyRequired) {
@@ -215,11 +232,13 @@ async function evaluateLMRA() {
 
     safeStorage.set('lmra_username', userName);
 
+    // Button Status
     const btn = document.getElementById('submitBtn');
     const originalText = btn.innerHTML;
     btn.innerHTML = '<div class="spinner"></div> Verwerken...';
     btn.disabled = true;
 
+    // Evaluatie
     let isSafe = true; let failedPoints = [];
     categories.forEach(cat => { 
         cat.questions.forEach(q => { 
@@ -233,19 +252,28 @@ async function evaluateLMRA() {
 
     let finalLocation = task;
     
-    // Altijd lokaal opslaan (Historie)
+    // 1. Sla op in lokale historie (telefoon)
     saveToLocalHistory(isSafe, userName, finalLocation, workOrder, comments, failedPoints, buddyRequired ? buddyName : null, `${tStart} - ${tEnd}`, validUntilDate.toISOString());
     
-    // Probeer cloud opslag (Sentinel Logic)
+    // 2. Sla op in de Cloud (Sentinel)
     await saveToCloudWithRetry(isSafe, userName, finalLocation, workOrder, comments, failedPoints);
+
+    // 3. (NIEUW) Sla op als actieve sessie voor 'Hervatten' (alleen als veilig)
+    if (isSafe) {
+        safeStorage.set(ACTIVE_SESSION_KEY, {
+            date: new Date().toDateString(),
+            name: userName,
+            task: finalLocation,
+            wo: workOrder
+        });
+        checkResumeState(); // Update UI direct
+    }
 
     btn.innerHTML = originalText; btn.disabled = false;
     showResult(isSafe, failedPoints, userName, finalLocation, workOrder, comments, buddyRequired ? buddyName : null, `${tStart} - ${tEnd}`);
 }
 
 /* --- SENTINEL SYNC LOGIC --- */
-
-// Functie 1: Probeer op te slaan, bij falen -> in wachtrij
 async function saveToCloudWithRetry(isSafe, monteur_naam, locatie, werkorder, opmerkingen, afkeurpunten) {
     const cloudStatus = document.getElementById('cloudStatus');
     cloudStatus.classList.remove('hidden');
@@ -281,7 +309,6 @@ async function saveToCloudWithRetry(isSafe, monteur_naam, locatie, werkorder, op
     }
 }
 
-// Functie 2: Toevoegen aan wachtrij
 function addToSyncQueue(data) {
     let queue = safeStorage.get(SYNC_QUEUE_KEY) || [];
     queue.push(data);
@@ -289,12 +316,10 @@ function addToSyncQueue(data) {
     showToast(`Offline! Rapport in wachtrij gezet (${queue.length})`);
 }
 
-// Functie 3: Verwerk wachtrij (wordt aangeroepen bij load & online event)
 async function processSyncQueue() {
     let queue = safeStorage.get(SYNC_QUEUE_KEY) || [];
     if (queue.length === 0) return;
-
-    if (!navigator.onLine) return; // Nog steeds offline
+    if (!navigator.onLine) return;
 
     showToast(`🔄 Synchroniseren van ${queue.length} rapporten...`);
     
@@ -310,23 +335,90 @@ async function processSyncQueue() {
             if (response.ok) {
                 successCount++;
             } else {
-                remainingQueue.push(item); // Server fout, bewaren
+                remainingQueue.push(item);
             }
         } catch (e) {
-            remainingQueue.push(item); // Netwerk fout, bewaren
+            remainingQueue.push(item);
         }
     }
 
     safeStorage.set(SYNC_QUEUE_KEY, remainingQueue);
 
-    if (successCount > 0) {
-        showToast(`✅ ${successCount} rapporten alsnog verzonden!`);
-    }
-    if (remainingQueue.length > 0) {
-        showToast(`⚠️ ${remainingQueue.length} nog niet verzonden (Server busy)`);
+    if (successCount > 0) { showToast(`✅ ${successCount} rapporten alsnog verzonden!`); }
+    if (remainingQueue.length > 0) { showToast(`⚠️ ${remainingQueue.length} nog niet verzonden (Server busy)`); }
+}
+
+/* --- CHANGELOG FUNCTIES (NIEUW) --- */
+function checkChangelog() {
+    const storedVersion = localStorage.getItem('lmra_version');
+    if (storedVersion !== APP_VERSION) {
+        document.getElementById('updateModal').classList.remove('hidden');
     }
 }
 
+function closeUpdateModal() {
+    localStorage.setItem('lmra_version', APP_VERSION);
+    document.getElementById('updateModal').classList.add('hidden');
+}
+
+/* --- HERVAT FUNCTIES (NIEUW) --- */
+function checkResumeState() {
+    const session = safeStorage.get(ACTIVE_SESSION_KEY);
+    const resumeBar = document.getElementById('resumeBar');
+    if (!resumeBar) return;
+    
+    if (session) {
+        const today = new Date().toDateString();
+        if (session.date === today) {
+            resumeBar.classList.remove('hidden');
+            // Vul velden alvast in
+            document.getElementById('userName').value = session.name || '';
+            document.getElementById('taskLocation').value = session.task || '';
+            document.getElementById('workOrder').value = session.wo || '';
+        } else {
+            safeStorage.removeItem(ACTIVE_SESSION_KEY);
+            resumeBar.classList.add('hidden');
+        }
+    } else {
+        resumeBar.classList.add('hidden');
+    }
+}
+
+function triggerResumeFlow() {
+    document.getElementById('resumeCheckModal').classList.remove('hidden');
+}
+
+function cancelResume() {
+    document.getElementById('resumeCheckModal').classList.add('hidden');
+    document.getElementById('resumeBar').classList.add('hidden');
+    safeStorage.removeItem(ACTIVE_SESSION_KEY);
+    resetApp();
+}
+
+function confirmResume() {
+    document.getElementById('resumeCheckModal').classList.add('hidden');
+    
+    // Verleng tijd met 4 uur
+    const now = new Date();
+    const end = new Date(now.getTime() + 4*60*60*1000);
+    const endStr = end.toTimeString().slice(0,5);
+    document.getElementById('timeEnd').value = endStr;
+    
+    // Update local history
+    const history = safeStorage.get('lmra_history') || [];
+    if (history.length > 0) {
+        const latest = history[0];
+        if (!latest.rechecks) latest.rechecks = [];
+        latest.rechecks.push(new Date().toLocaleTimeString());
+        latest.timeRange = `${latest.timeRange.split('-')[0]} - ${endStr}`;
+        safeStorage.set('lmra_history', history);
+    }
+
+    showToast("✅ Werkzaamheden hervat. Tijd verlengd.");
+    document.getElementById('resumeBar').classList.add('hidden');
+}
+
+/* --- OVERIGE UI LOGICA --- */
 function saveToLocalHistory(isSafe, name, task, wo, comments, fails, buddy, timeRange, validUntilISO) {
     const entry = { date: new Date().toISOString(), isSafe, name, task, wo, comments, fails, buddy, timeRange, validUntil: validUntilISO };
     let history = safeStorage.get('lmra_history') || [];
@@ -356,8 +448,7 @@ function getWeekNumber(d) {
     d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
     var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-    var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
-    return { week: weekNo, year: d.getUTCFullYear() };
+    return { week: Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7), year: d.getUTCFullYear() };
 }
 
 function openArchive() {
@@ -368,18 +459,7 @@ function openArchive() {
     
     const weeks = {};
     history.forEach((item, index) => {
-        let date;
-        try {
-            if(!item.date) throw new Error("Geen datum");
-            date = new Date(item.date);
-            if(isNaN(date.getTime())) throw new Error("Ongeldige datum");
-        } catch(e) {
-            const key = "Onbekende Datum";
-            if(!weeks[key]) weeks[key] = [];
-            item.originalIndex = index;
-            weeks[key].push(item);
-            return;
-        }
+        let date; try { date = new Date(item.date); if(isNaN(date)) throw new Error(); } catch(e) { date = new Date(); }
         const weekInfo = getWeekNumber(date);
         const key = `Week ${weekInfo.week} - ${weekInfo.year}`;
         if(!weeks[key]) weeks[key] = [];
@@ -408,7 +488,14 @@ function openArchive() {
             try { const d = new Date(item.date); dateStr = d.toLocaleDateString('nl-NL', {weekday:'short'}); timeStr = d.toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'}); } catch(e){}
             let statusDot = item.isSafe ? 'bg-green-500' : 'bg-red-500'; let statusText = item.isSafe ? 'Actief' : 'Afgekeurd';
             if (item.isSafe && item.validUntil && new Date() > new Date(item.validUntil)) { statusDot = 'bg-slate-400'; statusText = 'Verlopen'; }
-            listContainer.innerHTML += `<div onclick="showDetail(${item.originalIndex})" class="cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-3 rounded border-l-4 ${item.isSafe ? "border-green-500" : "border-red-500"} hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><div class="flex justify-between items-start mb-1"><span class="font-bold text-slate-700 dark:text-slate-200 text-sm truncate w-2/3">${item.task || 'Onbekend'}</span><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${statusDot}"></span><span class="text-[10px] text-slate-400 uppercase font-bold">${statusText}</span></div></div><div class="flex justify-between items-end"><div class="text-xs text-slate-500 dark:text-slate-400">${dateStr} ${timeStr}<br>WO: ${item.wo || '-'}</div><i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i></div></div>`;
+            
+            // Toon rechecks indien aanwezig
+            let recheckBadge = "";
+            if(item.rechecks && item.rechecks.length > 0) {
+                recheckBadge = `<span class="ml-2 bg-orange-100 text-orange-700 text-[9px] px-1.5 py-0.5 rounded border border-orange-200">Hervat (${item.rechecks.length}x)</span>`;
+            }
+
+            listContainer.innerHTML += `<div onclick="showDetail(${item.originalIndex})" class="cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-3 rounded border-l-4 ${item.isSafe ? "border-green-500" : "border-red-500"} hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><div class="flex justify-between items-start mb-1"><span class="font-bold text-slate-700 dark:text-slate-200 text-sm truncate w-2/3">${item.task || 'Onbekend'}</span><div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${statusDot}"></span><span class="text-[10px] text-slate-400 uppercase font-bold">${statusText}</span></div></div><div class="flex justify-between items-end"><div class="text-xs text-slate-500 dark:text-slate-400">${dateStr} ${timeStr}${recheckBadge}<br>WO: ${item.wo || '-'}</div><i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i></div></div>`;
         });
     });
     document.getElementById('archiveModal').classList.remove('hidden');
@@ -430,6 +517,12 @@ function showDetail(index) {
     document.getElementById('detailName').innerText = item.name; document.getElementById('detailLoc').innerText = item.task; document.getElementById('detailWO').innerText = item.wo; document.getElementById('detailComments').innerText = item.comments || "Geen opmerkingen.";
     const buddyBox = document.getElementById('detailBuddyBox');
     if(item.buddy) { document.getElementById('detailBuddy').innerText = item.buddy; buddyBox.classList.remove('hidden'); } else { buddyBox.classList.add('hidden'); }
+    
+    // Hervat info toevoegen aan comments veld in detail weergave
+    if(item.rechecks && item.rechecks.length > 0) {
+        document.getElementById('detailComments').innerText += `\n\n[INFO] Werkzaamheden hervat om: ${item.rechecks.join(', ')}`;
+    }
+
     const statusBox = document.getElementById('detailStatusBox'); const detailIcon = document.getElementById('detailIcon'); const failsContainer = document.getElementById('detailFailsContainer'); const failsList = document.getElementById('detailFails');
     if(item.isSafe) { statusBox.className = "bg-green-100 border border-green-300 text-green-800 p-3 rounded-lg text-center font-bold mb-6"; statusBox.innerText = "VEILIG OM TE STARTEN"; detailIcon.className = "text-4xl text-green-600"; detailIcon.innerHTML = '<i class="fa-solid fa-shield-check"></i>'; failsContainer.classList.add('hidden'); } 
     else { statusBox.className = "bg-red-100 border border-red-300 text-red-800 p-3 rounded-lg text-center font-bold mb-6"; statusBox.innerText = "NIET GESTART - RISICO'S"; detailIcon.className = "text-4xl text-red-600"; detailIcon.innerHTML = '<i class="fa-solid fa-hand"></i>'; failsContainer.classList.remove('hidden'); failsList.innerHTML = item.fails.map(f => `<li>${f}</li>`).join(''); }
@@ -449,11 +542,7 @@ function clearArchive() { if(confirm("Archief wissen?")) { safeStorage.removeIte
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-                console.log('ServiceWorker geregistreerd met scope:', registration.scope);
-            })
-            .catch(error => {
-                console.log('ServiceWorker registratie mislukt:', error);
-            });
+            .then(reg => console.log('SW Registered', reg.scope))
+            .catch(err => console.log('SW Fail', err));
     });
 }

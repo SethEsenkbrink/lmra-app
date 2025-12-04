@@ -10,7 +10,10 @@
     "security-check": "npm audit"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^0.10.4"
+    "@neondatabase/serverless": "^0.10.4",
+    "bcryptjs": "^3.0.3",
+    "cookie": "^1.1.1",
+    "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
     "netlify-cli": "latest",

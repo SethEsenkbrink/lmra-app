@@ -6,8 +6,8 @@
     <title>LMRA Admin 8.0</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" crossorigin="anonymous"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -23,12 +23,6 @@
             }
         }
     </script>
-    <style>
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
-    </style>
 </head>
 <body class="bg-slate-100 dark:bg-darkbg text-slate-800 dark:text-slate-200 h-screen flex flex-col transition-colors duration-300">
 
@@ -38,21 +32,21 @@
                 <i id="loginThemeIcon" class="fa-solid fa-moon"></i>
             </button>
             <div class="text-4xl text-brand-DEFAULT mb-4"><i class="fa-solid fa-user-shield"></i></div>
-            <h2 class="text-2xl font-bold mb-6 dark:text-white">Admin Login v8.0</h2>
+            <h2 class="text-2xl font-bold mb-6 dark:text-white">Admin Login</h2>
             
             <form onsubmit="event.preventDefault(); login();">
-                <input type="text" name="username" value="admin" autocomplete="username" style="display:none;">
-                <input type="password" id="passwordInput" name="password" autocomplete="current-password" class="w-full p-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded-lg mb-4 text-center text-lg focus:ring-2 focus:ring-brand-DEFAULT outline-none transition-colors" placeholder="Wachtwoord" required>
+                <input type="text" id="usernameInput" class="w-full p-3 mb-3 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-brand-DEFAULT" placeholder="Gebruikersnaam" required>
+                <input type="password" id="passwordInput" class="w-full p-3 mb-4 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-brand-DEFAULT" placeholder="Wachtwoord" required>
                 <button type="submit" id="loginBtn" class="w-full bg-brand-DEFAULT hover:bg-brand-light text-white py-3 rounded-lg font-bold transition-colors shadow-md">Inloggen</button>
             </form>
-            <p id="loginError" class="text-red-500 mt-4 hidden text-sm font-bold animate-pulse">Toegang geweigerd</p>
+            <p id="loginError" class="text-red-500 mt-4 hidden text-sm font-bold animate-pulse">Ongeldige gegevens</p>
         </div>
     </div>
 
     <header class="bg-white dark:bg-cardbg p-4 shadow-md flex flex-col md:flex-row justify-between items-center gap-4 z-20 sticky top-0 border-b border-slate-200 dark:border-slate-700">
         <div class="flex items-center gap-3">
             <div class="bg-brand-DEFAULT text-white p-2 rounded-lg"><i class="fa-solid fa-lock"></i></div>
-            <h1 class="font-bold text-xl tracking-wide text-slate-800 dark:text-white">LMRA Dashboard</h1>
+            <h1 class="font-bold text-xl tracking-wide text-slate-800 dark:text-white">LMRA Dashboard <span class="text-xs text-brand-light ml-2">Sentinel</span></h1>
         </div>
         <div class="flex flex-wrap gap-3 w-full md:w-auto items-center justify-center">
             <div class="relative group w-full md:w-auto">
@@ -87,15 +81,47 @@
     </main>
 
     <script>
-        let sessionKey = null; 
         let allData = [];
 
-        function createCell(content, classes = "") {
-            const td = document.createElement('td');
-            td.className = "p-4 " + classes;
-            if(typeof content === 'string') td.textContent = content || "-";
-            else td.appendChild(content);
-            return td;
+        async function login() {
+            const username = document.getElementById('usernameInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const btn = document.getElementById('loginBtn');
+            const errorMsg = document.getElementById('loginError');
+            
+            btn.innerText = "Laden..."; btn.disabled = true; errorMsg.classList.add('hidden');
+
+            try {
+                // Nieuwe endpoint aanroepen
+                const response = await fetch('/.netlify/functions/admin-login', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    loadData(); // Data ophalen na succesvolle login
+                } else {
+                    throw new Error("Fout");
+                }
+            } catch (e) {
+                errorMsg.classList.remove('hidden');
+                btn.innerText = "Inloggen"; btn.disabled = false;
+            }
+        }
+
+        async function loadData() {
+            try {
+                // Omdat we nu Cookies gebruiken (HttpOnly), hoeven we geen header mee te sturen!
+                const response = await fetch('/.netlify/functions/get-reports');
+                if (!response.ok) throw new Error("Niet ingelogd");
+                const data = await response.json();
+                allData = data;
+                renderTable(data);
+            } catch (e) {
+                // Als ophalen mislukt, terug naar login
+                document.getElementById('loginScreen').classList.remove('hidden');
+            }
         }
 
         function renderTable(data) {
@@ -110,114 +136,61 @@
                 tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group";
                 const dateStr = new Date(row.created_at).toLocaleString('nl-NL');
                 
-                tr.appendChild(createCell(dateStr, "font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs"));
-                tr.appendChild(createCell(row.monteur_naam, "font-bold text-slate-700 dark:text-slate-200"));
-                tr.appendChild(createCell(row.locatie, "text-slate-700 dark:text-slate-300 text-sm"));
-                tr.appendChild(createCell(row.werkorder, "text-slate-500 dark:text-slate-400 font-mono text-sm"));
-                
-                const tdStatus = document.createElement('td');
-                tdStatus.className = "p-4";
-                if (row.is_veilig) {
-                    tdStatus.innerHTML = '<span class="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 px-2 py-1 rounded text-xs font-bold border border-green-200 dark:border-green-800">VEILIG</span>';
-                } else {
-                    tdStatus.innerHTML = '<span class="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 px-2 py-1 rounded text-xs font-bold border border-red-200 dark:border-red-800">ONVEILIG</span>';
-                }
-                tr.appendChild(tdStatus);
-
-                // INFO & AFKEURPUNTEN KOLOM
-                const infoDiv = document.createElement('div');
-                infoDiv.className = "flex flex-col gap-1";
-                
-                // Opmerkingen
-                if(row.opmerkingen && row.opmerkingen !== "Geen") {
-                    const opm = document.createElement('span');
-                    opm.className = "text-slate-500 dark:text-slate-400 italic text-sm";
-                    opm.textContent = row.opmerkingen;
-                    infoDiv.appendChild(opm);
-                }
-
-                // Afkeurpunten tonen
-                if(!row.is_veilig && row.afkeurpunten) {
-                    let points = [];
-                    try {
-                        // Support voor zowel JSON string als object (als driver het al geparsed heeft)
-                        points = typeof row.afkeurpunten === 'string' ? JSON.parse(row.afkeurpunten) : row.afkeurpunten;
-                    } catch(e) { points = ["Fout bij laden punten"]; }
-                    
-                    if(points && points.length > 0) {
-                        const ul = document.createElement('ul');
-                        ul.className = "mt-1 text-xs text-red-600 dark:text-red-400 list-disc pl-4 font-bold bg-red-50 dark:bg-red-900/10 p-2 rounded border border-red-100 dark:border-red-900/30";
-                        points.forEach(p => {
-                            const li = document.createElement('li');
-                            li.textContent = p;
-                            ul.appendChild(li);
-                        });
-                        infoDiv.appendChild(ul);
-                    }
-                }
-                tr.appendChild(createCell(infoDiv, "hidden md:table-cell"));
-
-                const tdAction = document.createElement('td');
-                tdAction.className = "p-4 text-right";
-                const btn = document.createElement('button');
-                btn.className = "text-slate-300 hover:text-red-500 dark:hover:text-red-400 p-2 rounded transition-colors opacity-0 group-hover:opacity-100";
-                btn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
-                btn.onclick = () => deleteReport(row.id);
-                tdAction.appendChild(btn);
-                tr.appendChild(tdAction);
+                tr.innerHTML = `
+                    <td class="p-4 font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs">${dateStr}</td>
+                    <td class="p-4 font-bold text-slate-700 dark:text-slate-200">${row.monteur_naam}</td>
+                    <td class="p-4 text-slate-700 dark:text-slate-300">${row.locatie}</td>
+                    <td class="p-4 text-slate-500 dark:text-slate-400 font-mono">${row.werkorder || '-'}</td>
+                    <td class="p-4">${row.is_veilig 
+                        ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">VEILIG</span>' 
+                        : '<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-bold">ONVEILIG</span>'}
+                    </td>
+                    <td class="p-4 hidden md:table-cell">
+                        ${renderInfoColumn(row)}
+                    </td>
+                    <td class="p-4 text-right">
+                        <button onclick="deleteReport(${row.id})" class="text-slate-300 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                `;
                 tbody.appendChild(tr);
             });
         }
 
-        async function login() {
-            const input = document.getElementById('passwordInput').value;
-            const btn = document.getElementById('loginBtn');
-            const errorMsg = document.getElementById('loginError');
-            btn.innerText = "Controleren..."; btn.disabled = true; errorMsg.classList.add('hidden');
-            try {
-                const response = await fetch('/.netlify/functions/get-reports', { headers: { 'x-admin-secret': input } });
-                if (!response.ok) throw new Error("Toegang geweigerd");
-                const data = await response.json();
-                sessionKey = input;
-                document.getElementById('loginScreen').classList.add('hidden');
-                allData = data;
-                renderTable(data);
-            } catch (e) {
-                errorMsg.classList.remove('hidden');
-                btn.innerText = "Inloggen"; btn.disabled = false;
-                document.getElementById('passwordInput').value = '';
+        function renderInfoColumn(row) {
+            let html = `<div class="flex flex-col gap-1">`;
+            if(row.opmerkingen && row.opmerkingen !== "Geen") {
+                html += `<span class="text-slate-500 italic text-xs">${row.opmerkingen}</span>`;
             }
+            if(!row.is_veilig && row.afkeurpunten) {
+                let points = typeof row.afkeurpunten === 'string' ? JSON.parse(row.afkeurpunten) : row.afkeurpunten;
+                if(points && points.length) {
+                    html += `<ul class="text-xs text-red-600 list-disc pl-4 font-bold">${points.map(p => `<li>${p}</li>`).join('')}</ul>`;
+                }
+            }
+            html += `</div>`;
+            return html;
         }
 
-        function logout() {
-            sessionKey = null;
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('passwordInput').value = '';
+        async function deleteReport(id) {
+            if(!confirm("Verwijderen?")) return;
+            try {
+                await fetch('/.netlify/functions/delete-report', {
+                    method: 'POST',
+                    body: JSON.stringify({ id: id })
+                });
+                allData = allData.filter(i => i.id !== id);
+                renderTable(allData);
+            } catch(e) { alert("Fout"); }
         }
 
         function filterTable() {
             const term = document.getElementById('searchInput').value.toLowerCase();
             const filtered = allData.filter(row => 
-                (row.monteur_naam && row.monteur_naam.toLowerCase().includes(term)) || 
-                (row.locatie && row.locatie.toLowerCase().includes(term)) || 
+                row.monteur_naam.toLowerCase().includes(term) || 
+                row.locatie.toLowerCase().includes(term) || 
                 (row.werkorder && row.werkorder.toLowerCase().includes(term))
             );
             renderTable(filtered);
-        }
-
-        async function deleteReport(id) {
-            if(!confirm("Definitief verwijderen?")) return;
-            try {
-                const res = await fetch('/.netlify/functions/delete-report', {
-                    method: 'POST',
-                    headers: { 'x-admin-secret': sessionKey },
-                    body: JSON.stringify({ id: id })
-                });
-                if (res.ok) {
-                    allData = allData.filter(i => i.id !== id);
-                    filterTable();
-                } else { alert("Fout bij verwijderen"); }
-            } catch (e) { alert("Netwerkfout"); }
         }
 
         function exportToExcel() {
@@ -228,22 +201,19 @@
             XLSX.writeFile(wb, `LMRA_Export.xlsx`);
         }
 
-        function checkTheme() {
-            const st = localStorage.getItem('lmra_theme');
-            if (st === 'dark' || (!st && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); }
-            updateIcons();
+        function logout() {
+            location.reload(); // Simpele logout door refresh (sessie is cookie based)
         }
+
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
             localStorage.setItem('lmra_theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-            updateIcons();
         }
-        function updateIcons() {
-            const cls = document.documentElement.classList.contains('dark') ? "fa-solid fa-sun" : "fa-solid fa-moon";
-            if(document.getElementById('themeIcon')) document.getElementById('themeIcon').className = cls;
-            if(document.getElementById('loginThemeIcon')) document.getElementById('loginThemeIcon').className = cls;
+        
+        // Init
+        if (localStorage.getItem('lmra_theme') === 'dark' || (!localStorage.getItem('lmra_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
         }
-        checkTheme();
     </script>
 </body>
 </html>
