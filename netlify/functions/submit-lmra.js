@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 
+// LMRA Pro v8.0 - Sentinel Backend
 // Rate Limiting (5 requests per minuut per IP)
 const rateLimit = new Map();
 
@@ -37,12 +38,11 @@ export const handler = async (event, context) => {
       return { statusCode: 400, body: "Ongeldige data" };
     }
 
-    // Validatie (Backend)
+    // Validatie
     if (!data.monteur_naam || data.monteur_naam.length > 100) return { statusCode: 400, body: "Naam ongeldig" };
     if (!data.locatie || data.locatie.length > 100) return { statusCode: 400, body: "Locatie ongeldig" };
 
-    // Data opslaan (Neon driver regelt de SQL-injectie preventie automatisch)
-    // Let op: we slaan afkeurpunten nu op als JSON string
+    // Opslaan
     await sql`
       INSERT INTO lmra_reports 
       (monteur_naam, locatie, werkorder, is_veilig, opmerkingen, afkeurpunten) 
@@ -52,7 +52,7 @@ export const handler = async (event, context) => {
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "Veilig opgeslagen" }),
+      body: JSON.stringify({ message: "Veilig opgeslagen in Sentinel Cloud" }),
       headers: { "Content-Type": "application/json" }
     };
 

@@ -1,0 +1,11 @@
+# .gitignore - Wat niet naar GitHub mag
+
+# De map met 10.000 hulpbestanden (ALLEEN LOKAAL)
+node_modules/
+
+# De lokale Netlify instellingen (die had je al)
+.netlify/
+
+# Systeembestanden van Mac/Windows (optioneel, maar netjes)
+.DS_Store
+Thumbs.db

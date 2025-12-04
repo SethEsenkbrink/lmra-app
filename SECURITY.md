@@ -1,30 +1,24 @@
-Beveiligingsbeleid LMRA Pro
-Bedankt voor je interesse in de veiligheid van dit project.
+# Beveiligingsbeleid LMRA Pro
 
-Hoewel dit project is ontwikkeld met grote zorg voor veiligheid (Security by Design) en privacy, betreft het een applicatie die wordt ontwikkeld en onderhouden op basis van best-effort in een educatieve en hobby-matige context.
+**Versie 8.0 - Sentinel**
 
-🛡️ Ondersteunde Versies
-Alleen de laatste versie die is uitgerold naar de main branch wordt actief ondersteund. Oude versies ontvangen geen patches.
+Bedankt voor je interesse in de veiligheid van dit project. Dit project is ontwikkeld met een "Security by Design" en "Offline First" filosofie.
 
-Versie	Ondersteund
-Versie 5.x	✅ Wordt ondersteund
-Versie < 5.0	❌ Geen ondersteuning
-🐛 Een kwetsbaarheid melden
-Heb je een beveiligingslek gevonden? Ik waardeer het enorm als je dit meldt, zodat ik het kan oplossen. Omdat dit een openbaar leerproject is, vraag ik je om verantwoordelijk om te gaan met je vondst ("Responsible Disclosure").
+## 🛡️ Ondersteunde Versies
 
-Maak géén publiek issue aan op GitHub (om misbruik te voorkomen).
-Neem contact op via de bekende interne kanalen (of e-mail indien beschikbaar).
-Vermeld in je bericht:
-Een beschrijving van het lek.
-Stappen om het lek te reproduceren.
-Ik streef ernaar om meldingen serieus te onderzoeken, maar kan door de hobby-aard van het project geen vaste reactietijden garanderen.
+| Versie | Status | Opmerking |
+| :--- | :--- | :--- |
+| **Versie 8.x** | ✅ **Actief Ondersteund** | Sentinel (Huidige versie) |
+| Versie 7.x | ⚠️ Alleen kritieke patches | Ironclad (Uitgaand) |
+| Versie < 7.0 | ❌ Geen ondersteuning | Verouderd |
 
-⚖️ Disclaimer & Aansprakelijkheid
-Deze software wordt aangeboden "zoals deze is" ("as-is"), zonder enige vorm van garantie, expliciet of impliciet.
+## 🐛 Een kwetsbaarheid melden
+Heb je een beveiligingslek gevonden?
+1. Maak géén publiek issue aan op GitHub.
+2. Neem direct contact op met de beheerder.
+3. Vermeld stappen om het lek te reproduceren.
 
-Gebruik op Eigen Risico: Het gebruik van deze applicatie in een productie- of bedrijfsomgeving is volledig op eigen risico van de eindgebruiker.
-Geen Aansprakelijkheid: De ontwikkelaar(s) en bijdragers kunnen niet aansprakelijk worden gesteld voor enige directe of indirecte schade, dataverlies, storingen of incidenten die voortvloeien uit het gebruik van deze software.
-Geen Service Level Agreement (SLA): Er is geen garantie op 24/7 ondersteuning, uptime, updates of beschikbaarheid van de gekoppelde cloud-diensten (zoals Netlify en Neon).
-Door deze applicatie te gebruiken, ga je akkoord met deze voorwaarden.
+## ⚖️ Disclaimer
+Deze software wordt aangeboden "as-is". Gebruik in productie is op eigen risico. Er is geen garantie op uptime van de cloud-sync functies (Neon/Netlify).
 
 Laatste update: 2025

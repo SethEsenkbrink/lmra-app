@@ -1,10 +1,10 @@
-# Netlify Configuratie v7.0 - Ironclad
+# Netlify Configuratie v8.0 - Sentinel
 
 [[headers]]
   for = "/*"
   [headers.values]
-    # CSP versoepeld voor v7.0 functionaliteit
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self' https://api.open-meteo.com;"
+    # CSP: Configureren voor PWA en externe scripts
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; connect-src 'self' https://api.open-meteo.com;"
     X-XSS-Protection = "1; mode=block"
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
