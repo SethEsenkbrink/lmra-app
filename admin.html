@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LMRA Admin 8.0</title>
+    <title>LMRA Admin 8.1</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
@@ -89,37 +89,42 @@
             const btn = document.getElementById('loginBtn');
             const errorMsg = document.getElementById('loginError');
             
-            btn.innerText = "Laden..."; btn.disabled = true; errorMsg.classList.add('hidden');
+            btn.innerText = "Laden..."; 
+            btn.disabled = true; 
+            errorMsg.classList.add('hidden');
 
             try {
-                // Nieuwe endpoint aanroepen
+                // UPDATE: Headers toegevoegd voor correcte JSON verzending
                 const response = await fetch('/.netlify/functions/admin-login', {
                     method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json' 
+                    },
                     body: JSON.stringify({ username, password })
                 });
 
                 if (response.ok) {
                     document.getElementById('loginScreen').classList.add('hidden');
-                    loadData(); // Data ophalen na succesvolle login
+                    loadData(); 
                 } else {
                     throw new Error("Fout");
                 }
             } catch (e) {
                 errorMsg.classList.remove('hidden');
-                btn.innerText = "Inloggen"; btn.disabled = false;
+                btn.innerText = "Inloggen"; 
+                btn.disabled = false;
             }
         }
 
         async function loadData() {
             try {
-                // Omdat we nu Cookies gebruiken (HttpOnly), hoeven we geen header mee te sturen!
+                // HttpOnly cookies worden automatisch meegestuurd
                 const response = await fetch('/.netlify/functions/get-reports');
                 if (!response.ok) throw new Error("Niet ingelogd");
                 const data = await response.json();
                 allData = data;
                 renderTable(data);
             } catch (e) {
-                // Als ophalen mislukt, terug naar login
                 document.getElementById('loginScreen').classList.remove('hidden');
             }
         }
@@ -162,7 +167,11 @@
                 html += `<span class="text-slate-500 italic text-xs">${row.opmerkingen}</span>`;
             }
             if(!row.is_veilig && row.afkeurpunten) {
-                let points = typeof row.afkeurpunten === 'string' ? JSON.parse(row.afkeurpunten) : row.afkeurpunten;
+                let points = [];
+                try {
+                    points = typeof row.afkeurpunten === 'string' ? JSON.parse(row.afkeurpunten) : row.afkeurpunten;
+                } catch(e) {}
+                
                 if(points && points.length) {
                     html += `<ul class="text-xs text-red-600 list-disc pl-4 font-bold">${points.map(p => `<li>${p}</li>`).join('')}</ul>`;
                 }
@@ -176,6 +185,7 @@
             try {
                 await fetch('/.netlify/functions/delete-report', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: id })
                 });
                 allData = allData.filter(i => i.id !== id);
@@ -202,18 +212,28 @@
         }
 
         function logout() {
-            location.reload(); // Simpele logout door refresh (sessie is cookie based)
+            location.reload(); 
         }
 
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
             localStorage.setItem('lmra_theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            updateIcons();
+        }
+
+        function updateIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const iconClass = isDark ? "fa-solid fa-sun" : "fa-solid fa-moon";
+            if(document.getElementById('themeIcon')) document.getElementById('themeIcon').className = iconClass;
+            if(document.getElementById('loginThemeIcon')) document.getElementById('loginThemeIcon').className = iconClass;
         }
         
         // Init
-        if (localStorage.getItem('lmra_theme') === 'dark' || (!localStorage.getItem('lmra_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        const savedTheme = localStorage.getItem('lmra_theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         }
+        updateIcons();
     </script>
 </body>
 </html>
