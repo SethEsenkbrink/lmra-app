@@ -35,7 +35,7 @@
         
         <div class="flex-1 w-full md:w-auto max-w-md mx-4">
             <div class="relative">
-                <input type="text" id="searchInput" placeholder="Zoeken op naam, locatie of WO..." 
+                <input type="text" id="searchInput" placeholder="Zoeken..." 
                     class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
                 <div class="absolute left-3 top-2.5 text-slate-400">
                     <i class="fa-solid fa-search"></i>
@@ -44,7 +44,7 @@
         </div>
         
         <div class="flex items-center gap-2">
-            <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition-colors flex items-center justify-center" title="Wissel Thema">
+            <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition-colors flex items-center justify-center">
                 <i id="themeIcon" class="fa-solid fa-moon"></i>
             </button>
 
@@ -52,7 +52,7 @@
                 <i class="fa-solid fa-file-excel"></i> <span class="hidden sm:inline">Excel</span>
             </button>
             
-            <a href="/admin.html?action=logout" class="bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2">
+            <a href="/admin.html?action=logout" class="bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 text-decoration-none">
                 <i class="fa-solid fa-right-from-bracket"></i> <span class="hidden sm:inline">Uitloggen</span>
             </a>
         </div>
@@ -67,18 +67,18 @@
                         <th class="p-4">Monteur</th>
                         <th class="p-4">Locatie / WO</th>
                         <th class="p-4">Status</th>
-                        <th class="p-4 hidden md:table-cell w-1/3">Opmerkingen & Acties</th>
+                        <th class="p-4 hidden md:table-cell w-1/3">Opmerkingen</th>
                         <th class="p-4 text-right">Opties</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
             </table>
             <div id="loading" class="p-8 text-center text-slate-400 font-medium animate-pulse">
-                <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Beveiligde data ophalen...
+                <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Data ophalen...
             </div>
             <div id="emptyState" class="hidden p-12 text-center text-slate-400 dark:text-slate-500">
                 <i class="fa-solid fa-folder-open text-4xl mb-3 opacity-50"></i>
-                <p>Geen resultaten gevonden.</p>
+                <p>Geen resultaten.</p>
             </div>
         </div>
     </main>
@@ -89,45 +89,32 @@
         document.addEventListener('DOMContentLoaded', () => {
             checkTheme();
             loadReports();
-            
-            // Zoekfunctionaliteit koppelen
-            document.getElementById('searchInput').addEventListener('input', (e) => {
-                handleSearch(e.target.value);
-            });
+            document.getElementById('searchInput').addEventListener('input', (e) => handleSearch(e.target.value));
         });
 
         async function loadReports() {
             const loading = document.getElementById('loading');
             const tbody = document.getElementById('tableBody');
-            
             try {
                 const response = await fetch('/.netlify/functions/get-reports');
-
-                if (response.status === 401) {
-                    window.location.reload(); // Trigger login scherm
-                    return;
-                }
+                if (response.status === 401) { window.location.reload(); return; } // Forceer inloggen als sessie weg is
+                if (!response.ok) throw new Error("Fout");
                 
-                if (!response.ok) throw new Error("Server fout bij ophalen");
-
-                const data = await response.json();
-                allData = data;
-                renderTable(data);
+                allData = await response.json();
+                renderTable(allData);
             } catch (e) {
-                console.error(e);
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500 font-bold">Fout: ${e.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Fout bij ophalen data.</td></tr>`;
             } finally {
                 loading.style.display = 'none';
             }
         }
 
         function handleSearch(query) {
-            const lowerQuery = query.toLowerCase();
+            const lower = query.toLowerCase();
             const filtered = allData.filter(item => 
-                (item.monteur_naam && item.monteur_naam.toLowerCase().includes(lowerQuery)) ||
-                (item.locatie && item.locatie.toLowerCase().includes(lowerQuery)) ||
-                (item.werkorder && item.werkorder.toLowerCase().includes(lowerQuery)) ||
-                (item.opmerkingen && item.opmerkingen.toLowerCase().includes(lowerQuery))
+                (item.monteur_naam && item.monteur_naam.toLowerCase().includes(lower)) ||
+                (item.locatie && item.locatie.toLowerCase().includes(lower)) ||
+                (item.werkorder && item.werkorder.toLowerCase().includes(lower))
             );
             renderTable(filtered);
         }
@@ -137,88 +124,46 @@
             const emptyState = document.getElementById('emptyState');
             tbody.innerHTML = '';
             
-            if(data.length === 0) {
-                emptyState.classList.remove('hidden');
-                return;
-            } else {
-                emptyState.classList.add('hidden');
-            }
+            if(data.length === 0) { emptyState.classList.remove('hidden'); return; } 
+            else { emptyState.classList.add('hidden'); }
 
             data.forEach(row => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group";
-                
                 const statusBadge = row.is_veilig 
-                    ? '<span class="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded text-[10px] font-bold border border-green-200 dark:border-green-800 tracking-wider">VEILIG</span>'
-                    : '<span class="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 px-2 py-1 rounded text-[10px] font-bold border border-red-200 dark:border-red-800 tracking-wider">ONVEILIG</span>';
-
-                let failsHtml = '';
-                if (!row.is_veilig && row.afkeurpunten) {
-                    try {
-                        const points = typeof row.afkeurpunten === 'string' ? JSON.parse(row.afkeurpunten) : row.afkeurpunten;
-                        if(points.length > 0) {
-                            failsHtml = `<ul class="mt-1 text-xs text-red-600 dark:text-red-400 list-disc pl-4 bg-red-50 dark:bg-red-900/10 p-2 rounded border border-red-100 dark:border-red-800/30">${points.map(p => `<li>${p}</li>`).join('')}</ul>`;
-                        }
-                    } catch(e) {}
-                }
-
-                const comments = row.opmerkingen && row.opmerkingen !== "Geen" 
-                    ? `<div class="text-xs text-slate-500 dark:text-slate-400 italic mb-1">"${row.opmerkingen}"</div>` 
-                    : '';
+                    ? '<span class="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded text-[10px] font-bold">VEILIG</span>'
+                    : '<span class="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 px-2 py-1 rounded text-[10px] font-bold">ONVEILIG</span>';
+                
+                // Simpele weergave van afkeurpunten in opmerkingen kolom als die er zijn
+                let details = row.opmerkingen || '-';
+                if(!row.is_veilig) details += ' (Zie afkeurpunten)';
 
                 tr.innerHTML = `
-                    <td class="p-4 font-mono text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap border-b border-slate-100 dark:border-slate-700">${new Date(row.created_at).toLocaleString('nl-NL')}</td>
-                    <td class="p-4 font-bold text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700">${row.monteur_naam}</td>
-                    <td class="p-4 border-b border-slate-100 dark:border-slate-700">
-                        <div class="text-sm font-medium text-slate-700 dark:text-slate-200">${row.locatie}</div>
-                        <div class="text-xs text-slate-400 dark:text-slate-500 font-mono">${row.werkorder || '-'}</div>
-                    </td>
-                    <td class="p-4 border-b border-slate-100 dark:border-slate-700">${statusBadge}</td>
-                    <td class="p-4 hidden md:table-cell border-b border-slate-100 dark:border-slate-700">
-                        ${comments}
-                        ${failsHtml}
-                    </td>
-                    <td class="p-4 text-right border-b border-slate-100 dark:border-slate-700">
-                        <button onclick="deleteReport(${row.id})" class="text-slate-300 hover:text-red-600 dark:text-slate-600 dark:hover:text-red-400 transition-colors p-2" title="Verwijderen">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </td>
+                    <td class="p-4 font-mono text-xs text-slate-500 dark:text-slate-400">${new Date(row.created_at).toLocaleString('nl-NL')}</td>
+                    <td class="p-4 font-bold text-slate-700 dark:text-slate-200">${row.monteur_naam}</td>
+                    <td class="p-4"><div class="text-sm font-medium text-slate-700 dark:text-slate-200">${row.locatie}</div><div class="text-xs text-slate-400 font-mono">${row.werkorder || ''}</div></td>
+                    <td class="p-4">${statusBadge}</td>
+                    <td class="p-4 hidden md:table-cell text-xs text-slate-500 dark:text-slate-400 italic truncate max-w-xs">${details}</td>
+                    <td class="p-4 text-right"><button onclick="deleteReport(${row.id})" class="text-slate-300 hover:text-red-600 dark:text-slate-600 dark:hover:text-red-400"><i class="fa-solid fa-trash-can"></i></button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
         async function deleteReport(id) {
-            if(!confirm("Weet je zeker dat je dit rapport wilt verwijderen?")) return;
-
-            try {
-                const res = await fetch('/.netlify/functions/delete-report', {
-                    method: 'POST',
-                    body: JSON.stringify({ id: id })
-                });
-
-                if (res.ok) {
-                    loadReports();
-                } else {
-                    alert("Kon niet verwijderen.");
-                }
-            } catch(e) {
-                alert("Netwerkfout.");
-            }
+            if(!confirm("Verwijderen?")) return;
+            await fetch('/.netlify/functions/delete-report', { method: 'POST', body: JSON.stringify({ id }) });
+            loadReports();
         }
 
-        // Dark Mode Functies
         function toggleDarkMode() {
             const html = document.documentElement;
             if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                localStorage.setItem('lmra_theme', 'light');
-                document.getElementById('themeIcon').className = "fa-solid fa-moon";
+                html.classList.remove('dark'); localStorage.setItem('lmra_theme', 'light');
             } else {
-                html.classList.add('dark');
-                localStorage.setItem('lmra_theme', 'dark');
-                document.getElementById('themeIcon').className = "fa-solid fa-sun";
+                html.classList.add('dark'); localStorage.setItem('lmra_theme', 'dark');
             }
+            checkTheme();
         }
 
         function checkTheme() {
@@ -234,11 +179,11 @@
         }
 
         function exportToExcel() {
-            if (!allData.length) return alert("Geen data om te exporteren.");
+            if (!allData.length) return alert("Geen data.");
             const ws = XLSX.utils.json_to_sheet(allData);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "LMRA Export");
-            XLSX.writeFile(wb, `LMRA_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, "Export");
+            XLSX.writeFile(wb, "LMRA_Export.xlsx");
         }
     </script>
 </body>

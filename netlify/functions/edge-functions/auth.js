@@ -2,25 +2,26 @@ export default async (request, context) => {
   try {
     const url = new URL(request.url);
     
-    // 0. LOGOUT HANDLER (Nieuw!)
-    // Als de gebruiker op 'uitloggen' klikt, sturen we hem hierheen.
-    // De server wist dan de cookie en stuurt hem terug naar het inlogscherm.
+    // ---------------------------------------------------------
+    // 0. LOGOUT HANDLER (De "Uitlogknop" stuurt je hierheen)
+    // ---------------------------------------------------------
     if (url.pathname === '/admin.html' && url.searchParams.get('action') === 'logout') {
-        const response = await context.next();
         
-        // Wis de cookie door hem te overschrijven met een verloopdatum in het verleden
-        const clearCookie = `lmra_auth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=Strict`;
+        // We sturen een commando terug om de cookie direct te vernietigen (Max-Age=0)
+        const clearCookie = `lmra_auth=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict`;
 
         return new Response(null, {
             status: 302, // Redirect
             headers: {
-                'Location': '/admin.html', // Terug naar start (nu zonder cookie -> dus inlogscherm)
-                'Set-Cookie': clearCookie
+                'Location': '/admin.html', // Stuur terug naar de login pagina
+                'Set-Cookie': clearCookie  // DIT wist de cookie uit de browser
             }
         });
     }
 
-    // DEFINITIE: Welke pagina's zijn beveiligd?
+    // ---------------------------------------------------------
+    // BEVEILIGINGS CHECK
+    // ---------------------------------------------------------
     if (url.pathname === '/admin.html' || url.pathname.includes('/get-reports') || url.pathname.includes('/delete-report')) {
       
       const cookies = context.cookies;
@@ -41,7 +42,10 @@ export default async (request, context) => {
           const inputCode = url.searchParams.get('code');
           
           if (inputCode === secretKey) {
-              const cookieString = `lmra_auth=${secretKey}; Path=/; Max-Age=604800; Secure; HttpOnly; SameSite=Strict`;
+              // Code is goed! 
+              // LET OP: Geen 'Max-Age' meer = Sessie cookie (weg als browser sluit)
+              const cookieString = `lmra_auth=${secretKey}; Path=/; HttpOnly; Secure; SameSite=Strict`;
+              
               return new Response(null, {
                   status: 302,
                   headers: {
@@ -52,7 +56,7 @@ export default async (request, context) => {
           }
       }
 
-      // 3. GEEN TOEGANG? Toon inlogscherm
+      // 3. GEEN TOEGANG? Toon inlogscherm (Vervangt admin.html)
       if (url.pathname === '/admin.html') {
           return new Response(`
             <!DOCTYPE html>
@@ -69,6 +73,7 @@ export default async (request, context) => {
                   <div class="text-5xl text-blue-500 mb-6"><i class="fa-solid fa-shield-halved"></i></div>
                   <h1 class="text-xl font-bold mb-4">Sentinel Beheer</h1>
                   <p class="text-slate-400 text-sm mb-6">Sessie verlopen of ongeldig.</p>
+                  
                   <form method="GET" action="/admin.html">
                       <input type="password" name="code" placeholder="Voer toegangscode in..." class="w-full p-3 rounded bg-slate-700 border border-slate-600 text-white mb-4 focus:ring-2 focus:ring-blue-500 outline-none text-center transition-all" required autofocus>
                       <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition shadow-lg">Inloggen</button>
@@ -80,6 +85,7 @@ export default async (request, context) => {
           `, { headers: { 'content-type': 'text/html' } });
       }
 
+      // 4. Blokkeer API toegang
       return new Response("Geen toegang.", { status: 401 });
     }
 
