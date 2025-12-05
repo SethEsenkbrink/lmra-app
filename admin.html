@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LMRA Admin - Beheer v8.2</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>LMRA Admin v8.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -12,12 +15,7 @@
         tailwind.config = {
             darkMode: 'class',
             theme: {
-                extend: {
-                    colors: {
-                        darkbg: '#0f172a',
-                        cardbg: '#1e293b'
-                    }
-                }
+                extend: { colors: { darkbg: '#0f172a', cardbg: '#1e293b' } }
             }
         }
     </script>
@@ -35,11 +33,8 @@
         
         <div class="flex-1 w-full md:w-auto max-w-md mx-4">
             <div class="relative">
-                <input type="text" id="searchInput" placeholder="Zoeken..." 
-                    class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
-                <div class="absolute left-3 top-2.5 text-slate-400">
-                    <i class="fa-solid fa-search"></i>
-                </div>
+                <input type="text" id="searchInput" placeholder="Zoeken..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                <div class="absolute left-3 top-2.5 text-slate-400"><i class="fa-solid fa-search"></i></div>
             </div>
         </div>
         
@@ -47,11 +42,9 @@
             <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition-colors flex items-center justify-center">
                 <i id="themeIcon" class="fa-solid fa-moon"></i>
             </button>
-
             <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
                 <i class="fa-solid fa-file-excel"></i> <span class="hidden sm:inline">Excel</span>
             </button>
-            
             <a href="/admin.html?action=logout" class="bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 text-decoration-none">
                 <i class="fa-solid fa-right-from-bracket"></i> <span class="hidden sm:inline">Uitloggen</span>
             </a>
@@ -63,29 +56,18 @@
             <table class="w-full text-left text-sm border-collapse">
                 <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-700 uppercase text-xs sticky top-0 z-10 shadow-sm">
                     <tr>
-                        <th class="p-4">Datum</th>
-                        <th class="p-4">Monteur</th>
-                        <th class="p-4">Locatie / WO</th>
-                        <th class="p-4">Status</th>
-                        <th class="p-4 hidden md:table-cell w-1/3">Opmerkingen</th>
-                        <th class="p-4 text-right">Opties</th>
+                        <th class="p-4">Datum</th><th class="p-4">Monteur</th><th class="p-4">Locatie / WO</th><th class="p-4">Status</th><th class="p-4 hidden md:table-cell w-1/3">Opmerkingen</th><th class="p-4 text-right">Opties</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
             </table>
-            <div id="loading" class="p-8 text-center text-slate-400 font-medium animate-pulse">
-                <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Data ophalen...
-            </div>
-            <div id="emptyState" class="hidden p-12 text-center text-slate-400 dark:text-slate-500">
-                <i class="fa-solid fa-folder-open text-4xl mb-3 opacity-50"></i>
-                <p>Geen resultaten.</p>
-            </div>
+            <div id="loading" class="p-8 text-center text-slate-400 font-medium animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Data ophalen...</div>
+            <div id="emptyState" class="hidden p-12 text-center text-slate-400 dark:text-slate-500"><i class="fa-solid fa-folder-open text-4xl mb-3 opacity-50"></i><p>Geen resultaten.</p></div>
         </div>
     </main>
 
     <script>
         let allData = [];
-
         document.addEventListener('DOMContentLoaded', () => {
             checkTheme();
             loadReports();
@@ -94,19 +76,16 @@
 
         async function loadReports() {
             const loading = document.getElementById('loading');
-            const tbody = document.getElementById('tableBody');
             try {
                 const response = await fetch('/.netlify/functions/get-reports');
-                if (response.status === 401) { window.location.reload(); return; } // Forceer inloggen als sessie weg is
+                // 401 = Niet ingelogd (cookie weg/verlopen) -> Herlaad om inlogscherm te tonen
+                if (response.status === 401) { window.location.reload(); return; }
                 if (!response.ok) throw new Error("Fout");
-                
                 allData = await response.json();
                 renderTable(allData);
             } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Fout bij ophalen data.</td></tr>`;
-            } finally {
-                loading.style.display = 'none';
-            }
+                console.error(e);
+            } finally { loading.style.display = 'none'; }
         }
 
         function handleSearch(query) {
@@ -123,29 +102,14 @@
             const tbody = document.getElementById('tableBody');
             const emptyState = document.getElementById('emptyState');
             tbody.innerHTML = '';
-            
             if(data.length === 0) { emptyState.classList.remove('hidden'); return; } 
             else { emptyState.classList.add('hidden'); }
-
             data.forEach(row => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group";
-                const statusBadge = row.is_veilig 
-                    ? '<span class="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded text-[10px] font-bold">VEILIG</span>'
-                    : '<span class="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 px-2 py-1 rounded text-[10px] font-bold">ONVEILIG</span>';
-                
-                // Simpele weergave van afkeurpunten in opmerkingen kolom als die er zijn
-                let details = row.opmerkingen || '-';
-                if(!row.is_veilig) details += ' (Zie afkeurpunten)';
-
-                tr.innerHTML = `
-                    <td class="p-4 font-mono text-xs text-slate-500 dark:text-slate-400">${new Date(row.created_at).toLocaleString('nl-NL')}</td>
-                    <td class="p-4 font-bold text-slate-700 dark:text-slate-200">${row.monteur_naam}</td>
-                    <td class="p-4"><div class="text-sm font-medium text-slate-700 dark:text-slate-200">${row.locatie}</div><div class="text-xs text-slate-400 font-mono">${row.werkorder || ''}</div></td>
-                    <td class="p-4">${statusBadge}</td>
-                    <td class="p-4 hidden md:table-cell text-xs text-slate-500 dark:text-slate-400 italic truncate max-w-xs">${details}</td>
-                    <td class="p-4 text-right"><button onclick="deleteReport(${row.id})" class="text-slate-300 hover:text-red-600 dark:text-slate-600 dark:hover:text-red-400"><i class="fa-solid fa-trash-can"></i></button></td>
-                `;
+                const statusBadge = row.is_veilig ? '<span class="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded text-[10px] font-bold">VEILIG</span>' : '<span class="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 px-2 py-1 rounded text-[10px] font-bold">ONVEILIG</span>';
+                let details = row.opmerkingen || '-'; if(!row.is_veilig && row.afkeurpunten) details += ' (Zie afkeurpunten)';
+                tr.innerHTML = `<td class="p-4 font-mono text-xs text-slate-500 dark:text-slate-400">${new Date(row.created_at).toLocaleString('nl-NL')}</td><td class="p-4 font-bold text-slate-700 dark:text-slate-200">${row.monteur_naam}</td><td class="p-4"><div class="text-sm font-medium text-slate-700 dark:text-slate-200">${row.locatie}</div><div class="text-xs text-slate-400 font-mono">${row.werkorder || ''}</div></td><td class="p-4">${statusBadge}</td><td class="p-4 hidden md:table-cell text-xs text-slate-500 dark:text-slate-400 italic truncate max-w-xs">${details}</td><td class="p-4 text-right"><button onclick="deleteReport(${row.id})" class="text-slate-300 hover:text-red-600 dark:text-slate-600 dark:hover:text-red-400 transition-colors p-2"><i class="fa-solid fa-trash-can"></i></button></td>`;
                 tbody.appendChild(tr);
             });
         }
@@ -158,33 +122,18 @@
 
         function toggleDarkMode() {
             const html = document.documentElement;
-            if (html.classList.contains('dark')) {
-                html.classList.remove('dark'); localStorage.setItem('lmra_theme', 'light');
-            } else {
-                html.classList.add('dark'); localStorage.setItem('lmra_theme', 'dark');
-            }
+            if (html.classList.contains('dark')) { html.classList.remove('dark'); localStorage.setItem('lmra_theme', 'light'); } 
+            else { html.classList.add('dark'); localStorage.setItem('lmra_theme', 'dark'); }
             checkTheme();
         }
 
         function checkTheme() {
             const theme = localStorage.getItem('lmra_theme');
             const icon = document.getElementById('themeIcon');
-            if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-                if(icon) icon.className = "fa-solid fa-sun";
-            } else {
-                document.documentElement.classList.remove('dark');
-                if(icon) icon.className = "fa-solid fa-moon";
-            }
+            if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); if(icon) icon.className = "fa-solid fa-sun"; } 
+            else { document.documentElement.classList.remove('dark'); if(icon) icon.className = "fa-solid fa-moon"; }
         }
-
-        function exportToExcel() {
-            if (!allData.length) return alert("Geen data.");
-            const ws = XLSX.utils.json_to_sheet(allData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Export");
-            XLSX.writeFile(wb, "LMRA_Export.xlsx");
-        }
+        function exportToExcel() { const ws = XLSX.utils.json_to_sheet(allData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Export"); XLSX.writeFile(wb, "LMRA_Export.xlsx"); }
     </script>
 </body>
 </html>

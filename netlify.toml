@@ -1,26 +1,29 @@
-# Netlify Configuratie v8.2 - Sentinel (Edge Auth Update)
+# Netlify Configuratie v8.2 - Sentinel (Secure Token Auth)
 
 [build]
   publish = "."
   functions = "netlify/functions"
 
-# Koppel de Edge Function aan de admin pagina en de data-functies
+# 1. Beveilig de admin pagina (de 'voordeur')
 [[edge_functions]]
   path = "/admin.html"
   function = "auth"
 
+# 2. Beveilig de functie die data ophaalt
 [[edge_functions]]
   path = "/.netlify/functions/get-reports"
   function = "auth"
 
+# 3. Beveilig de functie die data verwijdert
 [[edge_functions]]
   path = "/.netlify/functions/delete-report"
   function = "auth"
 
+# Beveiligingsheaders voor de hele site
 [[headers]]
   for = "/*"
   [headers.values]
-    # CSP aangepast: Geen Identity meer, wel Tailwind/FontAwesome
+    # CSP opgeschoond: Identity domeinen verwijderd, alleen noodzakelijke bronnen toegestaan
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; connect-src 'self' https://api.open-meteo.com;"
     X-XSS-Protection = "1; mode=block"
     X-Frame-Options = "DENY"
