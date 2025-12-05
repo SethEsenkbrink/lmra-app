@@ -1,15 +1,14 @@
 import { neon } from '@neondatabase/serverless';
 
 export const handler = async (event, context) => {
-  // STAP 1: Authenticatie Check
-  // Netlify Identity stopt de gebruikersinfo automatisch in context.clientContext
-  // Als 'user' leeg is, is er geen geldig token meegestuurd.
+  // STAP 1: Authenticatie Check via Netlify Identity
+  // context.clientContext.user wordt AUTOMATISCH gevuld door Netlify als er een geldig token is
   const user = context.clientContext && context.clientContext.user;
 
   if (!user) {
     return { 
       statusCode: 401, 
-      body: JSON.stringify({ error: "Niet geautoriseerd. Log in via Netlify Identity." }) 
+      body: JSON.stringify({ error: "Niet geautoriseerd. Log in." }) 
     };
   }
 

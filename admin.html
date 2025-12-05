@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 h-screen flex flex-col font-sans">
@@ -17,7 +18,7 @@
             <h1 class="text-2xl font-bold mb-2 text-slate-800">LMRA Pro Beheer</h1>
             <p class="text-slate-500 mb-8 text-sm">Beveiligde toegang voor veiligheidskundigen.</p>
             
-            <button onclick="netlifyIdentity.open()" class="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+            <button id="loginBtn" class="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-lg font-bold transition-all shadow-lg">
                 Inloggen met Netlify ID
             </button>
         </div>
@@ -64,17 +65,35 @@
     <script>
         let allData = [];
 
-        // 1. INIT: Check login status bij laden
+        // Wacht tot de widget geladen is
         document.addEventListener('DOMContentLoaded', () => {
-            const user = netlifyIdentity.currentUser();
-            if (user) {
-                initDashboard(user);
-            } else {
-                netlifyIdentity.on('login', user => {
-                    netlifyIdentity.close();
-                    initDashboard(user);
+            // Koppel de knop pas als de DOM er is
+            document.getElementById('loginBtn').addEventListener('click', () => {
+                if (window.netlifyIdentity) {
+                    netlifyIdentity.open();
+                } else {
+                    alert("Authenticatie widget is nog aan het laden, probeer over 2 seconden opnieuw.");
+                }
+            });
+
+            // Initialiseer widget
+            if (window.netlifyIdentity) {
+                netlifyIdentity.on('init', user => {
+                    if (user) initDashboard(user);
                 });
+                netlifyIdentity.init();
             }
+            
+            // Login event
+            netlifyIdentity.on('login', user => {
+                netlifyIdentity.close();
+                initDashboard(user);
+            });
+
+            // Logout event
+            netlifyIdentity.on('logout', () => {
+                window.location.reload();
+            });
         });
 
         function initDashboard(user) {
@@ -86,18 +105,14 @@
 
         function logout() {
             netlifyIdentity.logout();
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('dashboard').classList.add('hidden');
-            document.getElementById('tableBody').innerHTML = '';
         }
 
-        // 2. DATA: Ophalen met beveiligde token
         async function loadReports(user) {
             const loading = document.getElementById('loading');
             loading.style.display = 'block';
             
             try {
-                // Haal vers token op
+                // Haal de token op die Netlify voor ons beheert
                 const token = await user.jwt();
                 
                 const response = await fetch('/.netlify/functions/get-reports', {
@@ -105,9 +120,7 @@
                 });
 
                 if (response.status === 401) {
-                    alert("Sessie verlopen. Log opnieuw in.");
-                    logout();
-                    return;
+                    throw new Error("Sessie verlopen");
                 }
 
                 if (!response.ok) throw new Error("Server fout");
@@ -117,13 +130,13 @@
                 renderTable(data);
             } catch (e) {
                 console.error(e);
-                document.getElementById('tableBody').innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Fout bij laden: ${e.message}</td></tr>`;
+                if(e.message === "Sessie verlopen") logout();
+                document.getElementById('tableBody').innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Fout: ${e.message}</td></tr>`;
             } finally {
                 loading.style.display = 'none';
             }
         }
 
-        // 3. RENDER: Tabel opbouwen
         function renderTable(data) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -137,12 +150,10 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition-colors group";
                 
-                // Status logic
                 const statusBadge = row.is_veilig 
                     ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-[10px] font-bold border border-green-200 tracking-wider">VEILIG</span>'
                     : '<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-[10px] font-bold border border-red-200 tracking-wider">ONVEILIG</span>';
 
-                // Afkeurpunten parsen
                 let failsHtml = '';
                 if (!row.is_veilig && row.afkeurpunten) {
                     try {
@@ -153,7 +164,6 @@
                     } catch(e) {}
                 }
 
-                // Opmerkingen
                 const comments = row.opmerkingen && row.opmerkingen !== "Geen" 
                     ? `<div class="text-xs text-slate-500 italic mb-1">"${row.opmerkingen}"</div>` 
                     : '';
@@ -180,10 +190,8 @@
             });
         }
 
-        // 4. ACTION: Verwijderen
         async function deleteReport(id) {
             if(!confirm("Weet je zeker dat je dit rapport wilt verwijderen?")) return;
-            
             const user = netlifyIdentity.currentUser();
             if(!user) return;
 
@@ -196,7 +204,7 @@
                 });
 
                 if (res.ok) {
-                    loadReports(user); // Herladen
+                    loadReports(user);
                 } else {
                     alert("Kon niet verwijderen.");
                 }
@@ -205,7 +213,6 @@
             }
         }
 
-        // 5. EXPORT: Excel
         function exportToExcel() {
             if (!allData.length) return alert("Geen data om te exporteren.");
             const ws = XLSX.utils.json_to_sheet(allData);
