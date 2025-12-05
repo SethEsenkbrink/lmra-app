@@ -45,9 +45,10 @@
             <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
                 <i class="fa-solid fa-file-excel"></i> <span class="hidden sm:inline">Excel</span>
             </button>
-            <a href="/admin.html?action=logout" class="bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 text-decoration-none">
-                <i class="fa-solid fa-right-from-bracket"></i> <span class="hidden sm:inline">Uitloggen</span>
-            </a>
+            
+            <button onclick="forceLogout()" class="bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-power-off"></i> <span class="hidden sm:inline">Uitloggen</span>
+            </button>
         </div>
     </header>
 
@@ -74,35 +75,70 @@
             document.getElementById('searchInput').addEventListener('input', (e) => handleSearch(e.target.value));
         });
 
-async function loadReports() {
-    const loading = document.getElementById('loading');
-    loading.style.display = 'block'; // Zorg dat spinner zichtbaar is bij start
-    
-    try {
-        const response = await fetch('/.netlify/functions/get-reports');
-        
-        // CRUCIAAL: Als we een 401 krijgen (sessie verlopen/niet geldig), 
-        // herlaad de pagina. De Edge Function toont dan het loginscherm.
-        if (response.status === 401) { 
-            window.location.reload(); 
-            return; 
+        // --- NIEUWE FUNCTIE: HARDE RESET ---
+        async function forceLogout() {
+            if(!confirm("Weet je zeker dat je wilt uitloggen?")) return;
+
+            const btn = document.querySelector('button[onclick="forceLogout()"]');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Wissen...';
+            
+            // 1. Service Workers doden (Dit is de boosdoener in jouw video)
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                    await registration.unregister();
+                    console.log('SW Unregistered');
+                }
+            }
+
+            // 2. Cache legen
+            if ('caches' in window) {
+                const keys = await caches.keys();
+                for (const key of keys) {
+                    await caches.delete(key);
+                    console.log('Cache deleted:', key);
+                }
+            }
+
+            // 3. Cookies wissen (Client side poging)
+            document.cookie.split(";").forEach((c) => {
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+
+            // 4. Forceer Server Logout & Reload
+            // We voegen een tijdstempel toe (?t=...) om de browser te dwingen een verse pagina te halen
+            window.location.href = "/admin.html?action=logout&t=" + Date.now();
         }
 
-        if (!response.ok) throw new Error("Server antwoordde niet met OK");
-        
-        allData = await response.json();
-        renderTable(allData);
-    } catch (e) {
-        console.error("Ophaalfout:", e);
-        // Toon een foutmelding in de tabel ipv oneindig laden
-        document.getElementById('tableBody').innerHTML = 
-            `<tr><td colspan="6" class="p-8 text-center text-red-500">
-                <i class="fa-solid fa-triangle-exclamation"></i> Kon data niet ophalen. Probeer opnieuw in te loggen.
-            </td></tr>`;
-    } finally { 
-        loading.style.display = 'none'; 
-    }
-}
+        async function loadReports() {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+            
+            try {
+                const response = await fetch('/.netlify/functions/get-reports');
+                
+                // 401: Als de server zegt "Niet ingelogd", herlaad de pagina direct.
+                // Dit forceert het inlogscherm.
+                if (response.status === 401) { 
+                    console.log("Sessie verlopen, herladen...");
+                    window.location.reload(); 
+                    return; 
+                }
+
+                if (!response.ok) throw new Error("Fout bij ophalen data");
+                
+                allData = await response.json();
+                renderTable(allData);
+            } catch (e) {
+                console.error(e);
+                // Als het misgaat, toon foutmelding in tabel ipv oneindige spinner
+                document.getElementById('tableBody').innerHTML = 
+                    `<tr><td colspan="6" class="p-8 text-center text-red-500">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Kon data niet ophalen. 
+                        <button onclick="window.location.reload()" class="underline font-bold">Verversen</button>
+                    </td></tr>`;
+            } finally { loading.style.display = 'none'; }
+        }
 
         function handleSearch(query) {
             const lower = query.toLowerCase();
