@@ -1,7 +1,7 @@
 {
   "name": "lmra-app",
-  "version": "8.1.0",
-  "description": "LMRA Pro v8.1 - Sentinel (Netlify Identity)",
+  "version": "8.2.0",
+  "description": "LMRA Pro v8.2 - Sentinel (Secure Identity & Fixes)",
   "type": "module",
   "scripts": {
     "dev": "netlify dev",

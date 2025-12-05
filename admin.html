@@ -16,7 +16,7 @@
         <div class="bg-white p-8 rounded-xl shadow-2xl text-center max-w-sm w-full border border-slate-200">
             <div class="text-5xl text-blue-900 mb-6"><i class="fa-solid fa-user-shield"></i></div>
             <h1 class="text-2xl font-bold mb-2 text-slate-800">LMRA Pro Beheer</h1>
-            <p class="text-slate-500 mb-8 text-sm">Beveiligde toegang voor veiligheidskundigen.</p>
+            <p class="text-slate-50 mb-8 text-sm">Beveiligde toegang voor veiligheidskundigen.</p>
             
             <button id="loginBtn" class="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-lg font-bold transition-all shadow-lg">
                 Inloggen met Netlify ID
@@ -57,7 +57,7 @@
                     </thead>
                     <tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
                 </table>
-                <div id="loading" class="p-8 text-center text-slate-400">Bezig met laden...</div>
+                <div id="loading" class="p-8 text-center text-slate-400 hidden">Bezig met laden...</div>
             </div>
         </main>
     </div>
@@ -65,48 +65,95 @@
     <script>
         let allData = [];
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Knop listener
-            document.getElementById('loginBtn').addEventListener('click', () => {
-                if (window.netlifyIdentity) {
-                    netlifyIdentity.open();
+        // --- AUTHENTICATIE LOGICA ---
+
+        // Zorg dat Netlify Identity direct reageert (belangrijk voor wachtwoord resets via mail)
+        if (window.netlifyIdentity) {
+            // Event: Widget is klaar
+            netlifyIdentity.on('init', user => {
+                console.log('Identity Init:', user);
+                if (user) {
+                    initDashboard(user);
                 } else {
-                    alert("Het inlog systeem is nog aan het laden. Probeer het over 2 seconden nog eens.");
+                    // Als er geen user is, checken of we in een 'recovery' flow zitten via de URL
+                    checkRecoveryMode();
                 }
             });
 
-            // Widget events
-            if (window.netlifyIdentity) {
-                netlifyIdentity.on('init', user => {
-                    if (user) initDashboard(user);
+            // Event: Succesvol ingelogd
+            netlifyIdentity.on('login', user => {
+                console.log('Ingelogd:', user);
+                netlifyIdentity.close();
+                initDashboard(user);
+            });
+
+            // Event: Uitgelogd
+            netlifyIdentity.on('logout', () => {
+                window.location.reload();
+            });
+
+            // Event: Foutmeldingen
+            netlifyIdentity.on('error', err => {
+                console.error('Identity Error:', err);
+                alert("Er ging iets mis met inloggen: " + err.message);
+            });
+
+            // Initialiseer de widget
+            netlifyIdentity.init({
+                locale: 'nl' 
+            });
+        }
+
+        // Koppel de inlogknop zodra de pagina geladen is
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginBtn = document.getElementById('loginBtn');
+            if (loginBtn) {
+                loginBtn.addEventListener('click', () => {
+                    if (window.netlifyIdentity) {
+                        netlifyIdentity.open();
+                    } else {
+                        alert("Het inlogsysteem wordt nog geladen. Probeer het zo nog eens.");
+                    }
                 });
-                netlifyIdentity.on('login', user => {
-                    netlifyIdentity.close();
-                    initDashboard(user);
-                });
-                netlifyIdentity.on('logout', () => {
-                    window.location.reload();
-                });
-                netlifyIdentity.init(); // Start de widget
             }
         });
 
+        // Extra check voor recovery token in de URL
+        function checkRecoveryMode() {
+            if (window.location.hash.includes('recovery_token') && window.netlifyIdentity) {
+                console.log("Recovery token gedetecteerd.");
+                // De widget handelt dit meestal zelf af bij 'init', 
+                // maar dit loggen helpt bij debuggen.
+            }
+        }
+
+        // Functie die wordt aangeroepen na succesvolle login
         function initDashboard(user) {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('dashboard').classList.remove('hidden');
-            document.getElementById('adminName').innerText = user.email;
+            
+            const adminNameEl = document.getElementById('adminName');
+            if (adminNameEl) adminNameEl.innerText = user.email;
+            
             loadReports(user);
         }
 
+        // Uitlog functie
         function logout() {
-            netlifyIdentity.logout();
+            if (window.netlifyIdentity) netlifyIdentity.logout();
         }
+
+        // --- DATA OPHALEN & VERWERKEN ---
 
         async function loadReports(user) {
             const loading = document.getElementById('loading');
-            loading.style.display = 'block';
+            const tbody = document.getElementById('tableBody');
+            
+            if(loading) loading.classList.remove('hidden');
+            if(tbody) tbody.innerHTML = ''; // Tabel leegmaken voor nieuwe data
             
             try {
+                // Haal een vers JWT token op
                 const token = await user.jwt();
                 
                 const response = await fetch('/.netlify/functions/get-reports', {
@@ -114,23 +161,25 @@
                 });
 
                 if (response.status === 401) throw new Error("Sessie verlopen");
-                if (!response.ok) throw new Error("Server fout");
+                if (!response.ok) throw new Error("Server fout bij ophalen data");
 
                 const data = await response.json();
-                allData = data;
+                allData = data; // Opslaan voor Excel export
                 renderTable(data);
             } catch (e) {
                 console.error(e);
-                document.getElementById('tableBody').innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Fout: ${e.message}</td></tr>`;
+                if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Fout: ${e.message}</td></tr>`;
+                
+                // Als de sessie verlopen is, log de gebruiker uit zodat ze opnieuw kunnen inloggen
                 if(e.message === "Sessie verlopen") logout();
             } finally {
-                loading.style.display = 'none';
+                if(loading) loading.classList.add('hidden');
             }
         }
 
         function renderTable(data) {
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
+            if (!tbody) return;
             
             if(data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400 italic">Nog geen rapporten aanwezig.</td></tr>';
@@ -139,7 +188,7 @@
 
             data.forEach(row => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition-colors group";
+                tr.className = "hover:bg-slate-50 transition-colors group border-b border-slate-100 last:border-0";
                 
                 const statusBadge = row.is_veilig 
                     ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-[10px] font-bold border border-green-200 tracking-wider">VEILIG</span>'
@@ -152,7 +201,9 @@
                         if(points.length > 0) {
                             failsHtml = `<ul class="mt-1 text-xs text-red-600 list-disc pl-4 bg-red-50 p-2 rounded border border-red-100">${points.map(p => `<li>${p}</li>`).join('')}</ul>`;
                         }
-                    } catch(e) {}
+                    } catch(e) {
+                        console.warn("Fout bij parsen afkeurpunten", e);
+                    }
                 }
 
                 const comments = row.opmerkingen && row.opmerkingen !== "Geen" 
@@ -183,7 +234,9 @@
 
         async function deleteReport(id) {
             if(!confirm("Weet je zeker dat je dit rapport wilt verwijderen?")) return;
-            const user = netlifyIdentity.currentUser();
+            
+            // Check voor user
+            const user = window.netlifyIdentity ? netlifyIdentity.currentUser() : null;
             if(!user) return;
 
             try {
@@ -195,18 +248,30 @@
                 });
 
                 if (res.ok) {
-                    loadReports(user);
+                    loadReports(user); // Herlaad tabel
                 } else {
-                    alert("Kon niet verwijderen.");
+                    alert("Kon niet verwijderen. Mogelijk geen rechten.");
                 }
             } catch(e) {
-                alert("Netwerkfout.");
+                alert("Netwerkfout bij verwijderen.");
             }
         }
 
         function exportToExcel() {
-            if (!allData.length) return alert("Geen data om te exporteren.");
-            const ws = XLSX.utils.json_to_sheet(allData);
+            if (!allData || allData.length === 0) return alert("Geen data om te exporteren.");
+            
+            // Maak een nette export set (overbodige ID's weglaten indien gewenst)
+            const exportData = allData.map(item => ({
+                Datum: new Date(item.created_at).toLocaleString('nl-NL'),
+                Monteur: item.monteur_naam,
+                Locatie: item.locatie,
+                Werkorder: item.werkorder,
+                Status: item.is_veilig ? 'Veilig' : 'Onveilig',
+                Opmerkingen: item.opmerkingen,
+                Afkeurpunten: item.afkeurpunten // Dit blijft ruwe data/JSON
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "LMRA Export");
             XLSX.writeFile(wb, `LMRA_Export_${new Date().toISOString().slice(0,10)}.xlsx`);

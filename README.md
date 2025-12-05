@@ -1,15 +1,15 @@
-# 🛡️ LMRA Pro - Digitale Veiligheidstool (v8.1)
+# 🛡️ LMRA Pro - Digitale Veiligheidstool (v8.2)
 
-**Codename: Sentinel (Fortress Update)**
+**Codename: Sentinel (Identity Fix Update)**
 
 LMRA Pro is een professionele Progressive Web App (PWA) ontwikkeld voor technici in de proces- en elektrotechniek. De applicatie digitaliseert de Laatste Minuut Risico Analyse en vervangt papieren boekjes door een slim, cloud-connected systeem dat **ook offline** werkt.
 
-## 🚀 Nieuw in v8.1 (Sentinel)
+## 🚀 Nieuw in v8.2 (Sentinel Patch)
 
-* **Hervat Werkzaamheden:** Na een pauze hoeft de monteur niet alles opnieuw in te vullen. De app herkent een actieve sessie en vraagt om een snelle visuele her-check.
-* **Professionele Beveiliging:** Het admin-paneel is nu beveiligd met database-gestuurde accounts, bcrypt wachtwoord-hashing en veilige HTTP-only cookies.
-* **Changelog:** Gebruikers zien direct na een update wat er nieuw is.
-* **Sentinel Sync Engine:** Rapporten worden offline opgeslagen in een wachtrij en automatisch gesynchroniseerd zodra er verbinding is.
+* **Secure Identity Flow:** Verbeterde afhandeling van wachtwoord resets en redirects.
+* **Redirect Fix:** Geen loop meer bij het gebruik van de 'Terug' knop na inloggen.
+* **Hervat Werkzaamheden:** Slimme detectie van actieve sessies op dezelfde dag.
+* **Versie Synchronisatie:** Alle componenten (SW, App, Admin) zijn gelijkgetrokken naar v8.2.
 
 ## 📱 Functionaliteiten
 
@@ -17,19 +17,17 @@ LMRA Pro is een professionele Progressive Web App (PWA) ontwikkeld voor technici
 * **Slimme Checklist:** Dynamische vragenlijst met verplichte actievelden bij afkeur.
 * **Geldigheidsduur:** Automatische waarschuwing als de sessie (pauze) is verlopen.
 * **Buddy Check:** Optioneel vierogenprincipe.
-* **Historie & PDF:** Inzien van eigen historie en exporteren naar PDF.
-* **Dagelijkse Reset:** Automatische opruiming bij start van een nieuwe werkdag.
+* **Offline Mode:** Rapporten worden lokaal opgeslagen en gesynchroniseerd bij verbinding.
 
 ### 👨‍💻 Voor het Beheer (Admin Dashboard)
-* **Beveiligde Login:** Toegang via unieke accounts (geen gedeelde wachtwoorden meer).
+* **Beveiligde Login:** Toegang via Netlify Identity (RBAC).
 * **Real-time Inzicht:** Tabel van alle uitgevoerde LMRA's.
-* **Detail Analyse:** Inzien van specifieke afkeurpunten en genomen maatregelen.
-* **Export:** Volledige database dump naar Excel.
+* **Excel Export:** Volledige database dump voor rapportages.
 
 ## 🛠️ Technische Stack
 * **Frontend:** HTML5, Tailwind CSS, Vanilla JS (ES6+).
 * **Backend:** Netlify Functions (Node.js).
-* **Auth:** JSON Web Tokens (JWT) & Bcryptjs.
+* **Auth:** Netlify Identity (GoTrue).
 * **Database:** Neon (Serverless PostgreSQL).
 * **Security:** Rate Limiting, Input Sanitization (DOMPurify), Secure Cookies.
 
@@ -39,4 +37,4 @@ LMRA Pro is een professionele Progressive Web App (PWA) ontwikkeld voor technici
 | Variabele | Beschrijving |
 | :--- | :--- |
 | `NETLIFY_DATABASE_URL` | Connectiestring naar Neon PostgreSQL |
-| `JWT_SECRET` | Lange willekeurige zin voor het onder
+| `JWT_SECRET` | Secret voor token validatie |

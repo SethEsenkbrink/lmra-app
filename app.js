@@ -1,7 +1,7 @@
-/* app.js - LMRA Pro Logica v8.1 (Codename: Sentinel) */
+/* app.js - LMRA Pro Logica v8.2 (Codename: Sentinel) */
 
 /* --- CONFIGURATIE --- */
-const APP_VERSION = "8.1"; 
+const APP_VERSION = "8.2"; // Aangepast naar 8.2
 const SYNC_QUEUE_KEY = 'lmra_sync_queue';
 const ACTIVE_SESSION_KEY = 'lmra_active_session'; 
 
