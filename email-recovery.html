@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    /* Simpele styling die werkt in mailprogramma's */
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; padding: 20px; }
+    .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
+    .header { background-color: #00447c; padding: 20px; text-align: center; }
+    .header h1 { color: white; margin: 0; font-size: 20px; letter-spacing: 1px; }
+    .content { padding: 30px; color: #334155; text-align: center; line-height: 1.6; }
+    .btn { display: inline-block; background-color: #00447c; color: white !important; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; margin-top: 20px; }
+    .footer { text-align: center; padding: 20px; font-size: 11px; color: #94a3b8; background-color: #f8fafc; border-top: 1px solid #e2e8f0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>LMRA PRO BEHEER</h1>
+    </div>
+    <div class="content">
+      <h3>Wachtwoord Herstellen</h3>
+      <p>Er is een verzoek gedaan om het wachtwoord van je <strong>Sentinel-account</strong> te resetten.</p>
+      
+      <p>Klik op de knop hieronder om een nieuw wachtwoord in te stellen:</p>
+      
+      <a href="{{ .SiteURL }}/admin.html#recovery_token={{ .Token }}" class="btn">Wachtwoord Resetten</a>
+      
+      <p style="margin-top: 30px; font-size: 12px; color: #64748b;">Heb je dit niet aangevraagd? Dan kun je deze e-mail negeren.</p>
+    </div>
+    <div class="footer">
+      &copy; 2025 LMRA Pro v8.2 - Sentinel
+    </div>
+  </div>
+</body>
+</html>
