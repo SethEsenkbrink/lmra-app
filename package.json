@@ -1,7 +1,7 @@
 {
   "name": "lmra-app",
-  "version": "8.0.1",
-  "description": "LMRA Pro v8.0 - Sentinel (Offline First)",
+  "version": "8.2.0",
+  "description": "LMRA Pro v8.2 - Sentinel (Netlify Identity)",
   "type": "module",
   "scripts": {
     "dev": "netlify dev",
@@ -10,17 +10,11 @@
     "security-check": "npm audit"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^0.10.4",
-    "bcryptjs": "^3.0.3",
-    "cookie": "^1.1.1",
-    "jsonwebtoken": "^9.0.3"
+    "@neondatabase/serverless": "^0.10.4"
   },
   "devDependencies": {
     "netlify-cli": "latest",
     "rimraf": "^6.0.0"
-  },
-  "overrides": {
-    "jws": "^3.2.3"
   },
   "engines": {
     "node": ">=18.0.0"
