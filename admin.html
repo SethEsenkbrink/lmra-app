@@ -7,18 +7,15 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>LMRA Admin v8.2</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="tailwind.config.js"></script>
+    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.4/purify.min.js"></script>
     
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: { colors: { darkbg: '#0f172a', cardbg: '#1e293b' } }
-            }
-        }
-    </script>
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body class="bg-slate-100 dark:bg-darkbg text-slate-800 dark:text-slate-200 h-screen flex flex-col font-sans transition-colors duration-300">
 
@@ -39,14 +36,13 @@
         </div>
         
         <div class="flex items-center gap-2">
-            <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition-colors flex items-center justify-center">
+            <button id="btnToggleTheme" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition-colors flex items-center justify-center">
                 <i id="themeIcon" class="fa-solid fa-moon"></i>
             </button>
-            <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
+            <button id="btnExport" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
                 <i class="fa-solid fa-file-excel"></i> <span class="hidden sm:inline">Excel</span>
             </button>
-            
-            <button onclick="forceLogout()" class="bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2">
+            <button id="btnLogout" class="bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2">
                 <i class="fa-solid fa-power-off"></i> <span class="hidden sm:inline">Uitloggen</span>
             </button>
         </div>
@@ -57,7 +53,12 @@
             <table class="w-full text-left text-sm border-collapse">
                 <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-700 uppercase text-xs sticky top-0 z-10 shadow-sm">
                     <tr>
-                        <th class="p-4">Datum</th><th class="p-4">Monteur</th><th class="p-4">Locatie / WO</th><th class="p-4">Status</th><th class="p-4 hidden md:table-cell w-1/3">Opmerkingen</th><th class="p-4 text-right">Opties</th>
+                        <th class="p-4">Datum</th>
+                        <th class="p-4">Monteur</th>
+                        <th class="p-4">Locatie / WO</th>
+                        <th class="p-4">Status</th>
+                        <th class="p-4 hidden md:table-cell w-1/3">Opmerkingen</th>
+                        <th class="p-4 text-right">Opties</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
@@ -67,125 +68,6 @@
         </div>
     </main>
 
-    <script>
-        let allData = [];
-        document.addEventListener('DOMContentLoaded', () => {
-            checkTheme();
-            loadReports();
-            document.getElementById('searchInput').addEventListener('input', (e) => handleSearch(e.target.value));
-        });
-
-        // --- NIEUWE FUNCTIE: HARDE RESET ---
-        async function forceLogout() {
-            if(!confirm("Weet je zeker dat je wilt uitloggen?")) return;
-
-            const btn = document.querySelector('button[onclick="forceLogout()"]');
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Wissen...';
-            
-            // 1. Service Workers doden (Dit is de boosdoener in jouw video)
-            if ('serviceWorker' in navigator) {
-                const registrations = await navigator.serviceWorker.getRegistrations();
-                for (const registration of registrations) {
-                    await registration.unregister();
-                    console.log('SW Unregistered');
-                }
-            }
-
-            // 2. Cache legen
-            if ('caches' in window) {
-                const keys = await caches.keys();
-                for (const key of keys) {
-                    await caches.delete(key);
-                    console.log('Cache deleted:', key);
-                }
-            }
-
-            // 3. Cookies wissen (Client side poging)
-            document.cookie.split(";").forEach((c) => {
-                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-            });
-
-            // 4. Forceer Server Logout & Reload
-            // We voegen een tijdstempel toe (?t=...) om de browser te dwingen een verse pagina te halen
-            window.location.href = "/admin.html?action=logout&t=" + Date.now();
-        }
-
-        async function loadReports() {
-            const loading = document.getElementById('loading');
-            loading.style.display = 'block';
-            
-            try {
-                const response = await fetch('/.netlify/functions/get-reports');
-                
-                // 401: Als de server zegt "Niet ingelogd", herlaad de pagina direct.
-                // Dit forceert het inlogscherm.
-                if (response.status === 401) { 
-                    console.log("Sessie verlopen, herladen...");
-                    window.location.reload(); 
-                    return; 
-                }
-
-                if (!response.ok) throw new Error("Fout bij ophalen data");
-                
-                allData = await response.json();
-                renderTable(allData);
-            } catch (e) {
-                console.error(e);
-                // Als het misgaat, toon foutmelding in tabel ipv oneindige spinner
-                document.getElementById('tableBody').innerHTML = 
-                    `<tr><td colspan="6" class="p-8 text-center text-red-500">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Kon data niet ophalen. 
-                        <button onclick="window.location.reload()" class="underline font-bold">Verversen</button>
-                    </td></tr>`;
-            } finally { loading.style.display = 'none'; }
-        }
-
-        function handleSearch(query) {
-            const lower = query.toLowerCase();
-            const filtered = allData.filter(item => 
-                (item.monteur_naam && item.monteur_naam.toLowerCase().includes(lower)) ||
-                (item.locatie && item.locatie.toLowerCase().includes(lower)) ||
-                (item.werkorder && item.werkorder.toLowerCase().includes(lower))
-            );
-            renderTable(filtered);
-        }
-
-        function renderTable(data) {
-            const tbody = document.getElementById('tableBody');
-            const emptyState = document.getElementById('emptyState');
-            tbody.innerHTML = '';
-            if(data.length === 0) { emptyState.classList.remove('hidden'); return; } 
-            else { emptyState.classList.add('hidden'); }
-            data.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group";
-                const statusBadge = row.is_veilig ? '<span class="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded text-[10px] font-bold">VEILIG</span>' : '<span class="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 px-2 py-1 rounded text-[10px] font-bold">ONVEILIG</span>';
-                let details = row.opmerkingen || '-'; if(!row.is_veilig && row.afkeurpunten) details += ' (Zie afkeurpunten)';
-                tr.innerHTML = `<td class="p-4 font-mono text-xs text-slate-500 dark:text-slate-400">${new Date(row.created_at).toLocaleString('nl-NL')}</td><td class="p-4 font-bold text-slate-700 dark:text-slate-200">${row.monteur_naam}</td><td class="p-4"><div class="text-sm font-medium text-slate-700 dark:text-slate-200">${row.locatie}</div><div class="text-xs text-slate-400 font-mono">${row.werkorder || ''}</div></td><td class="p-4">${statusBadge}</td><td class="p-4 hidden md:table-cell text-xs text-slate-500 dark:text-slate-400 italic truncate max-w-xs">${details}</td><td class="p-4 text-right"><button onclick="deleteReport(${row.id})" class="text-slate-300 hover:text-red-600 dark:text-slate-600 dark:hover:text-red-400 transition-colors p-2"><i class="fa-solid fa-trash-can"></i></button></td>`;
-                tbody.appendChild(tr);
-            });
-        }
-
-        async function deleteReport(id) {
-            if(!confirm("Verwijderen?")) return;
-            await fetch('/.netlify/functions/delete-report', { method: 'POST', body: JSON.stringify({ id }) });
-            loadReports();
-        }
-
-        function toggleDarkMode() {
-            const html = document.documentElement;
-            if (html.classList.contains('dark')) { html.classList.remove('dark'); localStorage.setItem('lmra_theme', 'light'); } 
-            else { html.classList.add('dark'); localStorage.setItem('lmra_theme', 'dark'); }
-            checkTheme();
-        }
-
-        function checkTheme() {
-            const theme = localStorage.getItem('lmra_theme');
-            const icon = document.getElementById('themeIcon');
-            if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); if(icon) icon.className = "fa-solid fa-sun"; } 
-            else { document.documentElement.classList.remove('dark'); if(icon) icon.className = "fa-solid fa-moon"; }
-        }
-        function exportToExcel() { const ws = XLSX.utils.json_to_sheet(allData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Export"); XLSX.writeFile(wb, "LMRA_Export.xlsx"); }
-    </script>
+    <script src="admin.js" defer></script>
 </body>
 </html>

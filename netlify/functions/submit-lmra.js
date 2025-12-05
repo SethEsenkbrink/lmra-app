@@ -1,23 +1,9 @@
 import { neon } from '@neondatabase/serverless';
 
-// LMRA Pro v8.0 - Sentinel Backend
-// Rate Limiting (5 requests per minuut per IP)
-const rateLimit = new Map();
+// LMRA Pro v8.2 - Sentinel Backend
+// Security: Rate Limiting (Edge), Honeypot Check
 
 export const handler = async (event, context) => {
-  const ip = event.headers['client-ip'] || 'unknown';
-  const now = Date.now();
-  const windowStart = now - 60000;
-  const requestTimestamps = rateLimit.get(ip) || [];
-  const recentRequests = requestTimestamps.filter(t => t > windowStart);
-  
-  if (recentRequests.length >= 5) {
-    return { statusCode: 429, body: "Te veel verzoeken. Probeer het later opnieuw." };
-  }
-  
-  recentRequests.push(now);
-  rateLimit.set(ip, recentRequests);
-
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
@@ -36,6 +22,19 @@ export const handler = async (event, context) => {
       data = JSON.parse(event.body);
     } catch (e) {
       return { statusCode: 400, body: "Ongeldige data" };
+    }
+
+    // --- HONEYPOT CHECK (SPAM TRAP) ---
+    // Als 'contact_email' is ingevuld, is het een bot.
+    // We sturen een 'succes' response zodat de bot denkt dat het gelukt is,
+    // maar we slaan NIETS op in de database.
+    if (data.contact_email && data.contact_email.length > 0) {
+        console.warn(`Spam detectie: Honeypot trap geactiveerd door IP ${event.headers['client-ip']}`);
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ message: "Veilig opgeslagen in Sentinel Cloud" }),
+            headers: { "Content-Type": "application/json" }
+        };
     }
 
     // Validatie
@@ -57,7 +56,7 @@ export const handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error("Backend Fout:", error);
+    console.error("Fout bij opslaan rapport.");
     return { statusCode: 500, body: "Verwerkingsfout" };
   }
 };

@@ -1,82 +1,81 @@
 export default async (request, context) => {
   const url = new URL(request.url);
-  const cookies = context.cookies;
-  const authCookie = cookies.get('lmra_auth');
-  const secretKey = Deno.env.get('ADMIN_ACCESS_TOKEN');
+  
+  // Definieer welke paden beveiligd moeten zijn
+  // Dit vervangt de losse [[edge_functions]] regels in netlify.toml niet, maar handelt de logica af.
+  const protectedPaths = [
+    '/admin.html', 
+    '/.netlify/functions/get-reports', 
+    '/.netlify/functions/delete-report'
+  ];
 
-  // --- CONFIG CHECK ---
-  if (!secretKey) {
-    return new Response("CONFIG ERROR: ADMIN_ACCESS_TOKEN ontbreekt.", { status: 500 });
+  // Check of het huidige pad beveiligd moet worden
+  const isProtected = protectedPaths.some(path => url.pathname.startsWith(path));
+
+  // Als het geen beveiligd pad is (bijv. index.html of submit-lmra), laat door.
+  if (!isProtected) {
+    return context.next();
   }
 
-  // --- 1. UITLOGGEN (Harde Reset) ---
-  if (url.pathname === '/admin.html' && url.searchParams.get('action') === 'logout') {
-    const headers = new Headers({
-      'Location': '/admin.html',
-      // Wis cookie in het verleden
-      'Set-Cookie': 'lmra_auth=deleted; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=Strict',
-      // FORCEER de browser om data te wissen (Nucleaire optie)
-      'Clear-Site-Data': '"cookies", "storage", "executionContexts"'
-    });
-    return new Response(null, { status: 302, headers });
-  }
+  // --- IDENTITY CHECK ---
+  // Netlify Identity zet automatisch een cookie 'nf_jwt' na succesvol inloggen.
+  const jwt = context.cookies.get('nf_jwt');
 
-  // --- 2. INLOGGEN (Token Check) ---
-  if (url.searchParams.has('code')) {
-    const inputCode = url.searchParams.get('code');
-    if (inputCode === secretKey) {
-      const headers = new Headers({
-        'Location': '/admin.html',
-        'Set-Cookie': `lmra_auth=${secretKey}; Path=/; HttpOnly; Secure; SameSite=Strict`
-      });
-      return new Response(null, { status: 302, headers });
-    }
-  }
-
-  // --- 3. TOEGANGSCONTROLE ---
-  // HIER ZAT DE TYPFOUT, NU GECORRIGEERD NAAR 'const'
-  const isAuthenticated = authCookie === secretKey;
-
-  // Situatie A: De gebruiker is NIET ingelogd
-  if (!isAuthenticated) {
+  // GEEN GELDIG TOKEN? -> BLOKKEREN
+  if (!jwt) {
     
-    // Is dit een API call? Stuur JSON error voor de 'oneindige spinner' fix
-    if (url.pathname.includes('/.netlify/functions/')) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { 
-        status: 401,
-        headers: { "Content-Type": "application/json" }
-      });
+    // Situatie A: Het is een API call (bijv. data ophalen). Stuur JSON 401.
+    if (url.pathname.startsWith('/.netlify/functions/')) {
+        return new Response(JSON.stringify({ error: "Unauthorized: Sessie verlopen" }), { 
+            status: 401, 
+            headers: { "Content-Type": "application/json" }
+        });
     }
 
-    // Is dit de admin pagina? Toon het inlogscherm
+    // Situatie B: Het is een browser request (admin.html). Toon het inlogscherm.
+    // We serveren hier HTML direct vanuit de Edge Function zodat de echte admin.html verborgen blijft.
     return new Response(`
       <!DOCTYPE html>
       <html lang="nl">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Sentinel Toegang</title>
+        <title>Sentinel Login</title>
         <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+        <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+        <style>body { background-color: #0f172a; color: white; font-family: sans-serif; }</style>
       </head>
-      <body class="bg-slate-900 flex items-center justify-center h-screen font-sans text-white">
+      <body class="flex items-center justify-center h-screen flex-col gap-6">
         <div class="bg-slate-800 p-8 rounded-xl shadow-2xl text-center max-w-sm w-full border border-slate-700">
-            <div class="text-5xl text-blue-500 mb-6"><i class="fa-solid fa-user-shield"></i></div>
-            <h1 class="text-xl font-bold mb-4">Sentinel Beheer</h1>
-            <p class="text-slate-400 text-sm mb-6">Voer toegangscode in.</p>
+            <div class="text-5xl text-blue-500 mb-6"><i class="fa-solid fa-shield-halved"></i></div>
+            <h1 class="text-2xl font-bold mb-2">Sentinel Beveiliging</h1>
+            <p class="text-slate-400 mb-6 text-sm">Deze omgeving is beveiligd met Netlify Identity (RBAC).</p>
             
-            <form method="GET" action="/admin.html">
-                <input type="password" name="code" placeholder="Code..." class="w-full p-3 rounded bg-slate-700 border border-slate-600 text-white mb-4 focus:ring-2 focus:ring-blue-500 outline-none text-center transition-all" required autofocus autocomplete="off">
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition shadow-lg">Inloggen</button>
-            </form>
+            <div class="space-y-4">
+                <button onclick="netlifyIdentity.open()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg transform active:scale-95">
+                    Inloggen Beheerder
+                </button>
+                <a href="/" class="block text-xs text-slate-500 hover:text-slate-300 transition">Terug naar App</a>
+            </div>
         </div>
+
+        <script>
+            // Initialiseer widget
+            netlifyIdentity.init();
+
+            // Zodra login succesvol is, herlaad de pagina.
+            // Omdat de cookie 'nf_jwt' dan is gezet, laat de Edge Function ons de volgende keer wel door.
+            netlifyIdentity.on('login', () => {
+                window.location.reload();
+            });
+        </script>
       </body>
       </html>
-    `, { 
-      headers: { 'content-type': 'text/html', 'Cache-Control': 'no-store' } 
+    `, {
+      headers: { 'content-type': 'text/html' }
     });
   }
 
-  // Situatie B: Gebruiker is WEL ingelogd -> Laat door
+  // WEL GELDIG TOKEN? -> Laat verzoek door naar de echte content (admin.html of functie)
   return context.next();
 };
