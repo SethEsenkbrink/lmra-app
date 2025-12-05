@@ -2,12 +2,8 @@ import { neon } from '@neondatabase/serverless';
 
 export const handler = async (event, context) => {
   if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
-
-  // 1. Auth Check via Netlify Identity
-  const user = context.clientContext && context.clientContext.user;
-  if (!user) {
-    return { statusCode: 401, body: "Niet geautoriseerd" };
-  }
+  
+  // Geen auth check meer nodig hier, Edge Function beschermt deze route
 
   try {
     const sql = neon(process.env.NETLIFY_DATABASE_URL);
@@ -15,7 +11,6 @@ export const handler = async (event, context) => {
     
     if (!data.id) return { statusCode: 400, body: "Geen ID opgegeven" };
 
-    // 2. Verwijder item
     await sql`DELETE FROM lmra_reports WHERE id = ${data.id}`;
 
     return {

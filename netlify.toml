@@ -1,10 +1,27 @@
-# Netlify Configuratie v8.2 - Sentinel (Identity Fix)
+# Netlify Configuratie v8.2 - Sentinel (Edge Auth Update)
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# Koppel de Edge Function aan de admin pagina en de data-functies
+[[edge_functions]]
+  path = "/admin.html"
+  function = "auth"
+
+[[edge_functions]]
+  path = "/.netlify/functions/get-reports"
+  function = "auth"
+
+[[edge_functions]]
+  path = "/.netlify/functions/delete-report"
+  function = "auth"
 
 [[headers]]
   for = "/*"
   [headers.values]
-    # CSP: Identity toegevoegd aan script-src en frame-src
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://*.nsvcs.net https://identity.netlify.com; frame-src 'self' https://identity.netlify.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; connect-src 'self' https://api.open-meteo.com https://*.nsvcs.net https://identity.netlify.com;"
+    # CSP aangepast: Geen Identity meer, wel Tailwind/FontAwesome
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; connect-src 'self' https://api.open-meteo.com;"
     X-XSS-Protection = "1; mode=block"
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"

@@ -7,18 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23005596'%3E%3Cpath d='M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z'/%3E%3C/svg%3E">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00447c">
-    
-    <script>
-        // Check of er een token in de URL zit (voor invite of reset)
-        if (window.location.hash.includes('invite_token=') || 
-            window.location.hash.includes('recovery_token=') || 
-            window.location.hash.includes('confirmation_token=')) {
-            
-            // STUUR NU DOOR NAAR DE SPECIALE RESET PAGINA
-            window.location.replace('/reset.html' + window.location.hash);
-        }
-    </script>
-    
+     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
