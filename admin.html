@@ -65,35 +65,30 @@
     <script>
         let allData = [];
 
-        // Wacht tot de widget geladen is
         document.addEventListener('DOMContentLoaded', () => {
-            // Koppel de knop pas als de DOM er is
+            // Knop listener
             document.getElementById('loginBtn').addEventListener('click', () => {
                 if (window.netlifyIdentity) {
                     netlifyIdentity.open();
                 } else {
-                    alert("Authenticatie widget is nog aan het laden, probeer over 2 seconden opnieuw.");
+                    alert("Het inlog systeem is nog aan het laden. Probeer het over 2 seconden nog eens.");
                 }
             });
 
-            // Initialiseer widget
+            // Widget events
             if (window.netlifyIdentity) {
                 netlifyIdentity.on('init', user => {
                     if (user) initDashboard(user);
                 });
-                netlifyIdentity.init();
+                netlifyIdentity.on('login', user => {
+                    netlifyIdentity.close();
+                    initDashboard(user);
+                });
+                netlifyIdentity.on('logout', () => {
+                    window.location.reload();
+                });
+                netlifyIdentity.init(); // Start de widget
             }
-            
-            // Login event
-            netlifyIdentity.on('login', user => {
-                netlifyIdentity.close();
-                initDashboard(user);
-            });
-
-            // Logout event
-            netlifyIdentity.on('logout', () => {
-                window.location.reload();
-            });
         });
 
         function initDashboard(user) {
@@ -112,17 +107,13 @@
             loading.style.display = 'block';
             
             try {
-                // Haal de token op die Netlify voor ons beheert
                 const token = await user.jwt();
                 
                 const response = await fetch('/.netlify/functions/get-reports', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (response.status === 401) {
-                    throw new Error("Sessie verlopen");
-                }
-
+                if (response.status === 401) throw new Error("Sessie verlopen");
                 if (!response.ok) throw new Error("Server fout");
 
                 const data = await response.json();
@@ -130,8 +121,8 @@
                 renderTable(data);
             } catch (e) {
                 console.error(e);
-                if(e.message === "Sessie verlopen") logout();
                 document.getElementById('tableBody').innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Fout: ${e.message}</td></tr>`;
+                if(e.message === "Sessie verlopen") logout();
             } finally {
                 loading.style.display = 'none';
             }
