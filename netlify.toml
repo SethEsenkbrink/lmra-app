@@ -1,10 +1,8 @@
-# Netlify Configuratie v8.2 - Sentinel (Secure Token Auth)
+# Netlify Configuratie v8.2 - Sentinel (Fixed)
 
 [build]
   publish = "."
   functions = "netlify/functions"
-
-# --- EDGE SECURITY LAYERS ---
 
 # 1. Beveilig de admin pagina (de 'voordeur')
 [[edge_functions]]
@@ -21,23 +19,17 @@
   path = "/.netlify/functions/delete-report"
   function = "auth"
 
-# 4. RATE LIMITING (NIEUW: Audit Fix Stap 3)
-# Deze Edge Function draait VOOR de backend submit functie.
+# 4. De Limiter functie koppelen (Zonder de 'rate_limit' property die de fout veroorzaakt)
 [[edge_functions]]
   function = "submit-limiter"
   path = "/.netlify/functions/submit-lmra"
-  
-  [edge_functions.rate_limit]
-    window = "1m" # Per minuut
-    limit = 10    # Max 10 rapporten (beschermt tegen DoS/Spam)
-    aggregate_by = "ip" # Per IP adres
 
-# --- HEADERS ---
+# Beveiligingsheaders voor de hele site
 [[headers]]
   for = "/*"
   [headers.values]
-    # CSP: 'unsafe-inline' is verwijderd bij script-src voor maximale veiligheid
-    Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; connect-src 'self' https://api.open-meteo.com https://*.nsvcs.net;"
+    # CSP: Strict, maar staat Tailwind en Netlify Identity toe
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://identity.netlify.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; frame-src 'self' https://identity.netlify.com; connect-src 'self' https://api.open-meteo.com https://*.nsvcs.net https://identity.netlify.com;"
     X-XSS-Protection = "1; mode=block"
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"

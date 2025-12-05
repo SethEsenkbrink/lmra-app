@@ -1,10 +1,8 @@
 export default async (request, context) => {
-  // Dit is een 'pass-through' Edge Function.
-  // De beveiliging (Rate Limiting) wordt toegepast door de Netlify Edge infrastructuur
-  // op basis van de configuratie in netlify.toml.
+  // Simpele logging om te zien dat het verkeer via de Edge loopt
+  console.log(`[Sentinel Edge] Verzoek van ${request.headers.get("x-nf-client-connection-ip") || "Unknown IP"}`);
   
-  // Als de limiet NIET is bereikt, wordt dit uitgevoerd en mag het verzoek door.
-  // Als de limiet WEL is bereikt, blokkeert Netlify dit verzoek automatisch met een 429 status.
-  
+  // In een latere fase kunnen we hier custom rate limiting code toevoegen met Deno KV,
+  // maar voor nu is de 'pass-through' voldoende om de architectuur correct te houden.
   return context.next();
 };
