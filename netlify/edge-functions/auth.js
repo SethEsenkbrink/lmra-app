@@ -11,22 +11,22 @@ export default async (request, context) => {
 
   // --- 1. UITLOGGEN (Harde Reset) ---
   if (url.pathname === '/admin.html' && url.searchParams.get('action') === 'logout') {
-    // We sturen een redirect naar de kale admin pagina, maar met instructies om de cookie te vernietigen
     const headers = new Headers({
-      'Location': '/admin.html', // Redirect terug naar login scherm
-      'Set-Cookie': 'lmra_auth=deleted; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=Strict'
+      'Location': '/admin.html',
+      // Wis cookie in het verleden
+      'Set-Cookie': 'lmra_auth=deleted; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=Strict',
+      // FORCEER de browser om data te wissen (Nucleaire optie)
+      'Clear-Site-Data': '"cookies", "storage", "executionContexts"'
     });
     return new Response(null, { status: 302, headers });
   }
 
   // --- 2. INLOGGEN (Token Check) ---
-  // Als de gebruiker de code in de URL heeft staan (?code=...)
   if (url.searchParams.has('code')) {
     const inputCode = url.searchParams.get('code');
     if (inputCode === secretKey) {
-      // Code is goed: Zet sessie cookie (vervalt als browser sluit)
       const headers = new Headers({
-        'Location': '/admin.html', // Schone URL zonder ?code
+        'Location': '/admin.html',
         'Set-Cookie': `lmra_auth=${secretKey}; Path=/; HttpOnly; Secure; SameSite=Strict`
       });
       return new Response(null, { status: 302, headers });
@@ -34,22 +34,21 @@ export default async (request, context) => {
   }
 
   // --- 3. TOEGANGSCONTROLE ---
+  // HIER ZAT DE TYPFOUT, NU GECORRIGEERD NAAR 'const'
   const isAuthenticated = authCookie === secretKey;
 
   // Situatie A: De gebruiker is NIET ingelogd
   if (!isAuthenticated) {
     
-    // Is dit een API call (data ophalen of verwijderen)?
+    // Is dit een API call? Stuur JSON error voor de 'oneindige spinner' fix
     if (url.pathname.includes('/.netlify/functions/')) {
-      // STUUR GEEN HTML, MAAR EEN 401 JSON ERROR
-      // Dit lost je "oneindige spinner" op
       return new Response(JSON.stringify({ error: "Unauthorized" }), { 
         status: 401,
         headers: { "Content-Type": "application/json" }
       });
     }
 
-    // Is dit de admin pagina zelf? Toon het inlogscherm
+    // Is dit de admin pagina? Toon het inlogscherm
     return new Response(`
       <!DOCTYPE html>
       <html lang="nl">
