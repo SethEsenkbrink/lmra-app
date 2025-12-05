@@ -74,19 +74,35 @@
             document.getElementById('searchInput').addEventListener('input', (e) => handleSearch(e.target.value));
         });
 
-        async function loadReports() {
-            const loading = document.getElementById('loading');
-            try {
-                const response = await fetch('/.netlify/functions/get-reports');
-                // 401 = Niet ingelogd (cookie weg/verlopen) -> Herlaad om inlogscherm te tonen
-                if (response.status === 401) { window.location.reload(); return; }
-                if (!response.ok) throw new Error("Fout");
-                allData = await response.json();
-                renderTable(allData);
-            } catch (e) {
-                console.error(e);
-            } finally { loading.style.display = 'none'; }
+async function loadReports() {
+    const loading = document.getElementById('loading');
+    loading.style.display = 'block'; // Zorg dat spinner zichtbaar is bij start
+    
+    try {
+        const response = await fetch('/.netlify/functions/get-reports');
+        
+        // CRUCIAAL: Als we een 401 krijgen (sessie verlopen/niet geldig), 
+        // herlaad de pagina. De Edge Function toont dan het loginscherm.
+        if (response.status === 401) { 
+            window.location.reload(); 
+            return; 
         }
+
+        if (!response.ok) throw new Error("Server antwoordde niet met OK");
+        
+        allData = await response.json();
+        renderTable(allData);
+    } catch (e) {
+        console.error("Ophaalfout:", e);
+        // Toon een foutmelding in de tabel ipv oneindig laden
+        document.getElementById('tableBody').innerHTML = 
+            `<tr><td colspan="6" class="p-8 text-center text-red-500">
+                <i class="fa-solid fa-triangle-exclamation"></i> Kon data niet ophalen. Probeer opnieuw in te loggen.
+            </td></tr>`;
+    } finally { 
+        loading.style.display = 'none'; 
+    }
+}
 
         function handleSearch(query) {
             const lower = query.toLowerCase();

@@ -23,8 +23,8 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    # CSP opgeschoond: Identity domeinen verwijderd, alleen noodzakelijke bronnen toegestaan
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; connect-src 'self' https://api.open-meteo.com;"
+    # Aangepaste CSP: Staat Netlify Analytics (nsvcs.net) toe om console errors te voorkomen
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; connect-src 'self' https://api.open-meteo.com https://*.nsvcs.net;"
     X-XSS-Protection = "1; mode=block"
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"

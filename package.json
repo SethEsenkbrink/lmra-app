@@ -10,7 +10,8 @@
     "security-check": "npm audit"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^0.10.4"
+    "@neondatabase/serverless": "^0.10.4",
+    "jws": "^4.0.1"
   },
   "devDependencies": {
     "netlify-cli": "latest",
