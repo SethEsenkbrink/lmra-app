@@ -9,13 +9,13 @@
     <meta name="theme-color" content="#00447c">
     
     <script>
-        // Check direct of er een Netlify Identity token in de URL zit
+        // Check of er een token in de URL zit (voor invite of reset)
         if (window.location.hash.includes('invite_token=') || 
             window.location.hash.includes('recovery_token=') || 
             window.location.hash.includes('confirmation_token=')) {
             
-            // Gebruik 'replace' in plaats van 'href' zodat de terug-knop niet breekt
-            window.location.replace('/admin.html' + window.location.hash);
+            // STUUR NU DOOR NAAR DE SPECIALE RESET PAGINA
+            window.location.replace('/reset.html' + window.location.hash);
         }
     </script>
     
