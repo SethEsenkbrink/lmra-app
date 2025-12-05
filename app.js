@@ -81,6 +81,11 @@ let isAppUnlocked = false;
 
 document.addEventListener('DOMContentLoaded', () => { 
     console.log(`LMRA Pro v${APP_VERSION} Sentinel starting...`);
+// --- HIER TUSSENIN PLAATSEN ---
+    if (window.netlifyIdentity) {
+        window.netlifyIdentity.init();
+    }
+    // ------------------------------
     initPINFlow();
 });
 
