@@ -24,27 +24,16 @@
   function = "submit-limiter"
   path = "/.netlify/functions/submit-lmra"
 
-# Beveiligingsheaders voor de hele site (Hardened v8.2)
+# Beveiligingsheaders voor de hele site (Fixed v8.2)
 [[headers]]
   for = "/*"
   [headers.values]
-    # CSP: Strict policy. Sta alleen vertrouwde bronnen toe.
+    # CSP UPDATE: 'unsafe-inline' toegevoegd aan script-src zodat de widget mag laden
     Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://identity.netlify.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://identity.netlify.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; frame-src 'self' https://identity.netlify.com https://*.netlify.app; connect-src 'self' https://api.open-meteo.com https://*.nsvcs.net https://identity.netlify.com; upgrade-insecure-requests;"
     
-    # Voorkomt MIME-type sniffing (beschermt tegen vermomde bestanden)
     X-Content-Type-Options = "nosniff"
-    
-    # Verbiedt het laden van de site in een iFrame (tegen Clickjacking)
     X-Frame-Options = "DENY"
-    
-    # Activeert XSS filtering in oude browsers (extra vangnet)
     X-XSS-Protection = "1; mode=block"
-    
-    # Forceer HTTPS voor 1 jaar (HSTS)
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    
-    # Privacy: Stuur geen referer info mee naar andere domeinen
     Referrer-Policy = "strict-origin-when-cross-origin"
-    
-    # Moderne browser features uitschakelen die we niet gebruiken (Privacy)
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
