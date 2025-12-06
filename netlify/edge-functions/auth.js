@@ -1,4 +1,4 @@
-/* netlify/edge-functions/auth.js - LMRA Sentinel Auth (Cookie-Bridge Fixed) */
+/* netlify/edge-functions/auth.js - LMRA Sentinel Auth (Short Session) */
 
 export default async (request, context) => {
   const url = new URL(request.url);
@@ -18,11 +18,8 @@ export default async (request, context) => {
   }
 
   // 2. Check voor de authenticatie-cookie 'nf_jwt'
-  // De widget zet deze niet zelf, dat doet ons script hieronder (De 'Bridge').
   const jwt = context.cookies.get('nf_jwt');
 
-  // Als er een geldig token in de cookie zit, laat door.
-  // Netlify verifieert de handtekening van de cookie automatisch in de achtergrond.
   if (jwt) {
     return context.next();
   }
@@ -38,7 +35,6 @@ export default async (request, context) => {
   }
 
   // Situatie B: Browser verzoek (admin.html) -> Toon speciale inlogpagina
-  // We injecteren hier de 'Cookie-Bridge' logica.
   return new Response(`
     <!DOCTYPE html>
     <html lang="nl">
@@ -68,19 +64,11 @@ export default async (request, context) => {
           if (window.netlifyIdentity) {
               window.netlifyIdentity.init();
 
-              // --- DE COOKIE BRIDGE ---
-              // Zodra de gebruiker inlogt via de widget, pakken we het token
-              // en zetten we het in een cookie die de Edge Function kan lezen.
               window.netlifyIdentity.on('login', (user) => {
                   if(user && user.token) {
-                      console.log("Login succesvol, cookie instellen...");
                       const token = user.token.access_token;
-                      
-                      // Cookie instellen: Secure, SameSite=Strict is verplicht voor veiligheid
-                      // Max-Age 3600 = 1 uur geldig
-                      document.cookie = "nf_jwt=" + token + "; path=/; max-age=3600; SameSite=Strict; Secure";
-                      
-                      // Herlaad de pagina. De Edge Function ziet nu de cookie en laat je door naar admin.html
+                      // SESSIE UPDATE: Nu slechts 15 minuten geldig (900 seconden)
+                      document.cookie = "nf_jwt=" + token + "; path=/; max-age=900; SameSite=Strict; Secure";
                       window.location.reload();
                   }
               });

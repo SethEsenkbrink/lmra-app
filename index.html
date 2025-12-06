@@ -16,14 +16,27 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.4/purify.min.js" crossorigin="anonymous"></script>
     
     <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+
+    <script>
+        // --- DE VERKEERSREGELAAR (FIX) ---
+        // Als iemand binnenkomt met een wachtwoord-reset link (#recovery_token) of invite,
+        // stuur ze dan DIRECT door naar de Admin pagina.
+        // Hierdoor slaan we de 'bevroren' app over.
+        if (window.location.hash.includes("recovery_token") || window.location.hash.includes("invite_token")) {
+            console.log("Account actie gedetecteerd, doorsturen naar veilige omgeving...");
+            window.location.href = "/admin.html" + window.location.hash;
+        }
+    </script>
+
     <style>
-        /* Zorg dat de Netlify Identity widget ALTIJD bovenop ligt (z-index 10000) */
+        /* Zorg dat de Netlify Identity widget altijd zichtbaar is */
         div[data-netlify-identity-menu], 
         div[data-netlify-identity-modal] {
             z-index: 10000 !important;
         }
     </style>
-    <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-slate-100 dark:bg-darkbg text-slate-900 dark:text-slate-200 h-screen flex flex-col transition-colors duration-300">
 
@@ -248,17 +261,7 @@
     </div>
 
     <div id="toast" class="fixed top-24 left-1/2 transform -translate-x-1/2 bg-slate-800 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-full text-sm font-bold shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none z-50 flex items-center gap-2"><i class="fa-solid fa-check"></i> <span id="toastMsg">Melding</span></div>
-    <script>
-        if (window.netlifyIdentity) {
-            window.netlifyIdentity.on("init", user => {
-                if (!user) {
-                    window.netlifyIdentity.on("login", () => {
-                        document.location.href = "/admin.html";
-                    });
-                }
-            });
-        }
-    </script>
+    
     <script src="app.js" defer></script>
 </body>
 </html>

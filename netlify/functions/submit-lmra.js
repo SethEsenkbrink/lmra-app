@@ -35,13 +35,11 @@ export const handler = async (event, context) => {
     }
 
     // 2. IDEMPOTENCY CHECK (Voorkom dubbele inzendingen)
-    // Als de app een report_id meestuurt, checken we of die al bestaat.
     if (data.report_id) {
         const existing = await sql`SELECT id FROM lmra_reports WHERE report_id = ${data.report_id} LIMIT 1`;
         
         if (existing.length > 0) {
             console.log(`Duplicaat gedetecteerd voor ID ${data.report_id}. Genegeerd.`);
-            // We sturen 200 OK terug, zodat de app hem uit de wachtrij haalt.
             return {
                 statusCode: 200,
                 body: JSON.stringify({ message: "Reeds verwerkt (Duplicaat)" }),
@@ -55,7 +53,6 @@ export const handler = async (event, context) => {
     if (!data.locatie || data.locatie.length > 100) return { statusCode: 400, body: "Locatie ongeldig" };
 
     // 4. OPSLAAN
-    // We voegen report_id toe aan de insert als deze bestaat
     if (data.report_id) {
         await sql`
           INSERT INTO lmra_reports 
@@ -64,7 +61,7 @@ export const handler = async (event, context) => {
           (${data.report_id}, ${data.monteur_naam}, ${data.locatie}, ${data.werkorder}, ${data.is_veilig}, ${data.opmerkingen}, ${JSON.stringify(data.afkeurpunten)})
         `;
     } else {
-        // Fallback voor oude versies van de app (zonder UUID)
+        // Fallback
         await sql`
           INSERT INTO lmra_reports 
           (monteur_naam, locatie, werkorder, is_veilig, opmerkingen, afkeurpunten) 
@@ -81,8 +78,7 @@ export const handler = async (event, context) => {
 
   } catch (error) {
     console.error("Fout bij opslaan rapport:", error);
-    // Specifieke check voor unieke constraint violation (als race condition optreedt)
-    if (error.code === '23505') { // Postgres code voor unique violation
+    if (error.code === '23505') { 
         return { statusCode: 200, body: JSON.stringify({ message: "Reeds verwerkt" }) };
     }
     return { statusCode: 500, body: "Verwerkingsfout" };

@@ -19,7 +19,7 @@
   path = "/.netlify/functions/delete-report"
   function = "auth"
 
-# 4. De Limiter functie koppelen (Zonder de 'rate_limit' property die de fout veroorzaakt)
+# 4. De Limiter functie koppelen
 [[edge_functions]]
   function = "submit-limiter"
   path = "/.netlify/functions/submit-lmra"
@@ -28,7 +28,7 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    # CSP UPDATE: 'unsafe-inline' toegevoegd aan script-src zodat de widget mag laden
+    # CSP: Strict + 'unsafe-inline' voor identity
     Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://identity.netlify.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://identity.netlify.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; frame-src 'self' https://identity.netlify.com https://*.netlify.app; connect-src 'self' https://api.open-meteo.com https://*.nsvcs.net https://identity.netlify.com; upgrade-insecure-requests;"
     
     X-Content-Type-Options = "nosniff"

@@ -1,4 +1,4 @@
-/* app.js - LMRA Pro Logica v8.2 (Codename: Sentinel) - CSP Hardened, Honeypot & Encryption + Declaratie */
+/* app.js - LMRA Pro Logica v8.2 (Codename: Sentinel) */
 
 /* --- CONFIGURATIE --- */
 const APP_VERSION = "8.2";
@@ -11,14 +11,14 @@ const SECURITY_CHECK_KEY = 'lmra_sec_check';
 const CryptoManager = {
     key: null,
     
-async deriveKey(pin, salt) {
+    async deriveKey(pin, salt) {
         const enc = new TextEncoder();
         const keyMaterial = await window.crypto.subtle.importKey(
             "raw", enc.encode(pin), { name: "PBKDF2" }, false, ["deriveKey"]
         );
         const saltBuffer = salt ? Uint8Array.from(atob(salt), c => c.charCodeAt(0)) : window.crypto.getRandomValues(new Uint8Array(16));
         
-        // UPDATE: Iteraties verhoogd van 100.000 naar 600.000 (OWASP Standaard 2025)
+        // 600.000 iteraties voor beveiliging
         const key = await window.crypto.subtle.deriveKey(
             { name: "PBKDF2", salt: saltBuffer, iterations: 600000, hash: "SHA-256" },
             keyMaterial,
@@ -83,26 +83,10 @@ let isAppUnlocked = false;
 
 document.addEventListener('DOMContentLoaded', () => { 
     console.log(`LMRA Pro v${APP_VERSION} Sentinel starting...`);
-// --- HIER TUSSENIN PLAATSEN ---
-    if (window.netlifyIdentity) {
-        window.netlifyIdentity.init();
-    }
-    // ------------------------------
     initPINFlow();
 });
 
 function initPINFlow() {
-    // 1. IDENTITY CHECK (NIEUW):
-    // Als de gebruiker binnenkomt via een e-mail link (invite of recovery),
-    // verberg dan het PIN-scherm zodat de widget bediend kan worden.
-    const hash = window.location.hash;
-    if (hash && (hash.includes('recovery_token') || hash.includes('invite_token'))) {
-        console.log("Identity flow gedetecteerd. PIN scherm wordt overgeslagen.");
-        document.getElementById('pinModal').classList.add('hidden');
-        return; // STOP HIER. Start de app beveiliging niet, geef voorrang aan de widget.
-    }
-
-    // 2. NORMALE FLOW (Oude code):
     const inputs = document.querySelectorAll('.pin-digit');
     const unlockBtn = document.getElementById('btnUnlock');
     const pinTitle = document.getElementById('pinTitle');
@@ -111,16 +95,12 @@ function initPINFlow() {
     const salt = localStorage.getItem('lmra_salt');
     const hasSecCheck = localStorage.getItem(SECURITY_CHECK_KEY);
 
-    // Zorg dat de modal zichtbaar is (standaard state)
-    document.getElementById('pinModal').classList.remove('hidden');
-
     if (!salt || !hasSecCheck) {
         pinTitle.innerText = "Stel je PIN in";
         pinDesc.innerText = "Kies een veilige 4-cijferige code. Onthoud deze goed!";
         setupInfo.classList.remove('hidden');
         unlockBtn.innerText = "Instellen & Starten";
-        // Alleen clearen als we echt opnieuw instellen
-        if(!salt) localStorage.clear();
+        localStorage.clear();
     } else {
         pinTitle.innerText = "Beveiligde Toegang";
         pinDesc.innerText = "Voer je PIN in om te ontgrendelen.";
@@ -128,30 +108,21 @@ function initPINFlow() {
         unlockBtn.innerText = "Ontgrendelen";
     }
 
-    // Reset inputs en focus
-    inputs.forEach(i => i.value = '');
-    
-    // Event listeners verversen (om dubbele clicks te voorkomen)
-    const newUnlockBtn = unlockBtn.cloneNode(true);
-    unlockBtn.parentNode.replaceChild(newUnlockBtn, unlockBtn);
-    newUnlockBtn.addEventListener('click', attemptUnlock);
-
     inputs.forEach((input, index) => {
-        input.oninput = (e) => {
+        input.addEventListener('input', (e) => {
             if (e.target.value.length === 1 && index < inputs.length - 1) {
                 inputs[index + 1].focus();
             }
-        };
-        input.onkeydown = (e) => {
+        });
+        input.addEventListener('keydown', (e) => {
             if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
                 inputs[index - 1].focus();
             }
             if (e.key === 'Enter') attemptUnlock();
-        };
+        });
     });
-    
-    // Focus op eerste veld
-    setTimeout(() => inputs[0].focus(), 100);
+
+    unlockBtn.addEventListener('click', attemptUnlock);
 }
 
 async function attemptUnlock() {
@@ -414,7 +385,6 @@ function setAnswer(id, value) {
 function saveAction(id, text) { actions[id] = DOMPurify.sanitize(text); }
 
 async function evaluateLMRA() {
-    // 1. Check Verklaring van Waarheid (NIEUW)
     const declaration = document.getElementById('declarationCheck');
     if (!declaration.checked) {
         showToast("⚠️ Vink de verklaring van waarheid aan!");
@@ -506,12 +476,11 @@ async function saveToCloudWithRetry(isSafe, monteur_naam, locatie, werkorder, op
     
     const honeypotVal = document.getElementById('contact_email').value;
     
-// UPDATE: Genereer een uniek ID voor dit specifieke rapport
-    // Dit voorkomt dubbele opslag als de verbinding hapert.
+    // UUID voor Idempotency
     const reportId = crypto.randomUUID(); 
     
     const payload = { 
-        report_id: reportId, // NIEUW: Het unieke ID meesturen
+        report_id: reportId,
         monteur_naam, 
         locatie, 
         werkorder, 
