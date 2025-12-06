@@ -92,6 +92,17 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initPINFlow() {
+    // 1. IDENTITY CHECK (NIEUW):
+    // Als de gebruiker binnenkomt via een e-mail link (invite of recovery),
+    // verberg dan het PIN-scherm zodat de widget bediend kan worden.
+    const hash = window.location.hash;
+    if (hash && (hash.includes('recovery_token') || hash.includes('invite_token'))) {
+        console.log("Identity flow gedetecteerd. PIN scherm wordt overgeslagen.");
+        document.getElementById('pinModal').classList.add('hidden');
+        return; // STOP HIER. Start de app beveiliging niet, geef voorrang aan de widget.
+    }
+
+    // 2. NORMALE FLOW (Oude code):
     const inputs = document.querySelectorAll('.pin-digit');
     const unlockBtn = document.getElementById('btnUnlock');
     const pinTitle = document.getElementById('pinTitle');
@@ -100,12 +111,16 @@ function initPINFlow() {
     const salt = localStorage.getItem('lmra_salt');
     const hasSecCheck = localStorage.getItem(SECURITY_CHECK_KEY);
 
+    // Zorg dat de modal zichtbaar is (standaard state)
+    document.getElementById('pinModal').classList.remove('hidden');
+
     if (!salt || !hasSecCheck) {
         pinTitle.innerText = "Stel je PIN in";
         pinDesc.innerText = "Kies een veilige 4-cijferige code. Onthoud deze goed!";
         setupInfo.classList.remove('hidden');
         unlockBtn.innerText = "Instellen & Starten";
-        localStorage.clear();
+        // Alleen clearen als we echt opnieuw instellen
+        if(!salt) localStorage.clear();
     } else {
         pinTitle.innerText = "Beveiligde Toegang";
         pinDesc.innerText = "Voer je PIN in om te ontgrendelen.";
@@ -113,21 +128,30 @@ function initPINFlow() {
         unlockBtn.innerText = "Ontgrendelen";
     }
 
+    // Reset inputs en focus
+    inputs.forEach(i => i.value = '');
+    
+    // Event listeners verversen (om dubbele clicks te voorkomen)
+    const newUnlockBtn = unlockBtn.cloneNode(true);
+    unlockBtn.parentNode.replaceChild(newUnlockBtn, unlockBtn);
+    newUnlockBtn.addEventListener('click', attemptUnlock);
+
     inputs.forEach((input, index) => {
-        input.addEventListener('input', (e) => {
+        input.oninput = (e) => {
             if (e.target.value.length === 1 && index < inputs.length - 1) {
                 inputs[index + 1].focus();
             }
-        });
-        input.addEventListener('keydown', (e) => {
+        };
+        input.onkeydown = (e) => {
             if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
                 inputs[index - 1].focus();
             }
             if (e.key === 'Enter') attemptUnlock();
-        });
+        };
     });
-
-    unlockBtn.addEventListener('click', attemptUnlock);
+    
+    // Focus op eerste veld
+    setTimeout(() => inputs[0].focus(), 100);
 }
 
 async function attemptUnlock() {

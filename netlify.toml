@@ -29,7 +29,7 @@
   for = "/*"
   [headers.values]
     # CSP: Strict policy. Sta alleen vertrouwde bronnen toe.
-    Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://identity.netlify.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; frame-src 'self' https://identity.netlify.com; connect-src 'self' https://api.open-meteo.com https://*.nsvcs.net https://identity.netlify.com; upgrade-insecure-requests;"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://identity.netlify.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://identity.netlify.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; frame-src 'self' https://identity.netlify.com https://*.netlify.app; connect-src 'self' https://api.open-meteo.com https://*.nsvcs.net https://identity.netlify.com; upgrade-insecure-requests;"
     
     # Voorkomt MIME-type sniffing (beschermt tegen vermomde bestanden)
     X-Content-Type-Options = "nosniff"
