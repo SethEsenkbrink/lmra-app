@@ -1,20 +1,16 @@
 {
   "name": "lmra-app",
   "version": "8.2.0",
-  "description": "LMRA Pro v8.2 - Sentinel (Cleaned)",
+  "description": "LMRA Pro v8.2 - Supabase Direct Connect",
   "type": "module",
   "scripts": {
     "dev": "netlify dev",
-    "build": "echo 'Geen build stap nodig voor Vanilla JS'",
-    "clean": "rimraf node_modules package-lock.json",
+    "build": "echo 'Statische site: geen build nodig'",
     "security-check": "npm audit"
   },
-  "dependencies": {
-    "@neondatabase/serverless": "^0.10.4"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "netlify-cli": "latest",
-    "rimraf": "^6.0.0"
+    "netlify-cli": "latest"
   },
   "engines": {
     "node": ">=18.0.0"

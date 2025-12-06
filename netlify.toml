@@ -1,19 +1,13 @@
-# Netlify Configuratie v8.2 - Sentinel (Cleaned)
-
 [build]
   publish = "."
-  functions = "netlify/functions"
+  # Netlify zoekt nu alleen in de hoofdfolder (statische bestanden)
 
-# ALLEEN de rate limiter blijft actief voor de API
-[[edge_functions]]
-  function = "submit-limiter"
-  path = "/.netlify/functions/submit-lmra"
-
-# Headers (CSP opgeschoond)
+# Headers voor beveiliging
 [[headers]]
   for = "/*"
   [headers.values]
-    Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; connect-src 'self' https://api.open-meteo.com https://*.nsvcs.net; upgrade-insecure-requests;"
+    # CSP: Alleen toegankelijk voor de Supabase URL
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; connect-src 'self' https://api.open-meteo.com https://*.nsvcs.net https://*.supabase.co; upgrade-insecure-requests;"
     X-Content-Type-Options = "nosniff"
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
