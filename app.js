@@ -1,21 +1,31 @@
-/* app.js - LMRA Pro v8.2 (Supabase Direct Connect) */
+/* app.js - LMRA Pro v9.0 (Sentinel Safe) */
 
-/* --- CONFIGURATIE (VUL HIER JE GEGEVENS IN!) --- */
-// VUL HIER DE URL en ANON KEY IN VAN JE SUPABASE DASHBOARD
+/* --- CONFIGURATIE --- */
 const SUPABASE_URL = 'https://zgbxlucbhyyrfwxqdntg.supabase.co'; 
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnYnhsdWNiaHl5cmZ3eHFkbnRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwMzM0NzcsImV4cCI6MjA4MDYwOTQ3N30.fF5S84dxbwLnzC8NIrx8v_CYSRjp_zcHYKC4tb8HPnE'; 
 
-const APP_VERSION = "8.2";
+const APP_VERSION = "9.0";
 const SYNC_QUEUE_KEY = 'lmra_sync_queue';
 const ACTIVE_SESSION_KEY = 'lmra_active_session'; 
 const HISTORY_KEY = 'lmra_history';
 const SECURITY_CHECK_KEY = 'lmra_sec_check';
 
-// Initialiseer Supabase client
-const { createClient } = supabase;
-const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// --- VEILIGE INITIALISATIE SUPABASE (CRASH PREVENTION) ---
+let _supabase = null;
 
-/* --- CRYPTO MANAGER (600K iteraties - Onveranderd) --- */
+try {
+    if (typeof supabase === 'undefined') {
+        console.error("CRITICAL: Supabase library (window.supabase) niet gevonden.");
+    } else {
+        const { createClient } = supabase;
+        _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log("✅ Sentinel Safe: Database verbonden (v9.0)");
+    }
+} catch (error) {
+    console.error("🛑 FOUT BIJ OPSTARTEN:", error);
+}
+
+/* --- CRYPTO MANAGER (600K iteraties) --- */
 const CryptoManager = {
     key: null,
     
@@ -65,7 +75,7 @@ const safeStorage = {
 let isAppUnlocked = false;
 
 document.addEventListener('DOMContentLoaded', () => { 
-    console.log(`LMRA Pro v${APP_VERSION} Supabase Init...`);
+    console.log(`LMRA Pro v${APP_VERSION} DOM Loaded...`);
     initPINFlow();
 });
 
@@ -78,26 +88,34 @@ function initPINFlow() {
     const salt = localStorage.getItem('lmra_salt');
     const hasSecCheck = localStorage.getItem(SECURITY_CHECK_KEY);
 
-    document.getElementById('pinModal').classList.remove('hidden');
+    // Check of modal bestaat (voor debugging)
+    const modal = document.getElementById('pinModal');
+    if (!modal) {
+        console.error("🛑 pinModal element niet gevonden in HTML!");
+        return;
+    }
+    modal.classList.remove('hidden');
 
     if (!salt || !hasSecCheck) {
-        pinTitle.innerText = "Stel je PIN in";
-        pinDesc.innerText = "Kies een veilige 4-cijferige code. Onthoud deze goed!";
-        setupInfo.classList.remove('hidden');
-        unlockBtn.innerText = "Instellen & Starten";
+        if(pinTitle) pinTitle.innerText = "Stel je PIN in";
+        if(pinDesc) pinDesc.innerText = "Kies een veilige 4-cijferige code. Onthoud deze goed!";
+        if(setupInfo) setupInfo.classList.remove('hidden');
+        if(unlockBtn) unlockBtn.innerText = "Instellen & Starten";
         if(!salt) localStorage.clear();
     } else {
-        pinTitle.innerText = "Beveiligde Toegang";
-        pinDesc.innerText = "Voer je PIN in om te ontgrendelen.";
-        setupInfo.classList.add('hidden');
-        unlockBtn.innerText = "Ontgrendelen";
+        if(pinTitle) pinTitle.innerText = "Beveiligde Toegang";
+        if(pinDesc) pinDesc.innerText = "Voer je PIN in om te ontgrendelen.";
+        if(setupInfo) setupInfo.classList.add('hidden');
+        if(unlockBtn) unlockBtn.innerText = "Ontgrendelen";
     }
 
     inputs.forEach(i => i.value = '');
     
-    const newUnlockBtn = unlockBtn.cloneNode(true);
-    unlockBtn.parentNode.replaceChild(newUnlockBtn, unlockBtn);
-    newUnlockBtn.addEventListener('click', attemptUnlock);
+    if(unlockBtn) {
+        const newUnlockBtn = unlockBtn.cloneNode(true);
+        unlockBtn.parentNode.replaceChild(newUnlockBtn, unlockBtn);
+        newUnlockBtn.addEventListener('click', attemptUnlock);
+    }
 
     inputs.forEach((input, index) => {
         input.oninput = (e) => {
@@ -113,7 +131,7 @@ function initPINFlow() {
         };
     });
     
-    setTimeout(() => inputs[0].focus(), 100);
+    if(inputs.length > 0) setTimeout(() => inputs[0].focus(), 100);
 }
 
 async function attemptUnlock() {
@@ -123,13 +141,15 @@ async function attemptUnlock() {
     inputs.forEach(input => pin += input.value);
 
     if (pin.length !== 4) {
-        errorMsg.innerText = "Voer 4 cijfers in.";
+        if(errorMsg) errorMsg.innerText = "Voer 4 cijfers in.";
         return;
     }
 
     const unlockBtn = document.getElementById('btnUnlock');
-    unlockBtn.disabled = true;
-    unlockBtn.innerText = "Verifiëren...";
+    if(unlockBtn) {
+        unlockBtn.disabled = true;
+        unlockBtn.innerText = "Verifiëren...";
+    }
 
     try {
         const storedSalt = localStorage.getItem('lmra_salt');
@@ -153,16 +173,19 @@ async function attemptUnlock() {
     } catch (e) {
         console.error(e);
         CryptoManager.key = null;
-        errorMsg.innerText = "Foutieve pincode.";
-        unlockBtn.disabled = false;
-        unlockBtn.innerText = "Probeer opnieuw";
+        if(errorMsg) errorMsg.innerText = "Foutieve pincode.";
+        if(unlockBtn) {
+            unlockBtn.disabled = false;
+            unlockBtn.innerText = "Probeer opnieuw";
+        }
         inputs.forEach(i => i.value = '');
-        inputs[0].focus();
+        if(inputs.length > 0) inputs[0].focus();
     }
 }
 
 function finishUnlock() {
-    document.getElementById('pinModal').classList.add('hidden');
+    const modal = document.getElementById('pinModal');
+    if(modal) modal.classList.add('hidden');
     isAppUnlocked = true;
     startApp();
 }
@@ -171,7 +194,10 @@ function startApp() {
     renderCategories(); 
     attachStaticEventListeners();
     safeStorage.get('lmra_username').then(sn => {
-        if(sn) document.getElementById('userName').value = sn;
+        if(sn) {
+            const el = document.getElementById('userName');
+            if(el) el.value = sn;
+        }
     });
     checkTheme(); 
     checkDailyReset(); 
@@ -181,6 +207,7 @@ function startApp() {
     checkResumeState();
 }
 
+// Categorieën en vragen
 const categories = [
     { title: "Algemeen & Fitheid", icon: "fa-user-clock", questions: [{ id: 1, text: "Voel ik mij fysiek en mentaal fit voor deze klus?", type: 'positive' }, { id: 2, text: "Weet ik wat te doen bij nood (alarmnummer, vluchtroute)?", type: 'positive' }] },
     { title: "Vergunningen & Procedures", icon: "fa-file-signature", questions: [{ id: 3, text: "Is de werkvergunning correct ingevuld en getekend?", type: 'positive' }, { id: 4, text: "Heb ik de taakrisicoanalyse (TRA) gelezen/begrepen?", type: 'positive' }] },
@@ -194,21 +221,29 @@ window.addEventListener('online', () => {
 });
 
 function attachStaticEventListeners() {
-    document.getElementById('btnOpenArchive').addEventListener('click', openArchive);
-    document.getElementById('btnToggleTheme').addEventListener('click', toggleDarkMode);
-    document.getElementById('btnResetApp').addEventListener('click', () => resetApp(true));
-    document.getElementById('buddyToggle').addEventListener('change', toggleBuddyField);
-    document.getElementById('submitBtn').addEventListener('click', evaluateLMRA);
-    document.getElementById('btnCopyToClipboard').addEventListener('click', copyToClipboard);
-    document.getElementById('btnCloseModal').addEventListener('click', closeModal);
-    document.getElementById('btnCloseArchive').addEventListener('click', closeArchive);
-    document.getElementById('btnClearArchive').addEventListener('click', clearArchive);
-    document.getElementById('btnGeneratePDF').addEventListener('click', generatePDF);
-    document.getElementById('btnCloseDetail').addEventListener('click', closeDetail);
-    document.getElementById('btnCloseUpdateModal').addEventListener('click', closeUpdateModal);
-    document.getElementById('btnTriggerResume').addEventListener('click', triggerResumeFlow);
-    document.getElementById('btnConfirmResume').addEventListener('click', confirmResume);
-    document.getElementById('btnCancelResume').addEventListener('click', cancelResume);
+    const bindClick = (id, fn) => {
+        const el = document.getElementById(id);
+        if(el) el.addEventListener('click', fn);
+    };
+
+    bindClick('btnOpenArchive', openArchive);
+    bindClick('btnToggleTheme', toggleDarkMode);
+    bindClick('btnResetApp', () => resetApp(true));
+    
+    const buddyToggle = document.getElementById('buddyToggle');
+    if(buddyToggle) buddyToggle.addEventListener('change', toggleBuddyField);
+    
+    bindClick('submitBtn', evaluateLMRA);
+    bindClick('btnCopyToClipboard', copyToClipboard);
+    bindClick('btnCloseModal', closeModal);
+    bindClick('btnCloseArchive', closeArchive);
+    bindClick('btnClearArchive', clearArchive);
+    bindClick('btnGeneratePDF', generatePDF);
+    bindClick('btnCloseDetail', closeDetail);
+    bindClick('btnCloseUpdateModal', closeUpdateModal);
+    bindClick('btnTriggerResume', triggerResumeFlow);
+    bindClick('btnConfirmResume', confirmResume);
+    bindClick('btnCancelResume', cancelResume);
 }
 
 async function checkDailyReset() {
@@ -219,7 +254,8 @@ async function checkDailyReset() {
         safeStorage.removeItem(ACTIVE_SESSION_KEY);
         safeStorage.removeItem('lmra_valid_until');
         await safeStorage.set('lmra_last_date', today);
-        document.getElementById('pauseAlert').classList.add('hidden');
+        const alert = document.getElementById('pauseAlert');
+        if(alert) alert.classList.add('hidden');
         resetApp(false);
     } else {
         checkValidity();
@@ -247,8 +283,9 @@ async function checkValidity() {
     if (validUntil && !session) {
         const now = new Date();
         const endTime = new Date(validUntil);
-        if (!isNaN(endTime) && now > endTime) { 
-            document.getElementById('pauseAlert').classList.remove('hidden'); 
+        const alert = document.getElementById('pauseAlert');
+        if (!isNaN(endTime) && now > endTime && alert) { 
+            alert.classList.remove('hidden'); 
         }
     }
 }
@@ -256,7 +293,9 @@ async function checkValidity() {
 function toggleBuddyField() {
     const check = document.getElementById('buddyToggle').checked;
     const field = document.getElementById('buddyField');
-    if(check) { field.classList.remove('hidden'); } else { field.classList.add('hidden'); }
+    if(field) {
+        if(check) { field.classList.remove('hidden'); } else { field.classList.add('hidden'); }
+    }
 }
 
 function toggleFormLock(locked) {
@@ -270,16 +309,18 @@ function toggleFormLock(locked) {
     const submitBtn = document.getElementById('submitBtn');
     const submitText = document.getElementById('submitBtnText');
     
-    if (locked) {
-        submitBtn.disabled = true;
-        submitBtn.classList.add('bg-slate-500', 'cursor-not-allowed');
-        submitBtn.classList.remove('bg-[#00447c]', 'hover:bg-[#003366]');
-        submitText.innerText = "LMRA Loopt - Wijzigen niet mogelijk";
-    } else {
-        submitBtn.disabled = false;
-        submitBtn.classList.remove('bg-slate-500', 'cursor-not-allowed');
-        submitBtn.classList.add('bg-[#00447c]', 'hover:bg-[#003366]');
-        submitText.innerText = "Beoordeel Veiligheid";
+    if(submitBtn && submitText) {
+        if (locked) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('bg-slate-500', 'cursor-not-allowed');
+            submitBtn.classList.remove('bg-[#00447c]', 'hover:bg-[#003366]');
+            submitText.innerText = "LMRA Loopt - Wijzigen niet mogelijk";
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('bg-slate-500', 'cursor-not-allowed');
+            submitBtn.classList.add('bg-[#00447c]', 'hover:bg-[#003366]');
+            submitText.innerText = "Beoordeel Veiligheid";
+        }
     }
 }
 
@@ -353,11 +394,16 @@ function renderCategories() {
 }
 
 function setAnswer(id, value) {
-    if(document.getElementById('submitBtn').disabled && document.getElementById('submitBtnText').innerText.includes("Loopt")) return;
+    const sBtn = document.getElementById('submitBtn');
+    const sText = document.getElementById('submitBtnText');
+    if(sBtn && sBtn.disabled && sText && sText.innerText.includes("Loopt")) return;
 
     answers[id] = value;
     const btnYes = document.getElementById(`btn-yes-${id}`); const btnNo = document.getElementById(`btn-no-${id}`);
     const actionBox = document.getElementById(`action-box-${id}`);
+    
+    if(!btnYes || !btnNo || !actionBox) return;
+
     const base = "py-2.5 rounded-md text-sm font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ";
     const inactive = "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600";
     btnYes.className = base + inactive; btnNo.className = base + inactive;
@@ -446,9 +492,17 @@ async function evaluateLMRA() {
 }
 
 async function saveToCloudWithRetry(isSafe, monteur_naam, locatie, werkorder, opmerkingen, afkeurpunten) {
+    // Check of supabase beschikbaar is
+    if(!_supabase) {
+         showToast("Database fout: Supabase niet geladen. Rapport alleen lokaal opgeslagen.");
+         return;
+    }
+
     const cloudStatus = document.getElementById('cloudStatus');
-    cloudStatus.classList.remove('hidden');
-    cloudStatus.innerText = "Syncen...";
+    if(cloudStatus) {
+        cloudStatus.classList.remove('hidden');
+        cloudStatus.innerText = "Syncen...";
+    }
     
     const honeypotVal = document.getElementById('contact_email').value;
     if (honeypotVal) { console.warn("Bot detected"); return; } 
@@ -465,13 +519,14 @@ async function saveToCloudWithRetry(isSafe, monteur_naam, locatie, werkorder, op
 
     if (!navigator.onLine) {
         await addToSyncQueue(payload);
-        cloudStatus.innerText = "💾 Offline (Wachtrij)";
-        cloudStatus.classList.add("text-yellow-200");
+        if(cloudStatus) {
+            cloudStatus.innerText = "💾 Offline (Wachtrij)";
+            cloudStatus.classList.add("text-yellow-200");
+        }
         return;
     }
 
     try {
-        // DIRECT NAAR SUPABASE
         const { error } = await _supabase
             .from('lmra_reports')
             .insert([payload]);
@@ -481,18 +536,24 @@ async function saveToCloudWithRetry(isSafe, monteur_naam, locatie, werkorder, op
             throw error;
         }
 
-        cloudStatus.innerText = "☁️ Opgeslagen in Supabase";
-        cloudStatus.classList.add("text-green-200");
-        cloudStatus.classList.remove("text-yellow-200");
+        if(cloudStatus) {
+            cloudStatus.innerText = "☁️ Opgeslagen in Supabase";
+            cloudStatus.classList.add("text-green-200");
+            cloudStatus.classList.remove("text-yellow-200");
+        }
     } catch (e) { 
         if (e.message !== "Duplicaat") {
             console.warn("Supabase fout:", e);
             await addToSyncQueue(payload);
-            cloudStatus.innerText = "💾 Error (Wachtrij)";
-            cloudStatus.classList.add("text-yellow-200");
+            if(cloudStatus) {
+                cloudStatus.innerText = "💾 Error (Wachtrij)";
+                cloudStatus.classList.add("text-yellow-200");
+            }
         } else {
-            cloudStatus.innerText = "☁️ Opgeslagen (Duplicaat Genegeerd)";
-            cloudStatus.classList.add("text-green-200");
+            if(cloudStatus) {
+                cloudStatus.innerText = "☁️ Opgeslagen (Duplicaat Genegeerd)";
+                cloudStatus.classList.add("text-green-200");
+            }
         }
     }
 }
@@ -505,6 +566,8 @@ async function addToSyncQueue(data) {
 }
 
 async function processSyncQueue() {
+    if(!_supabase) return; // Geen supabase = niet syncen
+
     let queue = await safeStorage.get(SYNC_QUEUE_KEY) || [];
     if (queue.length === 0 || !navigator.onLine) return;
 
@@ -535,12 +598,12 @@ async function processSyncQueue() {
     await safeStorage.set(SYNC_QUEUE_KEY, remainingQueue);
     if (successCount > 0) { showToast(`✅ ${successCount} rapporten verzonden!`); }
 }
-// ... (rest van de app.js functies blijven hetzelfde)
 
 function checkChangelog() {
     const storedVersion = localStorage.getItem('lmra_version');
-    if (storedVersion !== APP_VERSION) {
-        document.getElementById('updateModal').classList.remove('hidden');
+    const modal = document.getElementById('updateModal');
+    if (storedVersion !== APP_VERSION && modal) {
+        modal.classList.remove('hidden');
     }
 }
 
@@ -558,9 +621,9 @@ async function checkResumeState() {
         const today = new Date().toDateString();
         if (session.date === today) {
             resumeBar.classList.remove('hidden');
-            document.getElementById('userName').value = session.name || '';
-            document.getElementById('taskLocation').value = session.task || '';
-            document.getElementById('workOrder').value = session.wo || '';
+            const uName = document.getElementById('userName'); if(uName) uName.value = session.name || '';
+            const tLoc = document.getElementById('taskLocation'); if(tLoc) tLoc.value = session.task || '';
+            const wOrd = document.getElementById('workOrder'); if(wOrd) wOrd.value = session.wo || '';
             toggleFormLock(true);
         } else {
             safeStorage.removeItem(ACTIVE_SESSION_KEY);
@@ -574,12 +637,17 @@ async function checkResumeState() {
 }
 
 function triggerResumeFlow() {
-    document.getElementById('resumeCheckModal').classList.remove('hidden');
+    const modal = document.getElementById('resumeCheckModal');
+    if(modal) modal.classList.remove('hidden');
 }
 
 function cancelResume() {
-    document.getElementById('resumeCheckModal').classList.add('hidden');
-    document.getElementById('resumeBar').classList.add('hidden');
+    const modal = document.getElementById('resumeCheckModal');
+    if(modal) modal.classList.add('hidden');
+    
+    const bar = document.getElementById('resumeBar');
+    if(bar) bar.classList.add('hidden');
+    
     safeStorage.removeItem(ACTIVE_SESSION_KEY);
     safeStorage.removeItem('lmra_valid_until');
     toggleFormLock(false);
@@ -612,7 +680,10 @@ async function saveToLocalHistory(isSafe, name, task, wo, comments, fails, buddy
 }
 
 function showResult(isSafe, failedPoints, name, task, workOrder, comments, buddy, timeRange) {
-    const modal = document.getElementById('resultModal'); modal.classList.remove('hidden');
+    const modal = document.getElementById('resultModal'); 
+    if(!modal) return;
+    modal.classList.remove('hidden');
+    
     const now = new Date(); const dateStr = now.toLocaleDateString('nl-NL'); const timeStr = now.toLocaleTimeString('nl-NL', {hour: '2-digit', minute:'2-digit'});
     const header = document.getElementById('resultHeader'); const icon = document.getElementById('resultIcon'); const title = document.getElementById('resultTitle'); const message = document.getElementById('resultMessage'); const log = document.getElementById('logText');
     
@@ -630,7 +701,8 @@ function showResult(isSafe, failedPoints, name, task, workOrder, comments, buddy
 }
 
 function closeModal() { 
-    document.getElementById('resultModal').classList.add('hidden'); 
+    const modal = document.getElementById('resultModal');
+    if(modal) modal.classList.add('hidden'); 
     if(!document.getElementById('submitBtn').disabled) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -647,7 +719,14 @@ async function openArchive() {
     const container = document.getElementById('archiveContainer'); 
     const history = await safeStorage.get('lmra_history') || [];
     container.innerHTML = '';
-    if(history.length === 0) { container.innerHTML = '<div class="text-center text-slate-400 p-8">Nog geen archief data</div>'; document.getElementById('archiveModal').classList.remove('hidden'); return; }
+    
+    const modal = document.getElementById('archiveModal');
+    
+    if(history.length === 0) { 
+        container.innerHTML = '<div class="text-center text-slate-400 p-8">Nog geen archief data</div>'; 
+        if(modal) modal.classList.remove('hidden'); 
+        return; 
+    }
     
     const weeks = {};
     history.forEach((item, index) => {
@@ -697,7 +776,7 @@ async function openArchive() {
             listContainer.appendChild(itemDiv);
         });
     });
-    document.getElementById('archiveModal').classList.remove('hidden');
+    if(modal) modal.classList.remove('hidden');
 }
 
 function toggleWeek(key) {

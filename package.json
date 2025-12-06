@@ -1,16 +1,16 @@
 {
-  "name": "lmra-app",
-  "version": "8.2.0",
-  "description": "LMRA Pro v8.2 - Supabase Direct Connect",
+  "name": "lmra-app-pro",
+  "version": "9.0.0",
+  "description": "LMRA Pro v9.0 - Sentinel Safe (Supabase Direct)",
   "type": "module",
   "scripts": {
-    "dev": "netlify dev",
+    "dev": "npx serve",
     "build": "echo 'Statische site: geen build nodig'",
     "security-check": "npm audit"
   },
   "dependencies": {},
   "devDependencies": {
-    "netlify-cli": "latest"
+    "serve": "^14.2.0"
   },
   "engines": {
     "node": ">=18.0.0"

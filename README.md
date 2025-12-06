@@ -1,18 +1,35 @@
-# 🛡️ LMRA Pro - Digitale Veiligheidstool (v8.2)
+# 🛡️ LMRA Pro - v9.0 Sentinel Safe
 
-**Codename: Sentinel (Cleaned)**
+**Status:** Production Stable  
+**Architecture:** Serverless / Supabase Direct  
+**Security:** RLS Enabled & Client-Side Encryption
 
-LMRA Pro is een professionele Progressive Web App (PWA) ontwikkeld voor technici in de proces- en elektrotechniek. De applicatie digitaliseert de Laatste Minuut Risico Analyse.
+LMRA Pro is een professionele Progressive Web App (PWA) ontwikkeld voor technici in de proces- en elektrotechniek. Deze applicatie stelt monteurs in staat om een Laatste Minuut Risico Analyse uit te voeren met maximale gegevensbeveiliging.
 
-## 🚀 Status v8.2 (Cleaned)
+## 🚀 Nieuw in v9.0 (Sentinel)
+* **Supabase Direct:** Geen tussenliggende API servers meer. Directe, beveiligde verbinding met de database.
+* **Row Level Security (RLS):** Strikte database policies zorgen ervoor dat data alleen geschreven kan worden, nooit publiek gelezen of gewist.
+* **Offline First:** Verbeterde Service Worker voor gebruik in fabrieken zonder 4G/WiFi.
+* **Resume Flow:** Werkzaamheden pauzeren en later hervatten met behoud van sessie.
 
-Deze versie focust puur op de monteur in het veld. Het ingebouwde admin-paneel is verwijderd ten gunste van directe database-toegang (via Neon Console) of externe BI-tools.
+## 🛠️ Tech Stack
+* **Frontend:** HTML5, TailwindCSS, Vanilla JS (ES6+)
+* **Database:** Supabase (PostgreSQL)
+* **Security:** AES-GCM 256-bit (Lokaal), RLS (Cloud), CSP Headers
+* **Hosting:** Netlify (Static)
 
-* **🔐 Client-Side Encryptie:** Lokale data wordt versleuteld met **AES-GCM**.
-* **🛡️ Hardened Security:** Strikte CSP en Rate Limiting op de submit API.
-* **☁️ Neon Database:** Alle rapporten worden direct veilig opgeslagen in de cloud.
+## 💻 Lokaal Ontwikkelen
 
-## 📱 Functionaliteiten
-* **Digitale Kluis:** Data op het apparaat is onleesbaar zonder PIN.
-* **Offline Mode:** Versleutelde wachtrij die automatisch synchroniseert bij verbinding.
-* **Honeypot:** Bescherming tegen spam bots.
+1.  Clone de repo.
+2.  Installeer dependencies:
+    ```bash
+    npm install
+    ```
+3.  Start de lokale server:
+    ```bash
+    npm run dev
+    ```
+4.  Open `http://localhost:3000`
+
+## 🔒 Beveiligingsmodel
+Zie [SECURITY.md](SECURITY.md) voor gedetailleerde specs over encryptie en data-integriteit.

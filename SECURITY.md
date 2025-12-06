@@ -1,30 +1,27 @@
 # Beveiligingsbeleid LMRA Pro
 
-**Versie 8.2 - Sentinel (Cleaned)**
+**Versie 9.0 - Sentinel Safe**
 
-Bedankt voor je interesse in de veiligheid van dit project. LMRA Pro hanteert een "Security by Design" en "Privacy First" filosofie.
+LMRA Pro hanteert een "Defense in Depth" strategie. Wij beschermen de monteur én de data.
 
 ## 🛡️ Beveiligingsmaatregelen
 
-### 1. Data Encryptie (Data at Rest & Transit)
-* **Lokaal (Browser):** Alle gevoelige data in `localStorage` wordt versleuteld met **AES-GCM (256-bit)**.
-    * De encryptiesleutel wordt *niet* opgeslagen, maar on-the-fly afgeleid van een 4-cijferige **App PIN** via **PBKDF2** (600.000 iteraties, SHA-256).
-    * Bij verlies van de PIN is de lokale data onherstelbaar verloren (Fail-Secure).
-* **Transit:** Alle verkeer verloopt verplicht via HTTPS (HSTS enabled).
+### 1. Database Security (Supabase RLS)
+De database is beveiligd met Row Level Security (RLS).
+* **INSERT ONLY:** De publieke applicatie heeft *alleen* rechten om nieuwe rapporten toe te voegen.
+* **NO SELECT/DELETE:** Het is onmogelijk om via de publieke API rapporten uit te lezen, aan te passen of te verwijderen.
+* Dit voorkomt dat kwaadwillenden data kunnen stelen of de database kunnen wissen.
 
-### 2. Backend & Opslag
-* **Directe Opslag:** De app stuurt versleutelde/beveiligde rapporten direct naar de Neon PostgreSQL database.
-* **Geen Admin Interface:** Om het aanvalsoppervlak te minimaliseren, is het publieke admin-dashboard verwijderd. Data-analyse vindt plaats binnen de beveiligde omgeving van de database-provider (Neon/Supabase) of via gekoppelde BI-tools.
+### 2. Client-Side Encryptie (Data at Rest)
+Gevoelige data die lokaal wordt opgeslagen (zoals conceptrapporten) wordt versleuteld.
+* **Algoritme:** AES-GCM (256-bit).
+* **Sleutel:** Afgeleid van een user-PIN via PBKDF2 (600.000 iteraties).
+* **Gevolg:** Bij verlies van het apparaat is de data onleesbaar zonder PIN.
 
-### 3. Input Validatie & XSS Preventie
-* **Sanitization:** De app gebruikt **DOMPurify v3.2.4+** om alle input te zuiveren alvorens deze in de DOM te plaatsen. Dit beschermt tegen mXSS en injecties.
-* **CSP (Content Security Policy):** Strikte headers blokkeren ongewenste scripts en iframes.
-* **SQL Injectie:** Alle database queries gebruiken *parameterized queries* via de `@neondatabase/serverless` driver.
+### 3. Content Security Policy (CSP)
+Strikte headers blokkeren ongewenste scripts en iframes.
+* Alleen vertrouwde CDN's (Tailwind, Supabase, FontAwesome) worden toegelaten.
+* Inline scripts zijn beperkt.
 
-### 4. Spam & Misbruik Preventie
-* **Rate Limiting:** De API endpoints worden beschermd door Netlify Edge Rate Limiting.
-* **Honeypot:** Onzichtbare velden vangen bots af zonder echte gebruikers te hinderen.
-
-## 🐛 Een kwetsbaarheid melden
-1.  Maak **géén** publiek issue aan op GitHub.
-2.  Neem direct contact op met de security officer / beheerder.
+### 4. Input Validatie
+* **DOMPurify:** Alle gebruikersinvoer wordt gezuiverd ('sanitized') voordat het wordt weergegeven om XSS-aanvallen te voorkomen.

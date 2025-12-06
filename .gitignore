@@ -1,11 +1,23 @@
-# .gitignore - Wat niet naar GitHub mag
+# .gitignore - v9.0 Sentinel Safe
 
-# De map met 10.000 hulpbestanden (ALLEEN LOKAAL)
+# 1. Node Modules (De zware bibliotheken - NOOIT uploaden)
 node_modules/
+npm-debug.log
 
-# De lokale Netlify instellingen (die had je al)
+# 2. Lokale Build & Environment Bestanden
+dist/
+build/
+.env
+.env.local
+.env.production
+
+# 3. Netlify & Hosting Specifiek
 .netlify/
 
-# Systeembestanden van Mac/Windows (optioneel, maar netjes)
+# 4. Systeem Bestanden (Rommel van Mac/Windows)
 .DS_Store
 Thumbs.db
+Desktop.ini
+
+# 5. Editor Bestanden (Jouw persoonlijke VS Code instellingen)
+.vscode/
