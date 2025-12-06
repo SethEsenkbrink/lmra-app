@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 
 // LMRA Pro v8.2 - Sentinel Backend
-// Security: Rate Limiting (Edge), Honeypot Check
+// Features: Rate Limiting (Edge), Honeypot, Idempotency Check (Anti-Duplicate)
 
 export const handler = async (event, context) => {
   if (event.httpMethod !== "POST") {
@@ -24,30 +24,54 @@ export const handler = async (event, context) => {
       return { statusCode: 400, body: "Ongeldige data" };
     }
 
-    // --- HONEYPOT CHECK (SPAM TRAP) ---
-    // Als 'contact_email' is ingevuld, is het een bot.
-    // We sturen een 'succes' response zodat de bot denkt dat het gelukt is,
-    // maar we slaan NIETS op in de database.
+    // 1. HONEYPOT CHECK (SPAM TRAP)
     if (data.contact_email && data.contact_email.length > 0) {
         console.warn(`Spam detectie: Honeypot trap geactiveerd door IP ${event.headers['client-ip']}`);
         return {
-            statusCode: 200,
-            body: JSON.stringify({ message: "Veilig opgeslagen in Sentinel Cloud" }),
+            statusCode: 200, 
+            body: JSON.stringify({ message: "Veilig opgeslagen" }), // Fake success
             headers: { "Content-Type": "application/json" }
         };
     }
 
-    // Validatie
+    // 2. IDEMPOTENCY CHECK (Voorkom dubbele inzendingen)
+    // Als de app een report_id meestuurt, checken we of die al bestaat.
+    if (data.report_id) {
+        const existing = await sql`SELECT id FROM lmra_reports WHERE report_id = ${data.report_id} LIMIT 1`;
+        
+        if (existing.length > 0) {
+            console.log(`Duplicaat gedetecteerd voor ID ${data.report_id}. Genegeerd.`);
+            // We sturen 200 OK terug, zodat de app hem uit de wachtrij haalt.
+            return {
+                statusCode: 200,
+                body: JSON.stringify({ message: "Reeds verwerkt (Duplicaat)" }),
+                headers: { "Content-Type": "application/json" }
+            };
+        }
+    }
+
+    // 3. VALIDATIE
     if (!data.monteur_naam || data.monteur_naam.length > 100) return { statusCode: 400, body: "Naam ongeldig" };
     if (!data.locatie || data.locatie.length > 100) return { statusCode: 400, body: "Locatie ongeldig" };
 
-    // Opslaan
-    await sql`
-      INSERT INTO lmra_reports 
-      (monteur_naam, locatie, werkorder, is_veilig, opmerkingen, afkeurpunten) 
-      VALUES 
-      (${data.monteur_naam}, ${data.locatie}, ${data.werkorder}, ${data.is_veilig}, ${data.opmerkingen}, ${JSON.stringify(data.afkeurpunten)})
-    `;
+    // 4. OPSLAAN
+    // We voegen report_id toe aan de insert als deze bestaat
+    if (data.report_id) {
+        await sql`
+          INSERT INTO lmra_reports 
+          (report_id, monteur_naam, locatie, werkorder, is_veilig, opmerkingen, afkeurpunten) 
+          VALUES 
+          (${data.report_id}, ${data.monteur_naam}, ${data.locatie}, ${data.werkorder}, ${data.is_veilig}, ${data.opmerkingen}, ${JSON.stringify(data.afkeurpunten)})
+        `;
+    } else {
+        // Fallback voor oude versies van de app (zonder UUID)
+        await sql`
+          INSERT INTO lmra_reports 
+          (monteur_naam, locatie, werkorder, is_veilig, opmerkingen, afkeurpunten) 
+          VALUES 
+          (${data.monteur_naam}, ${data.locatie}, ${data.werkorder}, ${data.is_veilig}, ${data.opmerkingen}, ${JSON.stringify(data.afkeurpunten)})
+        `;
+    }
 
     return {
       statusCode: 200,
@@ -56,7 +80,11 @@ export const handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error("Fout bij opslaan rapport.");
+    console.error("Fout bij opslaan rapport:", error);
+    // Specifieke check voor unieke constraint violation (als race condition optreedt)
+    if (error.code === '23505') { // Postgres code voor unique violation
+        return { statusCode: 200, body: JSON.stringify({ message: "Reeds verwerkt" }) };
+    }
     return { statusCode: 500, body: "Verwerkingsfout" };
   }
 };

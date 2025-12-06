@@ -11,14 +11,16 @@ const SECURITY_CHECK_KEY = 'lmra_sec_check';
 const CryptoManager = {
     key: null,
     
-    async deriveKey(pin, salt) {
+async deriveKey(pin, salt) {
         const enc = new TextEncoder();
         const keyMaterial = await window.crypto.subtle.importKey(
             "raw", enc.encode(pin), { name: "PBKDF2" }, false, ["deriveKey"]
         );
         const saltBuffer = salt ? Uint8Array.from(atob(salt), c => c.charCodeAt(0)) : window.crypto.getRandomValues(new Uint8Array(16));
+        
+        // UPDATE: Iteraties verhoogd van 100.000 naar 600.000 (OWASP Standaard 2025)
         const key = await window.crypto.subtle.deriveKey(
-            { name: "PBKDF2", salt: saltBuffer, iterations: 100000, hash: "SHA-256" },
+            { name: "PBKDF2", salt: saltBuffer, iterations: 600000, hash: "SHA-256" },
             keyMaterial,
             { name: "AES-GCM", length: 256 },
             false,
@@ -480,7 +482,12 @@ async function saveToCloudWithRetry(isSafe, monteur_naam, locatie, werkorder, op
     
     const honeypotVal = document.getElementById('contact_email').value;
     
+// UPDATE: Genereer een uniek ID voor dit specifieke rapport
+    // Dit voorkomt dubbele opslag als de verbinding hapert.
+    const reportId = crypto.randomUUID(); 
+    
     const payload = { 
+        report_id: reportId, // NIEUW: Het unieke ID meesturen
         monteur_naam, 
         locatie, 
         werkorder, 
