@@ -15,28 +15,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.4/purify.min.js" crossorigin="anonymous"></script>
     
-    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-    
     <link rel="stylesheet" href="style.css">
-
-    <script>
-        // --- DE VERKEERSREGELAAR (FIX) ---
-        // Als iemand binnenkomt met een wachtwoord-reset link (#recovery_token) of invite,
-        // stuur ze dan DIRECT door naar de Admin pagina.
-        // Hierdoor slaan we de 'bevroren' app over.
-        if (window.location.hash.includes("recovery_token") || window.location.hash.includes("invite_token")) {
-            console.log("Account actie gedetecteerd, doorsturen naar veilige omgeving...");
-            window.location.href = "/admin.html" + window.location.hash;
-        }
-    </script>
-
-    <style>
-        /* Zorg dat de Netlify Identity widget altijd zichtbaar is */
-        div[data-netlify-identity-menu], 
-        div[data-netlify-identity-modal] {
-            z-index: 10000 !important;
-        }
-    </style>
 </head>
 <body class="bg-slate-100 dark:bg-darkbg text-slate-900 dark:text-slate-200 h-screen flex flex-col transition-colors duration-300">
 
@@ -47,7 +26,7 @@
             </div>
             <div>
                 <h1 class="font-bold text-lg leading-tight tracking-wide text-white">LMRA <span class="text-blue-200">PRO</span></h1>
-                <p class="text-[10px] uppercase tracking-wider opacity-90 font-semibold text-blue-100">v8.2 - Sentinel</p>
+                <p class="text-[10px] uppercase tracking-wider opacity-90 font-semibold text-blue-100">v8.2 - Sentinel (App Only)</p>
             </div>
         </div>
         <div class="flex gap-2">

@@ -1,36 +1,19 @@
-# Netlify Configuratie v8.2 - Sentinel (Fixed)
+# Netlify Configuratie v8.2 - Sentinel (Cleaned)
 
 [build]
   publish = "."
   functions = "netlify/functions"
 
-# 1. Beveilig de admin pagina (de 'voordeur')
-[[edge_functions]]
-  path = "/admin.html"
-  function = "auth"
-
-# 2. Beveilig de functie die data ophaalt
-[[edge_functions]]
-  path = "/.netlify/functions/get-reports"
-  function = "auth"
-
-# 3. Beveilig de functie die data verwijdert
-[[edge_functions]]
-  path = "/.netlify/functions/delete-report"
-  function = "auth"
-
-# 4. De Limiter functie koppelen
+# ALLEEN de rate limiter blijft actief voor de API
 [[edge_functions]]
   function = "submit-limiter"
   path = "/.netlify/functions/submit-lmra"
 
-# Beveiligingsheaders voor de hele site (Fixed v8.2)
+# Headers (CSP opgeschoond)
 [[headers]]
   for = "/*"
   [headers.values]
-    # CSP: Strict + 'unsafe-inline' voor identity
-    Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://identity.netlify.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://identity.netlify.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; frame-src 'self' https://identity.netlify.com https://*.netlify.app; connect-src 'self' https://api.open-meteo.com https://*.nsvcs.net https://identity.netlify.com; upgrade-insecure-requests;"
-    
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://placehold.co; connect-src 'self' https://api.open-meteo.com https://*.nsvcs.net; upgrade-insecure-requests;"
     X-Content-Type-Options = "nosniff"
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"

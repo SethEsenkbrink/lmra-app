@@ -1,7 +1,7 @@
 {
   "name": "lmra-app",
   "version": "8.2.0",
-  "description": "LMRA Pro v8.2 - Sentinel (Secure Identity & Fixes)",
+  "description": "LMRA Pro v8.2 - Sentinel (Cleaned)",
   "type": "module",
   "scripts": {
     "dev": "netlify dev",
@@ -10,8 +10,7 @@
     "security-check": "npm audit"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^0.10.4",
-    "jws": "^4.0.1"
+    "@neondatabase/serverless": "^0.10.4"
   },
   "devDependencies": {
     "netlify-cli": "latest",

@@ -1,27 +1,25 @@
-/* sw.js - Service Worker v8.2 (Sentinel Final) */
-const CACHE_NAME = 'lmra-pro-v8.2-sentinel-final'; 
+/* sw.js - Service Worker v8.2 (Sentinel Clean) */
+const CACHE_NAME = 'lmra-pro-v8.2-clean'; 
 
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  // '/admin.html', <-- Admin nooit cachen (veiligheid)
   '/style.css',
   '/app.js',
-  '/tailwind.config.js', // NIEUW: Styling config
+  '/tailwind.config.js',
   '/manifest.json',
-  /* Externe libs */
+  /* Externe libs - GEEN Identity Widget meer */
   'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.4/purify.min.js', // NIEUW: Versie 3.2.4
-  'https://identity.netlify.com/v1/netlify-identity-widget.js'
+  'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.4/purify.min.js'
 ];
 
 /* 1. Installatie */
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Caching files Sentinel Final');
+      console.log('[Service Worker] Caching files (Clean Version)');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
@@ -47,29 +45,23 @@ self.addEventListener('activate', (event) => {
 
 /* 3. Fetch Strategie */
 self.addEventListener('fetch', (event) => {
-  // Alleen GET verzoeken
   if (event.request.method !== 'GET') return;
 
   const url = event.request.url;
 
-  // NEGEER: Netlify functies, Identity, Admin pagina en Admin logica
-  if (
-      url.includes('/.netlify/') || 
-      url.includes('identity.netlify.com') || 
-      url.includes('/admin.html') ||
-      url.includes('/admin.js') // Admin JS ook niet cachen
-  ) {
+  // Negeer API calls en Netlify interne calls
+  if (url.includes('/.netlify/')) {
       return;
   }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      // Netwerk-eerst voor HTML (zodat updates snel zichtbaar zijn), fallback naar cache
+      // Netwerk-eerst voor HTML (altijd de nieuwste versie)
       if (event.request.headers.get('accept').includes('text/html')) {
           return fetch(event.request)
             .catch(() => cachedResponse || caches.match('/index.html'));
       }
-      // Cache-eerst voor assets
+      // Cache-eerst voor assets (css, js, images)
       return cachedResponse || fetch(event.request);
     })
   );

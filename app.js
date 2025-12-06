@@ -1,4 +1,4 @@
-/* app.js - LMRA Pro Logica v8.2 (Codename: Sentinel) */
+/* app.js - LMRA Pro Logica v8.2 (Codename: Sentinel Clean) */
 
 /* --- CONFIGURATIE --- */
 const APP_VERSION = "8.2";
@@ -18,7 +18,7 @@ const CryptoManager = {
         );
         const saltBuffer = salt ? Uint8Array.from(atob(salt), c => c.charCodeAt(0)) : window.crypto.getRandomValues(new Uint8Array(16));
         
-        // 600.000 iteraties voor beveiliging
+        // 600.000 iteraties (Post-Audit Requirement)
         const key = await window.crypto.subtle.deriveKey(
             { name: "PBKDF2", salt: saltBuffer, iterations: 600000, hash: "SHA-256" },
             keyMaterial,
@@ -95,12 +95,15 @@ function initPINFlow() {
     const salt = localStorage.getItem('lmra_salt');
     const hasSecCheck = localStorage.getItem(SECURITY_CHECK_KEY);
 
+    // Standaard PIN flow, geen gedoe met identity checks hier.
+    document.getElementById('pinModal').classList.remove('hidden');
+
     if (!salt || !hasSecCheck) {
         pinTitle.innerText = "Stel je PIN in";
         pinDesc.innerText = "Kies een veilige 4-cijferige code. Onthoud deze goed!";
         setupInfo.classList.remove('hidden');
         unlockBtn.innerText = "Instellen & Starten";
-        localStorage.clear();
+        if(!salt) localStorage.clear();
     } else {
         pinTitle.innerText = "Beveiligde Toegang";
         pinDesc.innerText = "Voer je PIN in om te ontgrendelen.";
@@ -108,21 +111,29 @@ function initPINFlow() {
         unlockBtn.innerText = "Ontgrendelen";
     }
 
+    inputs.forEach(i => i.value = '');
+    
+    // Zorg dat we geen oude event listeners hebben
+    const newUnlockBtn = unlockBtn.cloneNode(true);
+    unlockBtn.parentNode.replaceChild(newUnlockBtn, unlockBtn);
+    newUnlockBtn.addEventListener('click', attemptUnlock);
+
     inputs.forEach((input, index) => {
-        input.addEventListener('input', (e) => {
+        // Simpele override is hier veiliger dan cloneNode ivm references
+        input.oninput = (e) => {
             if (e.target.value.length === 1 && index < inputs.length - 1) {
                 inputs[index + 1].focus();
             }
-        });
-        input.addEventListener('keydown', (e) => {
+        };
+        input.onkeydown = (e) => {
             if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
                 inputs[index - 1].focus();
             }
             if (e.key === 'Enter') attemptUnlock();
-        });
+        };
     });
-
-    unlockBtn.addEventListener('click', attemptUnlock);
+    
+    setTimeout(() => inputs[0].focus(), 100);
 }
 
 async function attemptUnlock() {
@@ -225,7 +236,6 @@ async function checkDailyReset() {
     const today = new Date().toDateString();
     
     if (lastDate !== today) {
-        console.log("Nieuwe dag gedetecteerd. Resetting...");
         safeStorage.removeItem(ACTIVE_SESSION_KEY);
         safeStorage.removeItem('lmra_valid_until');
         await safeStorage.set('lmra_last_date', today);
