@@ -5,17 +5,14 @@ import DOMPurify from 'dompurify';
 
 export const CloudAuthService = {
     
-    // Controleer of er een geldige sessie is
     async checkSession(): Promise<boolean> {
         const { data } = await supabase.auth.getSession();
         
         if (!data.session) return false;
 
-        // "Onthoud mij" Logica Check
         const isPersistent = localStorage.getItem('lmra_auth_persist') === 'true';
         const isSession = sessionStorage.getItem('lmra_auth_session') === 'true';
 
-        // Als BEIDE vlaggen ontbreken (browser gesloten + onthoud mij stond uit), log uit.
         if (!isPersistent && !isSession) {
             console.log("Sessie verlopen (Browser gesloten en 'Onthoud mij' stond uit).");
             await this.signOut();
@@ -25,7 +22,6 @@ export const CloudAuthService = {
         return true;
     },
 
-    // Toon het inlogscherm
     showLogin(onSuccess: () => void): void {
         UI.toggleElement('cloudLoginModal', true);
         
@@ -36,7 +32,6 @@ export const CloudAuthService = {
         const rememberInput = document.getElementById('rememberMe') as HTMLInputElement;
         const errorMsg = document.getElementById('cloudLoginError');
 
-        // Wachtwoord vergeten logica
         if (btnForgot) {
             btnForgot.onclick = async () => {
                 const email = DOMPurify.sanitize(emailInput.value);
@@ -48,14 +43,10 @@ export const CloudAuthService = {
                 UI.setLoading('btnCloudLogin', true, "Verwerken..."); 
                 if (errorMsg) errorMsg.innerText = "";
 
-                // AANGEPAST: Slimme redirect keuze
-                // Als we in 'productie' mode zijn (live), gebruiken we ALTIJD jouw officiële URL.
-                // Als we lokaal aan het ontwikkelen zijn, gebruiken we localhost.
+                // Productie check voor juiste URL
                 const redirectUrl = import.meta.env.PROD 
                     ? 'https://lmrapro.nl' 
                     : window.location.origin;
-
-                console.log("Wachtwoord reset link verwijst naar:", redirectUrl);
 
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
                     redirectTo: redirectUrl,
@@ -67,12 +58,11 @@ export const CloudAuthService = {
                     console.error("Reset error:", error);
                     if (errorMsg) errorMsg.innerText = "Fout bij aanvragen. Controleer email.";
                 } else {
-                    alert(`📧 Check je e-mail! We hebben een herstellink gestuurd naar ${email}.\n(Link verwijst naar: ${redirectUrl})`);
+                    alert(`📧 Check je e-mail! We hebben een herstellink gestuurd naar ${email}.`);
                 }
             };
         }
 
-        // Inlog logica
         if (btnLogin) {
             btnLogin.onclick = async () => {
                 const email = DOMPurify.sanitize(emailInput.value);
@@ -113,10 +103,13 @@ export const CloudAuthService = {
         }
     },
 
-    // Functie voor het afhandelen van de reset NA het klikken op de link
+    // AANGEPAST: Forceer PIN modal dicht!
     async handlePasswordReset(): Promise<void> {
-        // Zorg dat de login modal weg is, mocht die open staan
+        // Sluit alle mogelijke andere schermen die in de weg kunnen zitten
+        UI.toggleElement('pinModal', false);        // <--- DEZE IS BELANGRIJK
         UI.toggleElement('cloudLoginModal', false);
+        
+        // Open het reset scherm
         UI.toggleElement('resetPasswordModal', true);
         
         const btnSave = document.getElementById('btnSavePassword');
@@ -142,12 +135,11 @@ export const CloudAuthService = {
                 if (error) {
                     console.error("Update error:", error);
                     UI.setLoading('btnSavePassword', false, "Opslaan & Inloggen");
-                    if (errorMsg) errorMsg.innerText = "Kon wachtwoord niet opslaan. Sessie mogelijk verlopen.";
+                    if (errorMsg) errorMsg.innerText = "Kon wachtwoord niet opslaan.";
                 } else {
                     alert("✅ Wachtwoord succesvol gewijzigd! Je wordt nu ingelogd.");
                     UI.toggleElement('resetPasswordModal', false);
                     
-                    // Schoon de URL op (verwijder tokens)
                     window.history.replaceState(null, '', window.location.pathname);
                     window.location.reload();
                 }
