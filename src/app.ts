@@ -1,4 +1,4 @@
-/* src/app.ts - v9.5 (Full & Complete - Self Destruct Enabled) */
+/* src/app.ts - v9.5 (Updated: Archive & PDF Fix) */
 import { UI } from './ui';
 import { Database, LMRAReport } from './database';
 import { CryptoManager, SecureStorage } from './security';
@@ -10,12 +10,15 @@ import {
     APP_VERSION 
 } from './config';
 import DOMPurify from 'dompurify';
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
 
 // Interface voor de applicatie status
 interface AppState {
     answers: Record<number, string>;
     actions: Record<number, string>;
     isUnlocked: boolean;
+    viewingReport: LMRAReport | null;
 }
 
 // Interface voor opgeslagen sessie
@@ -29,7 +32,8 @@ interface StoredSession {
 const state: AppState = {
     answers: {},
     actions: {},
-    isUnlocked: false
+    isUnlocked: false,
+    viewingReport: null
 };
 
 export const App = {
@@ -60,10 +64,11 @@ export const App = {
         document.getElementById('btnResetApp')?.addEventListener('click', () => this.resetForm());
         document.getElementById('btnToggleTheme')?.addEventListener('click', () => this.toggleTheme());
         
-        // Archief
+        // Archief & PDF
         document.getElementById('btnOpenArchive')?.addEventListener('click', () => this.openArchive());
         document.getElementById('btnCloseArchive')?.addEventListener('click', () => UI.toggleElement('archiveModal', false));
         document.getElementById('btnClearArchive')?.addEventListener('click', () => this.clearArchive());
+        document.getElementById('btnGeneratePDF')?.addEventListener('click', () => this.generatePDF());
 
         // Modals
         document.getElementById('btnCloseModal')?.addEventListener('click', () => UI.toggleElement('resultModal', false));
@@ -330,12 +335,11 @@ export const App = {
     handleAction(id: number, text: string): void { state.actions[id] = text; },
 
     async handleSubmit(): Promise<void> {
-        // 1. HONEYPOT CHECK (Anti-Spam Bot)
-        // Als een bot dit verborgen veld heeft ingevuld, stoppen we direct.
+        // 1. HONEYPOT CHECK
         const honeypot = document.getElementById('contact_email') as HTMLInputElement;
         if (honeypot && honeypot.value !== "") {
             console.warn("Bot detected via honeypot.");
-            return; // We doen net alsof het gelukt is, maar sturen niets.
+            return; 
         }
 
         const elUserName = document.getElementById('userName') as HTMLInputElement;
@@ -343,7 +347,7 @@ export const App = {
         const elWorkOrder = document.getElementById('workOrder') as HTMLInputElement;
         const elComments = document.getElementById('comments') as HTMLTextAreaElement;
         
-        // Buddy elementen ophalen
+        // Buddy elementen
         const elBuddyToggle = document.getElementById('buddyToggle') as HTMLInputElement;
         const elBuddyName = document.getElementById('buddyName') as HTMLInputElement;
         const elBuddySig = document.getElementById('buddySignature') as HTMLInputElement;
@@ -383,15 +387,12 @@ export const App = {
             });
         });
 
-        // BEREKEN GELDIGHEID
         const validUntilDate = new Date(new Date().getTime() + 4*60*60*1000);
-
-        // Buddy info toevoegen aan rapport indien aanwezig
         const buddyInfo = elBuddyToggle.checked ? ` (Buddy: ${DOMPurify.sanitize(elBuddyName.value)})` : "";
 
         const report: LMRAReport = {
             report_id: crypto.randomUUID(),
-            monteur_naam: userName + buddyInfo, // We voegen de buddy toe aan de naam-string voor eenvoud
+            monteur_naam: userName + buddyInfo,
             locatie: location,
             werkorder: DOMPurify.sanitize(elWorkOrder.value) || 'N.v.t.',
             is_veilig: isSafe,
@@ -425,7 +426,7 @@ export const App = {
         await SecureStorage.set(HISTORY_KEY, history);
     },
 
-    /* --- ARCHIEF MET STATUS --- */
+    /* --- ARCHIEF & DETAILS (UPDATED) --- */
     async openArchive(): Promise<void> {
         const history = await SecureStorage.get(HISTORY_KEY) as LMRAReport[];
         const container = document.getElementById('archiveContainer');
@@ -456,20 +457,26 @@ export const App = {
                 }
 
                 const div = document.createElement('div');
-                div.className = `p-3 mb-2 bg-white dark:bg-slate-800 rounded border-l-4 ${borderColor} hover:bg-slate-50 transition-colors cursor-default`;
+                // UPDATE: cursor-pointer toegevoegd
+                div.className = `p-3 mb-2 bg-white dark:bg-slate-800 rounded border-l-4 ${borderColor} hover:bg-slate-50 transition-colors cursor-pointer active:scale-[0.98]`;
+                
                 div.innerHTML = `
-                    <div class="flex justify-between items-start mb-1">
+                    <div class="flex justify-between items-start mb-1 pointer-events-none">
                         <span class="font-bold text-slate-700 dark:text-slate-200 text-sm truncate w-2/3">${h.locatie}</span>
                         <div class="flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full ${statusDot}"></span>
                             <span class="text-[10px] text-slate-500 uppercase font-bold">${statusText}</span>
                         </div>
                     </div>
-                    <div class="text-xs text-slate-500 dark:text-slate-400">
+                    <div class="text-xs text-slate-500 dark:text-slate-400 pointer-events-none">
                         ${new Date(h.created_at).toLocaleString()} - ${h.monteur_naam}<br>
                         WO: ${h.werkorder}
                     </div>
                 `;
+                
+                // UPDATE: Click handler voor details
+                div.onclick = () => this.showDetail(h);
+                
                 container.appendChild(div);
             });
         }
@@ -482,6 +489,109 @@ export const App = {
             this.openArchive();
             UI.showToast("Historie gewist.");
         }
+    },
+
+    // UPDATE: Nieuwe functie voor Detail weergave
+    showDetail(report: LMRAReport): void {
+        state.viewingReport = report;
+
+        // Vul velden
+        const setTxt = (id: string, val: string) => {
+            const el = document.getElementById(id);
+            if(el) el.innerText = val;
+        };
+
+        const date = new Date(report.created_at);
+        const validUntil = new Date(report.valid_until);
+
+        setTxt('detailDate', date.toLocaleDateString());
+        setTxt('detailTimeRange', `${date.toLocaleTimeString().slice(0,5)} - ${validUntil.toLocaleTimeString().slice(0,5)}`);
+        setTxt('detailName', report.monteur_naam);
+        setTxt('detailLoc', report.locatie);
+        setTxt('detailWO', report.werkorder);
+        setTxt('detailComments', report.opmerkingen || "Geen opmerkingen");
+
+        // Status visualisatie
+        const statusBox = document.getElementById('detailStatusBox');
+        if(statusBox) {
+            if(report.is_veilig) {
+                statusBox.innerHTML = `
+                    <div class="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 p-4 rounded-lg text-center border border-green-200 dark:border-green-800">
+                        <i class="fa-solid fa-check-circle text-3xl mb-1"></i><br>
+                        <span class="font-bold uppercase tracking-wide">Veilig / Goedgekeurd</span>
+                    </div>
+                `;
+            } else {
+                statusBox.innerHTML = `
+                    <div class="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 p-4 rounded-lg text-center border border-red-200 dark:border-red-800">
+                        <i class="fa-solid fa-triangle-exclamation text-3xl mb-1"></i><br>
+                        <span class="font-bold uppercase tracking-wide">Niet Veilig / Afgekeurd</span>
+                    </div>
+                `;
+            }
+        }
+
+        // Buddy Check Logic in display
+        // We parsen de buddy naam uit de monteur_naam string (hacky oplossing van submit, maar werkt voor display)
+        // Of we kijken gewoon naar de string zelf.
+        const buddyBox = document.getElementById('detailBuddyBox');
+        if(buddyBox) {
+            if(report.monteur_naam.includes('(Buddy:')) {
+                buddyBox.classList.remove('hidden');
+                // Simpele extractie: alles na "Buddy: "
+                const parts = report.monteur_naam.split('Buddy: ');
+                if(parts.length > 1) {
+                    setTxt('detailBuddy', parts[1].replace(')', ''));
+                }
+            } else {
+                buddyBox.classList.add('hidden');
+            }
+        }
+
+        // Afkeurpunten
+        const failsContainer = document.getElementById('detailFailsContainer');
+        const failsList = document.getElementById('detailFails');
+        
+        if(failsContainer && failsList) {
+            const afkeur = JSON.parse(report.afkeurpunten || "[]");
+            if(afkeur.length > 0) {
+                failsContainer.classList.remove('hidden');
+                failsList.innerHTML = afkeur.map((p: string) => `<li>${p}</li>`).join('');
+            } else {
+                failsContainer.classList.add('hidden');
+                failsList.innerHTML = '';
+            }
+        }
+
+        UI.toggleElement('archiveModal', false); // Sluit lijst
+        UI.toggleElement('detailModal', true); // Open detail
+    },
+
+    // UPDATE: PDF Generatie Functie
+    generatePDF(): void {
+        const report = state.viewingReport;
+        if (!report) return;
+
+        const element = document.getElementById('pdfContent');
+        if (!element) return UI.showToast("Geen inhoud voor PDF.");
+
+        UI.showToast("PDF Genereren...");
+
+        const opt = {
+            margin:       10,
+            filename:     `LMRA_${report.werkorder}_${new Date(report.created_at).toISOString().split('T')[0]}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // @ts-ignore
+        html2pdf().set(opt).from(element).save()
+            .then(() => UI.showToast("✅ PDF Gedownload"))
+            .catch((err: any) => {
+                console.error(err);
+                UI.showToast("❌ Fout bij PDF maken");
+            });
     },
 
     showResult(isSafe: boolean, report: LMRAReport, syncStatus: string): void {
