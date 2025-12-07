@@ -1,0 +1,25 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Beveiliging tegen clickjacking
+    X-Frame-Options = "DENY"
+    # Bescherming tegen MIME-type sniffing
+    X-Content-Type-Options = "nosniff"
+    # Forceer HTTPS (HSTS)
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    # Referrer Policy voor privacy
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Content Security Policy (CSP) - DE KRITIEKE AUDIT EIS
+    # We blokkeren 'unsafe-inline' scripts. Alles moet uit onze eigen bundel ('self') komen.
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;"
+    # Browser features uitschakelen die we niet gebruiken (Privacy)
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"

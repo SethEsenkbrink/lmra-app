@@ -94,6 +94,7 @@ export const App = {
         UI.toggleElement('pinModal', true);
         UI.toggleElement('setupMode', true);
         document.getElementById('pinTitle').innerText = "Stel PIN in";
+        document.getElementById('pinDesc').innerText = "Kies 6 cijfers";
         document.getElementById('btnUnlock').innerText = "Instellen & Starten";
         localStorage.setItem('lmra_failed_attempts', '0');
     },
@@ -111,7 +112,8 @@ export const App = {
         let pin = '';
         inputs.forEach(i => pin += i.value);
 
-        if (pin.length !== 4) return UI.showToast("Voer 4 cijfers in.");
+        // AANGEPAST: Check op 6 cijfers ipv 4
+        if (pin.length !== 6) return UI.showToast("Voer 6 cijfers in.");
 
         UI.setLoading('btnUnlock', true);
         const errorMsg = document.getElementById('pinError');
