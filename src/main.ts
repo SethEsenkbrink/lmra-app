@@ -12,7 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('✅ Service Worker Geregistreerd'))
+            // AANGEPAST: 'reg' vervangen door '()' omdat we de variabele niet gebruiken
+            .then(() => console.log('✅ Service Worker Geregistreerd'))
             .catch(err => console.log('❌ Service Worker Fout', err));
     });
 }
