@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LMRA Pro 9.0</title>
+    <title>LMRA Pro 9.5</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300447c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00447c">
@@ -20,7 +20,7 @@
             </div>
             <div>
                 <h1 class="font-bold text-lg leading-tight tracking-wide text-white">LMRA <span class="text-blue-200">PRO</span></h1>
-                <p class="text-[10px] uppercase tracking-wider opacity-90 font-semibold text-blue-100">v9.0 - Sentinel Safe</p>
+                <p class="text-[10px] uppercase tracking-wider opacity-90 font-semibold text-blue-100">v9.5 - Sentinel Safe</p>
             </div>
         </div>
         <div class="flex gap-2">
@@ -44,23 +44,35 @@
 
     <main class="flex-1 overflow-y-auto p-4 pb-32 max-w-3xl mx-auto w-full custom-scrollbar" id="main-container">
         
-        <div id="resumeBar" class="hidden mb-4 bg-orange-50 border-l-4 border-orange-500 p-4 rounded shadow-sm flex justify-between items-center animate-fade-in">
-            <div>
-                <p class="text-sm text-orange-800 font-bold">Actieve Sessie Gevonden</p>
-                <p class="text-xs text-orange-700">Je werkt nog aan een openstaande taak.</p>
+        <div id="resumeBar" class="hidden mb-4 bg-blue-50 dark:bg-blue-900/30 border-l-4 border-[#00447c] p-4 rounded shadow-sm animate-fade-in transition-all">
+            <div class="flex justify-between items-center mb-2">
+                <div>
+                    <p class="text-sm text-[#00447c] dark:text-blue-300 font-bold uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-stopwatch"></i> Actieve Sessie
+                    </p>
+                    <p id="sessionInfoText" class="text-xs text-slate-600 dark:text-slate-400">Geldig tot --:--</p>
+                </div>
+                <div class="text-right">
+                    <div id="timerDisplay" class="text-2xl font-black text-[#00447c] dark:text-white font-mono tracking-tight">00:00:00</div>
+                </div>
             </div>
-            <div class="flex gap-2">
-                <button id="btnTriggerResume" class="text-xs bg-orange-600 text-white px-3 py-1.5 rounded hover:bg-orange-700 font-bold">Hervatten</button>
-                <button id="btnCancelResume" class="text-xs bg-white text-orange-600 border border-orange-200 px-3 py-1.5 rounded hover:bg-orange-50">Stoppen</button>
+            
+            <div class="flex gap-2 mt-2 pt-2 border-t border-blue-200 dark:border-blue-800/50">
+                <button id="btnTriggerResume" class="hidden flex-1 text-xs bg-[#00447c] text-white px-3 py-2 rounded hover:bg-[#003366] font-bold transition-all shadow-sm items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate"></i> Verlengen
+                </button>
+                <button id="btnCancelResume" class="flex-1 text-xs bg-white dark:bg-slate-700 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 px-3 py-2 rounded hover:bg-red-50 dark:hover:bg-red-900/20 font-bold transition-all">
+                    Afsluiten
+                </button>
             </div>
         </div>
 
-        <div id="pauseAlert" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-r shadow-sm animate-pulse">
+        <div id="pauseAlert" class="hidden bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 mb-4 rounded-r shadow-sm animate-pulse">
             <div class="flex">
                 <div class="flex-shrink-0"><i class="fa-solid fa-clock text-red-500"></i></div>
                 <div class="ml-3">
-                    <p class="text-sm text-red-800 font-bold">Geldigheid Verlopen</p>
-                    <p class="text-xs text-red-700 mt-1">Start een nieuwe check voor je verder gaat.</p>
+                    <p class="text-sm text-red-800 dark:text-red-300 font-bold">LMRA Verlopen</p>
+                    <p class="text-xs text-red-700 dark:text-red-400 mt-1">Start een nieuwe check of verleng de huidige.</p>
                 </div>
             </div>
         </div>
@@ -135,7 +147,7 @@
         </div>
         
         <div class="text-center mt-8 mb-4 text-[10px] text-slate-400">
-            <p>LMRA Pro v9.0 &bull; Supabase Connected</p>
+            <p>LMRA Pro v9.5 &bull; Supabase Connected</p>
         </div>
     </main>
 
@@ -286,7 +298,7 @@
             <div class="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fa-solid fa-rocket text-2xl text-green-600 dark:text-green-400"></i>
             </div>
-            <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Update: v9.0 Sentinel</h2>
+            <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Update: v9.5 Sentinel</h2>
             <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">
                 Nieuwe beveiligingsupdate geïnstalleerd.<br>
                 Systeem is volledig beveiligd.
@@ -294,19 +306,6 @@
             <button id="btnCloseUpdateModal" class="w-full bg-[#00447c] text-white font-bold py-3 rounded-lg shadow hover:bg-[#003366]">
                 Ik begrijp het
             </button>
-        </div>
-    </div>
-
-    <div id="resumeCheckModal" class="fixed inset-0 z-[80] flex items-center justify-center p-6 hidden bg-black/70 backdrop-blur-sm">
-        <div class="bg-white dark:bg-cardbg rounded-xl shadow-2xl max-w-sm w-full p-6">
-            <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-2">Werkzaamheden Hervatten?</h2>
-            <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">
-                Je hervat de sessie. De eindtijd wordt met 4 uur verlengd vanaf nu.
-            </p>
-            <div class="flex gap-3">
-                <button id="btnConfirmResume" class="flex-1 bg-green-600 text-white font-bold py-2 rounded-lg hover:bg-green-700">Ja, Verlengen</button>
-                <button id="btnCancelResume" class="flex-1 bg-slate-200 text-slate-700 font-bold py-2 rounded-lg hover:bg-slate-300">Annuleren</button>
-            </div>
         </div>
     </div>
 

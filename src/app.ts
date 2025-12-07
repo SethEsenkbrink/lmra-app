@@ -1,4 +1,4 @@
-/* src/app.ts - v9.5 (Updated: Archive & PDF Fix) */
+/* src/app.ts - v9.6.2 (FIXED: Syntax Structure & Timer) */
 import { UI } from './ui';
 import { Database, LMRAReport } from './database';
 import { CryptoManager, SecureStorage } from './security';
@@ -19,6 +19,7 @@ interface AppState {
     actions: Record<number, string>;
     isUnlocked: boolean;
     viewingReport: LMRAReport | null;
+    timerInterval: number | null; // Voor de countdown
 }
 
 // Interface voor opgeslagen sessie
@@ -33,7 +34,8 @@ const state: AppState = {
     answers: {},
     actions: {},
     isUnlocked: false,
-    viewingReport: null
+    viewingReport: null,
+    timerInterval: null
 };
 
 export const App = {
@@ -71,12 +73,15 @@ export const App = {
         document.getElementById('btnGeneratePDF')?.addEventListener('click', () => this.generatePDF());
 
         // Modals
-        document.getElementById('btnCloseModal')?.addEventListener('click', () => UI.toggleElement('resultModal', false));
+        document.getElementById('btnCloseModal')?.addEventListener('click', () => {
+            UI.toggleElement('resultModal', false);
+            // Als we een veilige sessie hebben, start timer direct na sluiten modal
+            this.checkResumeState();
+        });
         document.getElementById('btnCloseDetail')?.addEventListener('click', () => UI.toggleElement('detailModal', false));
         
-        // Resume Knoppen
-        document.getElementById('btnTriggerResume')?.addEventListener('click', () => UI.toggleElement('resumeCheckModal', true));
-        document.getElementById('btnConfirmResume')?.addEventListener('click', () => this.confirmResume());
+        // Timer / Resume Knoppen in de Balk
+        document.getElementById('btnTriggerResume')?.addEventListener('click', () => this.confirmResume());
         document.getElementById('btnCancelResume')?.addEventListener('click', () => this.cancelResume());
 
         // Buddy Check
@@ -110,12 +115,11 @@ export const App = {
         const elStart = document.getElementById('timeStart') as HTMLInputElement;
         const elEnd = document.getElementById('timeEnd') as HTMLInputElement;
         
-        // Alleen invullen als ze leeg zijn
         if(elStart && !elStart.value) elStart.value = now.toTimeString().slice(0,5);
         if(elEnd && !elEnd.value) elEnd.value = end.toTimeString().slice(0,5);
     },
 
-    /* --- PIN FLOW (MET SELF-DESTRUCT) --- */
+    /* --- PIN FLOW --- */
     startSetupFlow(): void {
         UI.toggleElement('pinModal', true);
         UI.toggleElement('setupMode', true);
@@ -159,8 +163,6 @@ export const App = {
 
         try {
             const storedSalt = localStorage.getItem('lmra_salt');
-            
-            // Check lockdown status
             let attempts = parseInt(localStorage.getItem('lmra_failed_attempts') || '0');
             if (attempts >= 5) {
                 await this.triggerWipe();
@@ -171,16 +173,14 @@ export const App = {
             CryptoManager.key = key;
 
             if (!storedSalt) {
-                // Setup
                 localStorage.setItem('lmra_salt', salt);
                 await SecureStorage.set(SECURITY_CHECK_KEY, 'VALID_PIN');
                 localStorage.setItem('lmra_failed_attempts', '0');
                 this.unlockApp();
             } else {
-                // Decryptie check
                 const check = await SecureStorage.get(SECURITY_CHECK_KEY);
                 if (check === 'VALID_PIN') {
-                    localStorage.setItem('lmra_failed_attempts', '0'); // Succes! Reset teller.
+                    localStorage.setItem('lmra_failed_attempts', '0');
                     this.unlockApp();
                 } else {
                     throw new Error("Verkeerde PIN");
@@ -189,8 +189,6 @@ export const App = {
         } catch (e) {
             console.error(e);
             CryptoManager.key = null;
-            
-            // Foutafhandeling & Teller
             if (localStorage.getItem('lmra_salt')) {
                 let attempts = parseInt(localStorage.getItem('lmra_failed_attempts') || '0');
                 attempts++;
@@ -199,9 +197,8 @@ export const App = {
                 if(errorMsg) {
                     if (attempts >= 5) {
                         await this.triggerWipe();
-                        errorMsg.innerText = "BEVEILIGING GEACTIVEERD: DATA GEWIST.";
-                        errorMsg.className = "text-red-600 font-black text-xs h-4 mb-4 animate-pulse";
-                        alert("⚠️ 5 Foute pogingen.\n\nUit veiligheidsoverwegingen is alle lokale data permanent gewist.");
+                        errorMsg.innerText = "DATA GEWIST.";
+                        alert("⚠️ 5 Foute pogingen. Data gewist.");
                         location.reload();
                         return;
                     } else {
@@ -209,10 +206,7 @@ export const App = {
                         errorMsg.innerText = `Foutieve code. Nog ${left} pogingen.`;
                     }
                 }
-            } else if (errorMsg) {
-                errorMsg.innerText = "Fout bij instellen.";
             }
-
             inputs.forEach(i => i.value = '');
             inputs[0].focus();
         } finally {
@@ -221,7 +215,6 @@ export const App = {
     },
 
     async triggerWipe(): Promise<void> {
-        console.warn("🚨 SELF DESTRUCT INITIATED 🚨");
         await SecureStorage.wipeEverything();
         localStorage.clear();
     },
@@ -237,66 +230,106 @@ export const App = {
         Database.processSyncQueue();
     },
 
-    /* --- RESUME & SESSION LOGIC --- */
+    /* --- ACTIVE SESSION LOGIC & TIMER --- */
     async checkResumeState(): Promise<void> {
         const session = await SecureStorage.get(ACTIVE_SESSION_KEY) as StoredSession | null;
+        const validUntilStr = await SecureStorage.get('lmra_valid_until') as string | null;
         
-        if (session) {
-            const today = new Date().toDateString();
-            if (session.date === today) {
-                UI.toggleElement('resumeBar', true);
+        if (session && validUntilStr) {
+            // Check of datum vandaag is, anders killen we de sessie
+            if (session.date === new Date().toDateString()) {
+                // Sessie is van vandaag.
                 
+                // Formulier vullen
                 const uName = document.getElementById('userName') as HTMLInputElement; 
                 const tLoc = document.getElementById('taskLocation') as HTMLInputElement; 
                 const wOrd = document.getElementById('workOrder') as HTMLInputElement;
-                
                 if(uName) uName.value = session.name || '';
                 if(tLoc) tLoc.value = session.task || '';
                 if(wOrd) wOrd.value = session.wo || '';
                 
-                this.toggleFormLock(true);
+                // Activeer lock en timer
+                this.activateLockedSession(new Date(validUntilStr));
             } else {
-                await SecureStorage.remove(ACTIVE_SESSION_KEY);
-                UI.toggleElement('resumeBar', false);
-                this.setDefaultTimes();
+                // Oude sessie van gisteren
+                this.cancelResume();
             }
         } else {
+            // Geen sessie
             UI.toggleElement('resumeBar', false);
+            this.toggleFormLock(false);
             this.setDefaultTimes();
         }
+    },
 
-        const validUntil = await SecureStorage.get('lmra_valid_until') as string | null;
-        if (validUntil) {
+    activateLockedSession(validUntil: Date): void {
+        this.toggleFormLock(true); // Direct op slot!
+        UI.toggleElement('resumeBar', true); // Balk tonen
+        UI.toggleElement('submitBtn', false); // Submit knop weg
+        
+        // Start Timer
+        if(state.timerInterval) clearInterval(state.timerInterval);
+        
+        const updateTimer = () => {
             const now = new Date();
-            const endTime = new Date(validUntil);
-            if (!isNaN(endTime.getTime()) && now > endTime) {
+            const diff = validUntil.getTime() - now.getTime();
+            
+            const displayEl = document.getElementById('timerDisplay');
+            const infoEl = document.getElementById('sessionInfoText');
+            const btnExtend = document.getElementById('btnTriggerResume');
+
+            if(diff <= 0) {
+                // Tijd is op
+                if(displayEl) {
+                    displayEl.innerText = "00:00:00";
+                    displayEl.classList.add('text-red-600');
+                }
+                if(infoEl) infoEl.innerText = "Geldigheid verlopen!";
+                if(btnExtend) btnExtend.classList.remove('hidden'); // NU pas mag je verlengen
                 UI.toggleElement('pauseAlert', true);
+            } else {
+                // Nog geldig
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                if(displayEl) {
+                    displayEl.innerText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    displayEl.classList.remove('text-red-600');
+                }
+                if(infoEl) infoEl.innerText = `Geldig tot ${validUntil.toLocaleTimeString().slice(0,5)}`;
+                
+                // Verlengen knop verbergen
+                if(btnExtend) btnExtend.classList.add('hidden');
+                UI.toggleElement('pauseAlert', false);
             }
-        }
+        };
+
+        updateTimer(); // Directe update
+        // @ts-ignore
+        state.timerInterval = setInterval(updateTimer, 1000);
     },
 
     confirmResume(): void {
-        UI.toggleElement('resumeCheckModal', false);
-        UI.toggleElement('resumeBar', false); 
-        this.toggleFormLock(false); 
+        // Dit is nu "Verlengen"
+        const newEnd = new Date(Date.now() + 4*60*60*1000);
         
-        const now = new Date();
-        const end = new Date(now.getTime() + 4*60*60*1000);
-        const elStart = document.getElementById('timeStart') as HTMLInputElement;
-        const elEnd = document.getElementById('timeEnd') as HTMLInputElement;
-        
-        if(elStart) elStart.value = now.toTimeString().slice(0,5);
-        if(elEnd) elEnd.value = end.toTimeString().slice(0,5);
-        
-        UI.showToast("✅ Werkzaamheden hervat. Tijd verlengd.");
+        SecureStorage.set('lmra_valid_until', newEnd.toISOString()).then(() => {
+            UI.showToast("✅ Werkzaamheden verlengd (+4 uur)");
+            this.activateLockedSession(newEnd);
+        });
     },
 
     cancelResume(): void {
-        UI.toggleElement('resumeCheckModal', false);
-        UI.toggleElement('resumeBar', false);
+        if(state.timerInterval) clearInterval(state.timerInterval);
         SecureStorage.remove(ACTIVE_SESSION_KEY);
         SecureStorage.remove('lmra_valid_until');
-        this.toggleFormLock(false);
+        
+        UI.toggleElement('resumeBar', false);
+        UI.toggleElement('pauseAlert', false);
+        UI.toggleElement('submitBtn', true); // Submit knop terug
+        
+        this.toggleFormLock(false); // Formulier open
         this.resetForm();
     },
 
@@ -307,7 +340,7 @@ export const App = {
         buttons.forEach(btn => btn.disabled = locked);
     },
 
-    /* --- FORMULIER --- */
+    /* --- FORMULIER SUBMIT --- */
     handleAnswer(id: number, value: string): void {
         state.answers[id] = value;
         const btnYes = document.getElementById(`btn-yes-${id}`);
@@ -335,19 +368,14 @@ export const App = {
     handleAction(id: number, text: string): void { state.actions[id] = text; },
 
     async handleSubmit(): Promise<void> {
-        // 1. HONEYPOT CHECK
         const honeypot = document.getElementById('contact_email') as HTMLInputElement;
-        if (honeypot && honeypot.value !== "") {
-            console.warn("Bot detected via honeypot.");
-            return; 
-        }
+        if (honeypot && honeypot.value !== "") return;
 
         const elUserName = document.getElementById('userName') as HTMLInputElement;
         const elLocation = document.getElementById('taskLocation') as HTMLInputElement;
         const elWorkOrder = document.getElementById('workOrder') as HTMLInputElement;
         const elComments = document.getElementById('comments') as HTMLTextAreaElement;
         
-        // Buddy elementen
         const elBuddyToggle = document.getElementById('buddyToggle') as HTMLInputElement;
         const elBuddyName = document.getElementById('buddyName') as HTMLInputElement;
         const elBuddySig = document.getElementById('buddySignature') as HTMLInputElement;
@@ -357,7 +385,6 @@ export const App = {
         
         if (!userName || !location) return UI.showToast("Vul naam en locatie in!");
         
-        // BUDDY CHECK VALIDATIE
         if (elBuddyToggle.checked) {
             const buddyName = DOMPurify.sanitize(elBuddyName.value);
             if (!buddyName) return UI.showToast("Naam van buddy is verplicht!");
@@ -413,6 +440,9 @@ export const App = {
                 wo: report.werkorder 
             });
             await SecureStorage.set('lmra_valid_until', validUntilDate.toISOString());
+            
+            // DIRECT ACTIE: Formulier op slot
+            this.activateLockedSession(validUntilDate);
         }
 
         UI.setLoading('submitBtn', false, "Beoordeel Veiligheid");
@@ -426,7 +456,7 @@ export const App = {
         await SecureStorage.set(HISTORY_KEY, history);
     },
 
-    /* --- ARCHIEF & DETAILS (UPDATED) --- */
+    /* --- ARCHIEF & DETAILS --- */
     async openArchive(): Promise<void> {
         const history = await SecureStorage.get(HISTORY_KEY) as LMRAReport[];
         const container = document.getElementById('archiveContainer');
@@ -437,7 +467,6 @@ export const App = {
             container.innerHTML = '<div class="text-center p-4 text-slate-500">Geen historie.</div>';
         } else {
             const now = new Date();
-            
             history.forEach(h => {
                 let statusDot = 'bg-red-500';
                 let statusText = 'Afgekeurd';
@@ -457,9 +486,7 @@ export const App = {
                 }
 
                 const div = document.createElement('div');
-                // UPDATE: cursor-pointer toegevoegd
                 div.className = `p-3 mb-2 bg-white dark:bg-slate-800 rounded border-l-4 ${borderColor} hover:bg-slate-50 transition-colors cursor-pointer active:scale-[0.98]`;
-                
                 div.innerHTML = `
                     <div class="flex justify-between items-start mb-1 pointer-events-none">
                         <span class="font-bold text-slate-700 dark:text-slate-200 text-sm truncate w-2/3">${h.locatie}</span>
@@ -469,14 +496,10 @@ export const App = {
                         </div>
                     </div>
                     <div class="text-xs text-slate-500 dark:text-slate-400 pointer-events-none">
-                        ${new Date(h.created_at).toLocaleString()} - ${h.monteur_naam}<br>
-                        WO: ${h.werkorder}
+                        ${new Date(h.created_at).toLocaleString()} - ${h.monteur_naam}<br>WO: ${h.werkorder}
                     </div>
                 `;
-                
-                // UPDATE: Click handler voor details
                 div.onclick = () => this.showDetail(h);
-                
                 container.appendChild(div);
             });
         }
@@ -491,15 +514,9 @@ export const App = {
         }
     },
 
-    // UPDATE: Nieuwe functie voor Detail weergave
     showDetail(report: LMRAReport): void {
         state.viewingReport = report;
-
-        // Vul velden
-        const setTxt = (id: string, val: string) => {
-            const el = document.getElementById(id);
-            if(el) el.innerText = val;
-        };
+        const setTxt = (id: string, val: string) => { const el = document.getElementById(id); if(el) el.innerText = val; };
 
         const date = new Date(report.created_at);
         const validUntil = new Date(report.valid_until);
@@ -511,47 +528,28 @@ export const App = {
         setTxt('detailWO', report.werkorder);
         setTxt('detailComments', report.opmerkingen || "Geen opmerkingen");
 
-        // Status visualisatie
         const statusBox = document.getElementById('detailStatusBox');
         if(statusBox) {
             if(report.is_veilig) {
-                statusBox.innerHTML = `
-                    <div class="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 p-4 rounded-lg text-center border border-green-200 dark:border-green-800">
-                        <i class="fa-solid fa-check-circle text-3xl mb-1"></i><br>
-                        <span class="font-bold uppercase tracking-wide">Veilig / Goedgekeurd</span>
-                    </div>
-                `;
+                statusBox.innerHTML = `<div class="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 p-4 rounded-lg text-center border border-green-200 dark:border-green-800"><i class="fa-solid fa-check-circle text-3xl mb-1"></i><br><span class="font-bold uppercase tracking-wide">Veilig / Goedgekeurd</span></div>`;
             } else {
-                statusBox.innerHTML = `
-                    <div class="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 p-4 rounded-lg text-center border border-red-200 dark:border-red-800">
-                        <i class="fa-solid fa-triangle-exclamation text-3xl mb-1"></i><br>
-                        <span class="font-bold uppercase tracking-wide">Niet Veilig / Afgekeurd</span>
-                    </div>
-                `;
+                statusBox.innerHTML = `<div class="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 p-4 rounded-lg text-center border border-red-200 dark:border-red-800"><i class="fa-solid fa-triangle-exclamation text-3xl mb-1"></i><br><span class="font-bold uppercase tracking-wide">Niet Veilig / Afgekeurd</span></div>`;
             }
         }
 
-        // Buddy Check Logic in display
-        // We parsen de buddy naam uit de monteur_naam string (hacky oplossing van submit, maar werkt voor display)
-        // Of we kijken gewoon naar de string zelf.
         const buddyBox = document.getElementById('detailBuddyBox');
         if(buddyBox) {
             if(report.monteur_naam.includes('(Buddy:')) {
                 buddyBox.classList.remove('hidden');
-                // Simpele extractie: alles na "Buddy: "
                 const parts = report.monteur_naam.split('Buddy: ');
-                if(parts.length > 1) {
-                    setTxt('detailBuddy', parts[1].replace(')', ''));
-                }
+                if(parts.length > 1) setTxt('detailBuddy', parts[1].replace(')', ''));
             } else {
                 buddyBox.classList.add('hidden');
             }
         }
 
-        // Afkeurpunten
         const failsContainer = document.getElementById('detailFailsContainer');
         const failsList = document.getElementById('detailFails');
-        
         if(failsContainer && failsList) {
             const afkeur = JSON.parse(report.afkeurpunten || "[]");
             if(afkeur.length > 0) {
@@ -562,36 +560,26 @@ export const App = {
                 failsList.innerHTML = '';
             }
         }
-
-        UI.toggleElement('archiveModal', false); // Sluit lijst
-        UI.toggleElement('detailModal', true); // Open detail
+        UI.toggleElement('archiveModal', false);
+        UI.toggleElement('detailModal', true);
     },
 
-    // UPDATE: PDF Generatie Functie
     generatePDF(): void {
         const report = state.viewingReport;
         if (!report) return;
-
         const element = document.getElementById('pdfContent');
         if (!element) return UI.showToast("Geen inhoud voor PDF.");
 
         UI.showToast("PDF Genereren...");
-
         const opt = {
-            margin:       10,
-            filename:     `LMRA_${report.werkorder}_${new Date(report.created_at).toISOString().split('T')[0]}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            margin: 10,
+            filename: `LMRA_${report.werkorder}_${new Date(report.created_at).toISOString().split('T')[0]}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-
         // @ts-ignore
-        html2pdf().set(opt).from(element).save()
-            .then(() => UI.showToast("✅ PDF Gedownload"))
-            .catch((err: any) => {
-                console.error(err);
-                UI.showToast("❌ Fout bij PDF maken");
-            });
+        html2pdf().set(opt).from(element).save().then(() => UI.showToast("✅ PDF Gedownload")).catch((err: any) => { console.error(err); UI.showToast("❌ Fout bij PDF maken"); });
     },
 
     showResult(isSafe: boolean, report: LMRAReport, syncStatus: string): void {
@@ -610,7 +598,6 @@ export const App = {
 
         if(!header || !iconContainer || !title || !msg || !log) return;
 
-        // Gratis iconen
         if (isSafe) {
             header.className = "p-8 text-center text-white shrink-0 bg-green-600";
             iconContainer.innerHTML = '<i class="fa-solid fa-shield-halved"></i>'; 
@@ -623,16 +610,7 @@ export const App = {
             msg.innerText = "Risico's! Pas eerst maatregelen toe.";
         }
 
-        log.innerHTML = `
-            <strong>STATUS: ${statusText}</strong><br>
-            ---------------------------<br>
-            Datum: ${new Date().toLocaleString()}<br>
-            Monteur: ${report.monteur_naam}<br>
-            Locatie: ${report.locatie}<br>
-            WO: ${report.werkorder}<br>
-            ---------------------------<br>
-            ${isSafe ? '✅ Geen afkeurpunten' : '⚠️ <strong>AFKEURPUNTEN:</strong><br>' + JSON.parse(report.afkeurpunten).join('<br>')}
-        `;
+        log.innerHTML = `<strong>STATUS: ${statusText}</strong><br>---------------------------<br>Datum: ${new Date().toLocaleString()}<br>Monteur: ${report.monteur_naam}<br>Locatie: ${report.locatie}<br>WO: ${report.werkorder}<br>---------------------------<br>${isSafe ? '✅ Geen afkeurpunten' : '⚠️ <strong>AFKEURPUNTEN:</strong><br>' + JSON.parse(report.afkeurpunten).join('<br>')}`;
     },
 
     resetForm(): void {
@@ -642,10 +620,7 @@ export const App = {
         (document.getElementById('taskLocation') as HTMLInputElement).value = '';
         (document.getElementById('workOrder') as HTMLInputElement).value = '';
         (document.getElementById('comments') as HTMLInputElement).value = '';
-        UI.renderCategories(categories, 'questions-container', 
-            (id, val) => this.handleAnswer(id, val), 
-            (id, txt) => this.handleAction(id, txt)
-        );
+        UI.renderCategories(categories, 'questions-container', (id, val) => this.handleAnswer(id, val), (id, txt) => this.handleAction(id, txt));
         this.setDefaultTimes();
     },
 
@@ -654,10 +629,7 @@ export const App = {
         if (storedVersion !== APP_VERSION) {
             UI.toggleElement('updateModal', true);
             const btn = document.getElementById('btnCloseUpdateModal');
-            if(btn) btn.onclick = () => {
-                localStorage.setItem('lmra_version', APP_VERSION);
-                UI.toggleElement('updateModal', false);
-            };
+            if(btn) btn.onclick = () => { localStorage.setItem('lmra_version', APP_VERSION); UI.toggleElement('updateModal', false); };
         }
     },
 
