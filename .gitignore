@@ -1,23 +1,34 @@
-# .gitignore - v9.0 Sentinel Safe
+# 1. Logs & Systeemfouten (Niet nodig in Cloud)
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# 1. Node Modules (De zware bibliotheken - NOOIT uploaden)
-node_modules/
-npm-debug.log
+# 2. Dependencies (CRUCIAAL: Dit zijn duizenden bestanden die je opnieuw downloadt met 'npm install')
+node_modules
+.pnpm-store
 
-# 2. Lokale Build & Environment Bestanden
-dist/
-build/
-.env
-.env.local
-.env.production
+# 3. Build Output (Het resultaat van je bouwproces)
+dist
+dist-ssr
+*.local
 
-# 3. Netlify & Hosting Specifiek
-.netlify/
-
-# 4. Systeem Bestanden (Rommel van Mac/Windows)
+# 4. Editor & Systeem Rommel (Mac/Windows specifieke bestanden)
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
 Thumbs.db
-Desktop.ini
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# 5. Editor Bestanden (Jouw persoonlijke VS Code instellingen)
-.vscode/
+# 5. Environment Variables (BEVEILIGING: Hier staan vaak geheime sleutels in)
+.env
+.env.*
+!.env.example

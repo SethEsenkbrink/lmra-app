@@ -1,18 +1,25 @@
 {
-  "name": "lmra-app-pro",
-  "version": "9.0.0",
-  "description": "LMRA Pro v9.0 - Sentinel Safe (Supabase Direct)",
+  "name": "lmra-sentinel",
+  "private": true,
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "npx serve",
-    "build": "echo 'Statische site: geen build nodig'",
-    "security-check": "npm audit"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "init:tailwind": "tailwindcss init -p"
   },
-  "dependencies": {},
   "devDependencies": {
-    "serve": "^14.2.0"
+    "autoprefixer": "^10.4.22",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "vite": "^7.2.4"
   },
-  "engines": {
-    "node": ">=18.0.0"
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.1.0",
+    "@supabase/supabase-js": "^2.86.2",
+    "dompurify": "^3.3.0",
+    "html2pdf.js": "^0.12.1",
+    "idb-keyval": "^6.2.2"
   }
 }

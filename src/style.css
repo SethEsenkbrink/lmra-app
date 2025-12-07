@@ -1,4 +1,8 @@
-/* style.css - LMRA Pro Styling v9.0 (Sentinel) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- LMRA PRO CUSTOM STYLING (v9.0 Sentinel) --- */
 
 body { 
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 

@@ -1,35 +1,33 @@
-# 🛡️ LMRA Pro - v9.0 Sentinel Safe
+# 🛡️ LMRA Pro - v9.5 Sentinel Safe
 
 **Status:** Production Stable  
-**Architecture:** Serverless / Supabase Direct  
-**Security:** RLS Enabled & Client-Side Encryption
+**Architecture:** Vite / Vanilla JS / PWA  
+**Security:** Client-Side AES-GCM & Self-Destruct Protocol
 
-LMRA Pro is een professionele Progressive Web App (PWA) ontwikkeld voor technici in de proces- en elektrotechniek. Deze applicatie stelt monteurs in staat om een Laatste Minuut Risico Analyse uit te voeren met maximale gegevensbeveiliging.
+LMRA Pro is een geavanceerde Progressive Web App (PWA) voor technici in de proces- en elektrotechniek. Deze "Sentinel Safe" editie is volledig herbouwd om maximale databeveiliging en offline-stabiliteit te garanderen zonder afhankelijk te zijn van externe CDN's.
 
-## 🚀 Nieuw in v9.0 (Sentinel)
-* **Supabase Direct:** Geen tussenliggende API servers meer. Directe, beveiligde verbinding met de database.
-* **Row Level Security (RLS):** Strikte database policies zorgen ervoor dat data alleen geschreven kan worden, nooit publiek gelezen of gewist.
-* **Offline First:** Verbeterde Service Worker voor gebruik in fabrieken zonder 4G/WiFi.
-* **Resume Flow:** Werkzaamheden pauzeren en later hervatten met behoud van sessie.
+## 🚀 Nieuw in v9.5 (Sentinel Architecture)
+* **Zero-Build Dependency:** Volledig lokaal gebouwd met Vite. Geen externe CDN-links meer voor CSS of JS.
+* **Self-Destruct Protocol:** Lokale data wordt permanent gewist (crypto-shredding) na 5 foutieve PIN-pogingen.
+* **Encrypted Storage:** Migratie van LocalStorage naar IndexedDB (via `idb-keyval`) voor veilige, asynchrone opslag van grote datasets.
+* **Offline-First:** Verbeterde Service Worker en Sync Queue die automatisch synchroniseert zodra verbinding hersteld is.
 
 ## 🛠️ Tech Stack
-* **Frontend:** HTML5, TailwindCSS, Vanilla JS (ES6+)
-* **Database:** Supabase (PostgreSQL)
-* **Security:** AES-GCM 256-bit (Lokaal), RLS (Cloud), CSP Headers
-* **Hosting:** Netlify (Static)
+* **Core:** Vanilla JavaScript (ES Modules)
+* **Build Tool:** Vite 5.x
+* **Styling:** TailwindCSS 3.4 (PostCSS)
+* **Database:** Supabase (PostgreSQL + RLS)
+* **Security:** Web Crypto API (SubtleCrypto)
+* **Local DB:** IndexedDB (Encrypted wrapper)
 
-## 💻 Lokaal Ontwikkelen
+## 💻 Installatie & Gebruik
 
-1.  Clone de repo.
-2.  Installeer dependencies:
-    ```bash
-    npm install
-    ```
-3.  Start de lokale server:
-    ```bash
-    npm run dev
-    ```
-4.  Open `http://localhost:3000`
+### Vereisten
+* Node.js (v18 of hoger)
+* NPM
 
-## 🔒 Beveiligingsmodel
-Zie [SECURITY.md](SECURITY.md) voor gedetailleerde specs over encryptie en data-integriteit.
+### Setup
+1. Clone de repository:
+   ```bash
+   git clone [https://github.com/jouw-repo/lmra-app.git](https://github.com/jouw-repo/lmra-app.git)
+   cd lmra-app
