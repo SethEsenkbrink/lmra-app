@@ -10,10 +10,16 @@
 [[headers]]
   for = "/*"
   [headers.values]
+    # Beveiliging tegen clickjacking
     X-Frame-Options = "DENY"
+    # Bescherming tegen MIME-type sniffing
     X-Content-Type-Options = "nosniff"
+    # Forceer HTTPS (HSTS)
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    # Referrer Policy voor privacy
     Referrer-Policy = "strict-origin-when-cross-origin"
-    # AANGEPAST: *.nsvcs.net toegevoegd aan connect-src voor Netlify Analytics
+    # Content Security Policy (CSP) - DE KRITIEKE AUDIT EIS
+    # AANGEPAST: *.nsvcs.net toegevoegd voor Netlify Analytics
     Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.nsvcs.net;"
+    # Browser features uitschakelen die we niet gebruiken (Privacy)
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"

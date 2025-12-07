@@ -330,6 +330,14 @@ export const App = {
     handleAction(id: number, text: string): void { state.actions[id] = text; },
 
     async handleSubmit(): Promise<void> {
+        // 1. HONEYPOT CHECK (Anti-Spam Bot)
+        // Als een bot dit verborgen veld heeft ingevuld, stoppen we direct.
+        const honeypot = document.getElementById('contact_email') as HTMLInputElement;
+        if (honeypot && honeypot.value !== "") {
+            console.warn("Bot detected via honeypot.");
+            return; // We doen net alsof het gelukt is, maar sturen niets.
+        }
+
         const elUserName = document.getElementById('userName') as HTMLInputElement;
         const elLocation = document.getElementById('taskLocation') as HTMLInputElement;
         const elWorkOrder = document.getElementById('workOrder') as HTMLInputElement;
@@ -345,7 +353,7 @@ export const App = {
         
         if (!userName || !location) return UI.showToast("Vul naam en locatie in!");
         
-        // BUDDY CHECK VALIDATIE (NIEUW)
+        // BUDDY CHECK VALIDATIE
         if (elBuddyToggle.checked) {
             const buddyName = DOMPurify.sanitize(elBuddyName.value);
             if (!buddyName) return UI.showToast("Naam van buddy is verplicht!");
