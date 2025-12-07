@@ -106,8 +106,15 @@
                             <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00447c]"></div>
                         </label>
                     </div>
-                    <div id="buddyField" class="hidden mt-1 animate-fade-in">
-                        <input type="text" id="buddyName" maxlength="50" class="w-full bg-blue-50 dark:bg-slate-800/50 border border-blue-200 dark:border-slate-600 rounded-lg p-3 text-sm outline-none dark:text-white" placeholder="Naam Buddy">
+                    <div id="buddyField" class="hidden mt-3 p-3 bg-blue-50 dark:bg-slate-800/50 rounded-lg border border-blue-100 dark:border-slate-700 animate-fade-in">
+                        <input type="text" id="buddyName" maxlength="50" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-2 text-sm outline-none dark:text-white mb-2" placeholder="Naam Buddy / Toezichthouder">
+                        
+                        <div class="flex items-start gap-2">
+                            <input type="checkbox" id="buddySignature" class="mt-1 w-4 h-4 text-[#00447c] border-gray-300 rounded focus:ring-[#00447c]">
+                            <label for="buddySignature" class="text-[10px] text-slate-600 dark:text-slate-400 leading-tight select-none cursor-pointer">
+                                Ik (de buddy) bevestig hierbij dat ik de risico's heb mede-beoordeeld en akkoord ben met de maatregelen.
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>

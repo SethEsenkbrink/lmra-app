@@ -53,13 +53,21 @@ export const Database = {
                 if (error.code === '23505') {
                     return { success: true, status: 'cloud_duplicate' };
                 }
-                throw error; // Andere errors gooien we op, zodat we in catch komen
+                
+                // AANGEPAST: Gedetailleerde logging voor debugging
+                console.error("Supabase Upload Fout Details:", {
+                    message: error.message,
+                    details: error.details,
+                    hint: error.hint,
+                    code: error.code
+                });
+                
+                throw error; // Gooi error op zodat we in de catch komen
             }
 
             return { success: true, status: 'cloud' };
 
         } catch (error) {
-            console.error("Supabase Error:", error);
             // Stap 3: Bij cloud-fout, alsnog lokaal opslaan
             return await this.queueReport(reportData, "Error-Fallback");
         }
@@ -100,7 +108,7 @@ export const Database = {
                 if (!error || error.code === '23505') {
                     successCount++;
                 } else {
-                    remainingQueue.push(report); // Bij harde fout, bewaar voor later
+                    remainingQueue.push(report); 
                 }
             } catch (e) {
                 remainingQueue.push(report);

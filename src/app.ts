@@ -334,11 +334,23 @@ export const App = {
         const elLocation = document.getElementById('taskLocation') as HTMLInputElement;
         const elWorkOrder = document.getElementById('workOrder') as HTMLInputElement;
         const elComments = document.getElementById('comments') as HTMLTextAreaElement;
+        
+        // Buddy elementen ophalen
+        const elBuddyToggle = document.getElementById('buddyToggle') as HTMLInputElement;
+        const elBuddyName = document.getElementById('buddyName') as HTMLInputElement;
+        const elBuddySig = document.getElementById('buddySignature') as HTMLInputElement;
 
         const userName = DOMPurify.sanitize(elUserName.value);
         const location = DOMPurify.sanitize(elLocation.value);
         
         if (!userName || !location) return UI.showToast("Vul naam en locatie in!");
+        
+        // BUDDY CHECK VALIDATIE (NIEUW)
+        if (elBuddyToggle.checked) {
+            const buddyName = DOMPurify.sanitize(elBuddyName.value);
+            if (!buddyName) return UI.showToast("Naam van buddy is verplicht!");
+            if (!elBuddySig.checked) return UI.showToast("Buddy moet de verklaring aanvinken!");
+        }
         
         const totalQ = categories.reduce((acc, cat) => acc + cat.questions.length, 0);
         if (Object.keys(state.answers).length < totalQ) return UI.showToast("Beantwoord alle vragen!");
@@ -366,9 +378,12 @@ export const App = {
         // BEREKEN GELDIGHEID
         const validUntilDate = new Date(new Date().getTime() + 4*60*60*1000);
 
+        // Buddy info toevoegen aan rapport indien aanwezig
+        const buddyInfo = elBuddyToggle.checked ? ` (Buddy: ${DOMPurify.sanitize(elBuddyName.value)})` : "";
+
         const report: LMRAReport = {
             report_id: crypto.randomUUID(),
-            monteur_naam: userName,
+            monteur_naam: userName + buddyInfo, // We voegen de buddy toe aan de naam-string voor eenvoud
             locatie: location,
             werkorder: DOMPurify.sanitize(elWorkOrder.value) || 'N.v.t.',
             is_veilig: isSafe,
