@@ -189,11 +189,16 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2 mb-6 px-1">
-                    <input type="checkbox" id="rememberMe" class="w-4 h-4 text-[#00447c] border-gray-300 rounded focus:ring-[#00447c] cursor-pointer" checked>
-                    <label for="rememberMe" class="text-xs text-slate-600 dark:text-slate-400 select-none cursor-pointer font-medium">
-                        Onthoud mij (30 dagen)
-                    </label>
+                <div class="flex items-center gap-2 mb-4 px-1 justify-between">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="rememberMe" class="w-4 h-4 text-[#00447c] border-gray-300 rounded focus:ring-[#00447c] cursor-pointer" checked>
+                        <label for="rememberMe" class="text-xs text-slate-600 dark:text-slate-400 select-none cursor-pointer font-medium">
+                            Onthoud mij
+                        </label>
+                    </div>
+                    <button id="btnForgotPass" class="text-xs text-[#00447c] dark:text-blue-400 font-bold hover:underline">
+                        Wachtwoord vergeten?
+                    </button>
                 </div>
 
                 <p id="cloudLoginError" class="text-red-500 text-xs font-bold h-4 mb-4 text-center"></p>
@@ -203,6 +208,33 @@
                 </button>
                 
                 <p class="text-[10px] text-slate-400">Geen account? Neem contact op met QHSE.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="resetPasswordModal" class="fixed inset-0 bg-[#002a4d] z-[100] hidden">
+        <div class="flex h-full w-full items-center justify-center p-6">
+            <div class="w-full max-w-sm bg-white dark:bg-cardbg rounded-2xl shadow-2xl p-8 text-center border border-slate-700 relative overflow-hidden">
+                <div class="mb-6">
+                    <div class="w-16 h-16 bg-blue-50 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-key text-2xl text-[#00447c] dark:text-blue-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Nieuw Wachtwoord</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Voer je nieuwe wachtwoord in</p>
+                </div>
+
+                <div class="space-y-4 mb-6 text-left">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Nieuw Wachtwoord</label>
+                        <input type="password" id="newPassword" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] outline-none dark:text-white" placeholder="Minimaal 6 tekens">
+                    </div>
+                </div>
+
+                <p id="resetError" class="text-red-500 text-xs font-bold h-4 mb-4 text-center"></p>
+
+                <button id="btnSavePassword" class="w-full bg-[#00447c] text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-transform">
+                    <span id="btnSavePasswordText">Opslaan & Inloggen</span>
+                </button>
             </div>
         </div>
     </div>
