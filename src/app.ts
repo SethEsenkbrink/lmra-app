@@ -1,4 +1,4 @@
-/* src/app.ts - v9.8 (Final: Fully Modular) */
+/* src/app.ts - v9.8 (Final: Sentinel Architecture) */
 import { UI } from './ui';
 import { Database, LMRAReport } from './database';
 import { SecureStorage } from './security';

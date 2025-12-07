@@ -1,4 +1,4 @@
-# 🛡️ Security Protocol - LMRA Pro Sentinel
+# 🛡️ Security Protocol - LMRA Pro v9.8 Sentinel
 
 LMRA Pro "Sentinel Edition" is ontworpen volgens het **Privacy-First & Zero-Trust** principe. Alle gegevens worden lokaal versleuteld voordat ze worden opgeslagen.
 
