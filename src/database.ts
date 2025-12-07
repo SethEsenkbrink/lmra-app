@@ -30,7 +30,8 @@ interface QueueResult {
 }
 
 // Veilige initialisatie van Supabase
-const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// AANGEPAST: We exporteren de client nu voor gebruik in Auth services
+export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export const Database = {
     
@@ -54,7 +55,7 @@ export const Database = {
                     return { success: true, status: 'cloud_duplicate' };
                 }
                 
-                // AANGEPAST: Gedetailleerde logging voor debugging
+                // Gedetailleerde logging voor debugging
                 console.error("Supabase Upload Fout Details:", {
                     message: error.message,
                     details: error.details,

@@ -1,4 +1,4 @@
-/* src/app.ts - v9.8 (Final: Sentinel Architecture) */
+/* src/app.ts - v9.8 (Final: Sentinel Architecture + Cloud Gate) */
 import { UI } from './ui';
 import { Database, LMRAReport } from './database';
 import { SecureStorage } from './security';
@@ -7,7 +7,8 @@ import DOMPurify from 'dompurify';
 
 // Services
 import { PDFService } from './services/pdf';
-import { AuthService } from './services/auth';
+import { AuthService } from './services/auth'; // Local PIN Auth
+import { CloudAuthService } from './services/cloud-auth'; // Cloud Login (Nieuw)
 import { SessionService } from './services/session';
 import { FormService } from './services/form';
 
@@ -25,8 +26,22 @@ export const App = {
         this.attachEventListeners();
         this.checkChangelog();
         
-        AuthService.init(() => this.unlockApp());
+        // STAP 1: Cloud Gatekeeper Check
+        // Eerst controleren of de gebruiker een geldige Supabase sessie heeft.
+        const isCloudAuthenticated = await CloudAuthService.checkSession();
+
+        if (isCloudAuthenticated) {
+            // Sessie geldig? Start dan pas de lokale PIN beveiliging.
+            this.startLocalSecurity(); 
+        } else {
+            // Geen sessie? Toon het cloud login scherm.
+            CloudAuthService.showLogin(() => {
+                // Callback: Login succesvol? Dan starten we de PIN procedure.
+                this.startLocalSecurity();
+            });
+        }
         
+        // Luister naar netwerk herstel voor sync
         window.addEventListener('online', () => {
             UI.showToast("Verbinding hersteld. Synchroniseren...");
             Database.processSyncQueue().then(res => {
@@ -35,9 +50,19 @@ export const App = {
         });
     },
 
+    // De "Oude" startfunctie, nu aangeroepen NA cloud auth
+    startLocalSecurity(): void {
+        // FIX: We tonen nu de wrapper i.p.v. de knop direct, voor de juiste lay-out
+        const btnLogOutWrapper = document.getElementById('btnLogOutWrapper');
+        if(btnLogOutWrapper) btnLogOutWrapper.classList.remove('hidden'); 
+        
+        // Start de lokale PIN beveiliging (Sentinel)
+        AuthService.init(() => this.unlockApp());
+    },
+
     unlockApp(): void {
         UI.toggleElement('pinModal', false);
-        FormService.init('questions-container'); // FormService regelt nu de opbouw
+        FormService.init('questions-container'); 
         SessionService.checkResumeState(() => this.resetForm(false));
         Database.processSyncQueue();
     },
@@ -46,6 +71,9 @@ export const App = {
         document.getElementById('submitBtn')?.addEventListener('click', () => this.handleSubmit());
         document.getElementById('btnResetApp')?.addEventListener('click', () => this.resetForm(true));
         document.getElementById('btnToggleTheme')?.addEventListener('click', () => this.toggleTheme());
+        
+        // NIEUW: Uitlogknop koppelen aan CloudAuthService
+        document.getElementById('btnLogOut')?.addEventListener('click', () => CloudAuthService.signOut());
         
         document.getElementById('btnOpenArchive')?.addEventListener('click', () => this.openArchive());
         document.getElementById('btnCloseArchive')?.addEventListener('click', () => UI.toggleElement('archiveModal', false));

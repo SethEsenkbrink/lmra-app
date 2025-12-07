@@ -7,7 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300447c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00447c">
-    </head>
+</head>
 <body class="bg-slate-100 dark:bg-darkbg text-slate-900 dark:text-slate-200 h-screen flex flex-col transition-colors duration-300 overflow-hidden">
 
     <header class="bg-[#00447c] text-white p-4 shadow-lg flex justify-between items-center z-40 sticky top-0 border-b border-[#002a4d] shrink-0">
@@ -23,14 +23,22 @@
                 <p class="text-[10px] uppercase tracking-wider opacity-90 font-semibold text-blue-100">v9.8 - Sentinel Safe</p>
             </div>
         </div>
-        <div class="flex gap-2">
-            <div id="cloudStatus" class="hidden text-[10px] font-bold px-2 py-1 bg-black/20 rounded flex items-center">Sync...</div>
+        <div class="flex gap-2 items-center">
+            <div id="cloudStatus" class="hidden text-[10px] font-bold px-2 py-1 bg-black/20 rounded">Sync...</div>
+            
             <button id="btnOpenArchive" aria-label="Open Historie" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center justify-center transition-all border border-white/20 text-white shadow-sm">
                 <i class="fa-solid fa-folder-open"></i>
             </button>
             <button id="btnToggleTheme" aria-label="Wissel Thema" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center justify-center transition-all border border-white/20 text-white shadow-sm">
                 <i id="themeIcon" class="fa-solid fa-moon"></i>
             </button>
+            
+            <div id="btnLogOutWrapper" class="hidden">
+                <button id="btnLogOut" aria-label="Uitloggen" class="w-10 h-10 rounded-full bg-white/10 hover:bg-red-600/80 active:bg-red-700 flex items-center justify-center transition-all border border-white/20 text-white shadow-sm">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
+            </div>
+
             <button id="btnResetApp" aria-label="Reset Formulier" class="w-10 h-10 rounded-full bg-red-600 hover:bg-red-500 active:bg-red-700 flex items-center justify-center transition-all text-white shadow-md border border-red-700 hover:scale-105">
                 <i class="fa-solid fa-rotate-right"></i>
             </button>
@@ -159,153 +167,203 @@
         </div>
     </div>
 
-    <div id="pinModal" class="fixed inset-0 bg-[#0f172a] z-50 flex flex-col items-center justify-center p-6 hidden">
-        <div class="w-full max-w-sm bg-white dark:bg-cardbg rounded-2xl shadow-2xl p-8 text-center border border-slate-700 relative overflow-hidden">
-            <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-400 to-[#00447c]"></div>
-            <div class="mb-6">
-                <div class="w-16 h-16 bg-blue-50 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fa-solid fa-lock text-2xl text-[#00447c] dark:text-blue-400"></i>
+    <div id="cloudLoginModal" class="fixed inset-0 bg-[#002a4d] z-[90] hidden">
+        <div class="flex h-full w-full items-center justify-center p-6">
+            <div class="w-full max-w-sm bg-white dark:bg-cardbg rounded-2xl shadow-2xl p-8 text-center border border-slate-700 relative overflow-hidden">
+                <div class="mb-6">
+                    <div class="w-20 h-20 bg-white dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm p-1 border border-slate-100 dark:border-slate-600">
+                        <img src="/icon-192.png" alt="Logo" class="w-full h-full object-contain drop-shadow-sm">
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">LMRA Pro Login</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Inloggen met bedrijfsaccount</p>
                 </div>
-                <h2 id="pinTitle" class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Beveiliging</h2>
-                <p id="pinDesc" class="text-sm text-slate-500 dark:text-slate-400">Voer pincode in (6 cijfers)</p>
-            </div>
 
-            <div class="flex justify-center gap-2 mb-6">
-                <input type="tel" maxlength="1" class="pin-digit w-10 h-12 text-center text-xl font-bold bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:border-[#00447c] focus:ring-0 outline-none transition-all dark:text-white" inputmode="numeric">
-                <input type="tel" maxlength="1" class="pin-digit w-10 h-12 text-center text-xl font-bold bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:border-[#00447c] focus:ring-0 outline-none transition-all dark:text-white" inputmode="numeric">
-                <input type="tel" maxlength="1" class="pin-digit w-10 h-12 text-center text-xl font-bold bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:border-[#00447c] focus:ring-0 outline-none transition-all dark:text-white" inputmode="numeric">
-                <input type="tel" maxlength="1" class="pin-digit w-10 h-12 text-center text-xl font-bold bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:border-[#00447c] focus:ring-0 outline-none transition-all dark:text-white" inputmode="numeric">
-                <input type="tel" maxlength="1" class="pin-digit w-10 h-12 text-center text-xl font-bold bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:border-[#00447c] focus:ring-0 outline-none transition-all dark:text-white" inputmode="numeric">
-                <input type="tel" maxlength="1" class="pin-digit w-10 h-12 text-center text-xl font-bold bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:border-[#00447c] focus:ring-0 outline-none transition-all dark:text-white" inputmode="numeric">
-            </div>
+                <div class="space-y-4 mb-4 text-left">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Email</label>
+                        <input type="email" id="cloudEmail" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] outline-none dark:text-white" placeholder="naam@bedrijf.nl">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Wachtwoord</label>
+                        <input type="password" id="cloudPassword" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] outline-none dark:text-white" placeholder="••••••••">
+                    </div>
+                </div>
 
-            <p id="pinError" class="text-red-500 text-xs font-bold h-4 mb-4"></p>
+                <div class="flex items-center gap-2 mb-6 px-1">
+                    <input type="checkbox" id="rememberMe" class="w-4 h-4 text-[#00447c] border-gray-300 rounded focus:ring-[#00447c] cursor-pointer" checked>
+                    <label for="rememberMe" class="text-xs text-slate-600 dark:text-slate-400 select-none cursor-pointer font-medium">
+                        Onthoud mij (30 dagen)
+                    </label>
+                </div>
 
-            <button id="btnUnlock" class="w-full bg-[#00447c] text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-transform">
-                Ontgrendelen
-            </button>
-            
-            <div id="setupMode" class="hidden mt-4 bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded border border-yellow-200 dark:border-yellow-800">
-                <p class="text-[10px] text-yellow-800 dark:text-yellow-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Eerste gebruik: Verzin een code.</p>
+                <p id="cloudLoginError" class="text-red-500 text-xs font-bold h-4 mb-4 text-center"></p>
+
+                <button id="btnCloudLogin" class="w-full bg-[#00447c] text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-transform mb-4">
+                    <span id="btnCloudLoginText">Inloggen</span>
+                </button>
+                
+                <p class="text-[10px] text-slate-400">Geen account? Neem contact op met QHSE.</p>
             </div>
         </div>
     </div>
 
-    <div id="resultModal" class="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 hidden backdrop-blur-sm">
-        <div class="bg-white dark:bg-cardbg rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
-            <div id="resultHeader" class="p-8 text-center text-white shrink-0 bg-gray-500">
-                <div id="resultIcon" class="text-6xl mb-4 bg-white/20 w-24 h-24 rounded-full flex items-center justify-center mx-auto backdrop-blur-md shadow-inner">
-                    <i class="fa-solid fa-question"></i>
+    <div id="pinModal" class="fixed inset-0 bg-[#0f172a] z-50 hidden">
+        <div class="flex h-full w-full items-center justify-center p-6">
+            <div class="w-full max-w-sm bg-white dark:bg-cardbg rounded-2xl shadow-2xl p-8 text-center border border-slate-700 relative overflow-hidden">
+                <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-400 to-[#00447c]"></div>
+                <div class="mb-6">
+                    <div class="w-16 h-16 bg-blue-50 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-lock text-2xl text-[#00447c] dark:text-blue-400"></i>
+                    </div>
+                    <h2 id="pinTitle" class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Beveiliging</h2>
+                    <p id="pinDesc" class="text-sm text-slate-500 dark:text-slate-400">Voer pincode in (6 cijfers)</p>
                 </div>
-                <h2 id="resultTitle" class="text-3xl font-black tracking-wider uppercase drop-shadow-md">STATUS</h2>
-                <p id="resultMessage" class="text-white/90 font-medium mt-2">Beoordeling...</p>
-            </div>
-            
-            <div class="p-6 overflow-y-auto custom-scrollbar bg-slate-50 dark:bg-[#1a2333]">
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 font-mono text-xs leading-relaxed text-slate-600 dark:text-slate-300 shadow-inner" id="logText"></div>
-            </div>
 
-            <div class="p-4 bg-white dark:bg-cardbg border-t border-slate-100 dark:border-slate-700 shrink-0 grid grid-cols-2 gap-3">
-                <button id="btnCopyToClipboard" class="col-span-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 py-3 rounded-lg font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
-                    <i class="fa-regular fa-copy mr-2"></i> Kopiëren
+                <div class="flex justify-center gap-2 mb-6">
+                    <input type="tel" maxlength="1" class="pin-digit w-10 h-12 text-center text-xl font-bold bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:border-[#00447c] focus:ring-0 outline-none transition-all dark:text-white" inputmode="numeric">
+                    <input type="tel" maxlength="1" class="pin-digit w-10 h-12 text-center text-xl font-bold bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:border-[#00447c] focus:ring-0 outline-none transition-all dark:text-white" inputmode="numeric">
+                    <input type="tel" maxlength="1" class="pin-digit w-10 h-12 text-center text-xl font-bold bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:border-[#00447c] focus:ring-0 outline-none transition-all dark:text-white" inputmode="numeric">
+                    <input type="tel" maxlength="1" class="pin-digit w-10 h-12 text-center text-xl font-bold bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:border-[#00447c] focus:ring-0 outline-none transition-all dark:text-white" inputmode="numeric">
+                    <input type="tel" maxlength="1" class="pin-digit w-10 h-12 text-center text-xl font-bold bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:border-[#00447c] focus:ring-0 outline-none transition-all dark:text-white" inputmode="numeric">
+                    <input type="tel" maxlength="1" class="pin-digit w-10 h-12 text-center text-xl font-bold bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:border-[#00447c] focus:ring-0 outline-none transition-all dark:text-white" inputmode="numeric">
+                </div>
+
+                <p id="pinError" class="text-red-500 text-xs font-bold h-4 mb-4"></p>
+
+                <button id="btnUnlock" class="w-full bg-[#00447c] text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-transform">
+                    Ontgrendelen
                 </button>
-                <button id="btnCloseModal" class="col-span-1 bg-[#00447c] text-white py-3 rounded-lg font-bold text-sm hover:bg-[#003366] transition-colors shadow-lg shadow-blue-900/20">
-                    Sluiten
-                </button>
+                
+                <div id="setupMode" class="hidden mt-4 bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded border border-yellow-200 dark:border-yellow-800">
+                    <p class="text-[10px] text-yellow-800 dark:text-yellow-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Eerste gebruik: Verzin een code.</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="archiveModal" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center hidden backdrop-blur-sm sm:p-4">
-        <div class="bg-white dark:bg-cardbg w-full sm:max-w-lg h-[85vh] sm:h-[80vh] sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col transform transition-transform">
-            <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 sm:rounded-t-2xl">
-                <h3 class="font-bold text-slate-700 dark:text-white flex items-center gap-2">
-                    <i class="fa-solid fa-clock-rotate-left text-[#00447c] dark:text-blue-400"></i> Geschiedenis
-                </h3>
-                <div class="flex gap-2">
-                    <button id="btnClearArchive" class="text-xs text-red-500 hover:text-red-700 px-2 py-1 border border-red-100 dark:border-slate-600 rounded">Wissen</button>
-                    <button id="btnCloseArchive" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-300">
-                        <i class="fa-solid fa-xmark"></i>
+    <div id="resultModal" class="fixed inset-0 bg-black/80 z-[60] hidden backdrop-blur-sm">
+        <div class="flex h-full w-full items-center justify-center p-4">
+            <div class="bg-white dark:bg-cardbg rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+                <div id="resultHeader" class="p-8 text-center text-white shrink-0 bg-gray-500">
+                    <div id="resultIcon" class="text-6xl mb-4 bg-white/20 w-24 h-24 rounded-full flex items-center justify-center mx-auto backdrop-blur-md shadow-inner">
+                        <i class="fa-solid fa-question"></i>
+                    </div>
+                    <h2 id="resultTitle" class="text-3xl font-black tracking-wider uppercase drop-shadow-md">STATUS</h2>
+                    <p id="resultMessage" class="text-white/90 font-medium mt-2">Beoordeling...</p>
+                </div>
+                
+                <div class="p-6 overflow-y-auto custom-scrollbar bg-slate-50 dark:bg-[#1a2333]">
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 font-mono text-xs leading-relaxed text-slate-600 dark:text-slate-300 shadow-inner" id="logText"></div>
+                </div>
+
+                <div class="p-4 bg-white dark:bg-cardbg border-t border-slate-100 dark:border-slate-700 shrink-0 grid grid-cols-2 gap-3">
+                    <button id="btnCopyToClipboard" class="col-span-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 py-3 rounded-lg font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                        <i class="fa-regular fa-copy mr-2"></i> Kopiëren
+                    </button>
+                    <button id="btnCloseModal" class="col-span-1 bg-[#00447c] text-white py-3 rounded-lg font-bold text-sm hover:bg-[#003366] transition-colors shadow-lg shadow-blue-900/20">
+                        Sluiten
                     </button>
                 </div>
             </div>
-            <div id="archiveContainer" class="flex-1 overflow-y-auto p-4 custom-scrollbar bg-slate-100 dark:bg-[#0f172a]"></div>
         </div>
     </div>
 
-    <div id="detailModal" class="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4 hidden backdrop-blur-sm">
-        <div class="bg-white dark:bg-cardbg w-full max-w-2xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
-            <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800">
-                <h3 class="font-bold text-slate-800 dark:text-white">Rapport Details</h3>
-                <button id="btnCloseDetail" class="text-slate-500 hover:text-slate-800 dark:text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div id="archiveModal" class="fixed inset-0 bg-black/50 z-50 hidden backdrop-blur-sm">
+        <div class="flex h-full w-full items-end sm:items-center justify-center sm:p-4">
+            <div class="bg-white dark:bg-cardbg w-full sm:max-w-lg h-[85vh] sm:h-[80vh] sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col transform transition-transform">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 sm:rounded-t-2xl">
+                    <h3 class="font-bold text-slate-700 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-[#00447c] dark:text-blue-400"></i> Geschiedenis
+                    </h3>
+                    <div class="flex gap-2">
+                        <button id="btnClearArchive" class="text-xs text-red-500 hover:text-red-700 px-2 py-1 border border-red-100 dark:border-slate-600 rounded">Wissen</button>
+                        <button id="btnCloseArchive" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-300">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="archiveContainer" class="flex-1 overflow-y-auto p-4 custom-scrollbar bg-slate-100 dark:bg-[#0f172a]"></div>
             </div>
-            
-            <div class="flex-1 overflow-y-auto p-6" id="pdfContent">
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <h1 class="text-2xl font-bold text-[#00447c] dark:text-blue-400">LMRA Rapport</h1>
-                        <p class="text-xs text-slate-400 uppercase tracking-widest mt-1">Safety First</p>
+        </div>
+    </div>
+
+    <div id="detailModal" class="fixed inset-0 bg-black/60 z-[70] hidden backdrop-blur-sm">
+        <div class="flex h-full w-full items-center justify-center p-4">
+            <div class="bg-white dark:bg-cardbg w-full max-w-2xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+                <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800">
+                    <h3 class="font-bold text-slate-800 dark:text-white">Rapport Details</h3>
+                    <button id="btnCloseDetail" class="text-slate-500 hover:text-slate-800 dark:text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto p-6" id="pdfContent">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h1 class="text-2xl font-bold text-[#00447c] dark:text-blue-400">LMRA Rapport</h1>
+                            <p class="text-xs text-slate-400 uppercase tracking-widest mt-1">Safety First</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-bold text-slate-800 dark:text-slate-200" id="detailDate"></div>
+                            <div class="text-xs text-slate-500" id="detailTimeRange"></div>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <div class="text-sm font-bold text-slate-800 dark:text-slate-200" id="detailDate"></div>
-                        <div class="text-xs text-slate-500" id="detailTimeRange"></div>
+
+                    <div id="detailStatusBox" class="mb-6"></div>
+                    <div id="detailIcon" class="hidden text-center mb-4"></div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded border border-slate-100 dark:border-slate-700">
+                            <span class="block text-xs text-slate-400 uppercase">Monteur</span>
+                            <span class="font-bold dark:text-slate-200" id="detailName"></span>
+                        </div>
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded border border-slate-100 dark:border-slate-700">
+                            <span class="block text-xs text-slate-400 uppercase">Locatie / Asset</span>
+                            <span class="font-bold dark:text-slate-200" id="detailLoc"></span>
+                        </div>
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded border border-slate-100 dark:border-slate-700">
+                            <span class="block text-xs text-slate-400 uppercase">Werkorder</span>
+                            <span class="font-bold dark:text-slate-200" id="detailWO"></span>
+                        </div>
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded border border-slate-100 dark:border-slate-700 hidden" id="detailBuddyBox">
+                            <span class="block text-xs text-slate-400 uppercase">Buddy</span>
+                            <span class="font-bold dark:text-slate-200" id="detailBuddy"></span>
+                        </div>
+                    </div>
+
+                    <div id="detailFailsContainer" class="hidden mb-6">
+                        <h4 class="font-bold text-red-600 mb-2 text-sm uppercase border-b border-red-100 pb-1">Afkeurpunten & Acties</h4>
+                        <ul id="detailFails" class="list-disc list-inside text-sm text-red-700 space-y-1 bg-red-50 p-3 rounded"></ul>
+                    </div>
+
+                    <div class="mb-4">
+                        <h4 class="font-bold text-slate-700 dark:text-slate-300 mb-2 text-sm uppercase">Opmerkingen</h4>
+                        <p id="detailComments" class="text-sm text-slate-600 dark:text-slate-400 italic bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-100 dark:border-slate-700"></p>
                     </div>
                 </div>
 
-                <div id="detailStatusBox" class="mb-6"></div>
-                <div id="detailIcon" class="hidden text-center mb-4"></div>
-
-                <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
-                    <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded border border-slate-100 dark:border-slate-700">
-                        <span class="block text-xs text-slate-400 uppercase">Monteur</span>
-                        <span class="font-bold dark:text-slate-200" id="detailName"></span>
-                    </div>
-                    <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded border border-slate-100 dark:border-slate-700">
-                        <span class="block text-xs text-slate-400 uppercase">Locatie / Asset</span>
-                        <span class="font-bold dark:text-slate-200" id="detailLoc"></span>
-                    </div>
-                    <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded border border-slate-100 dark:border-slate-700">
-                        <span class="block text-xs text-slate-400 uppercase">Werkorder</span>
-                        <span class="font-bold dark:text-slate-200" id="detailWO"></span>
-                    </div>
-                    <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded border border-slate-100 dark:border-slate-700 hidden" id="detailBuddyBox">
-                        <span class="block text-xs text-slate-400 uppercase">Buddy</span>
-                        <span class="font-bold dark:text-slate-200" id="detailBuddy"></span>
-                    </div>
-                </div>
-
-                <div id="detailFailsContainer" class="hidden mb-6">
-                    <h4 class="font-bold text-red-600 mb-2 text-sm uppercase border-b border-red-100 pb-1">Afkeurpunten & Acties</h4>
-                    <ul id="detailFails" class="list-disc list-inside text-sm text-red-700 space-y-1 bg-red-50 p-3 rounded"></ul>
-                </div>
-
-                <div class="mb-4">
-                    <h4 class="font-bold text-slate-700 dark:text-slate-300 mb-2 text-sm uppercase">Opmerkingen</h4>
-                    <p id="detailComments" class="text-sm text-slate-600 dark:text-slate-400 italic bg-slate-50 dark:bg-slate-800 p-3 rounded border border-slate-100 dark:border-slate-700"></p>
+                <div class="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex justify-end">
+                    <button id="btnGeneratePDF" class="bg-[#00447c] hover:bg-[#003366] text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </button>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex justify-end">
-                <button id="btnGeneratePDF" class="bg-[#00447c] hover:bg-[#003366] text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
-                    <i class="fa-solid fa-file-pdf"></i> Download PDF
+    <div id="updateModal" class="fixed inset-0 z-[80] hidden bg-black/70 backdrop-blur-sm">
+        <div class="flex h-full w-full items-center justify-center p-6">
+            <div class="bg-white dark:bg-cardbg rounded-xl shadow-2xl max-w-sm w-full p-6 text-center">
+                <div class="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-rocket text-2xl text-green-600 dark:text-green-400"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Update: v9.8 Sentinel</h2>
+                <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">
+                    Nieuwe beveiligingsupdate geïnstalleerd.<br>
+                    Systeem is volledig beveiligd.
+                </p>
+                <button id="btnCloseUpdateModal" class="w-full bg-[#00447c] text-white font-bold py-3 rounded-lg shadow hover:bg-[#003366]">
+                    Ik begrijp het
                 </button>
             </div>
-        </div>
-    </div>
-
-    <div id="updateModal" class="fixed inset-0 z-[80] flex items-center justify-center p-6 hidden bg-black/70 backdrop-blur-sm">
-        <div class="bg-white dark:bg-cardbg rounded-xl shadow-2xl max-w-sm w-full p-6 text-center">
-            <div class="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fa-solid fa-rocket text-2xl text-green-600 dark:text-green-400"></i>
-            </div>
-            <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Update: v9.8 Sentinel</h2>
-            <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">
-                Nieuwe beveiligingsupdate geïnstalleerd.<br>
-                Systeem is volledig beveiligd.
-            </p>
-            <button id="btnCloseUpdateModal" class="w-full bg-[#00447c] text-white font-bold py-3 rounded-lg shadow hover:bg-[#003366]">
-                Ik begrijp het
-            </button>
         </div>
     </div>
 
