@@ -1,5 +1,20 @@
-/* src/data.js */
-export const categories = [
+/* src/data.ts */
+
+export type QuestionType = 'positive' | 'negative';
+
+export interface Question {
+    id: number;
+    text: string;
+    type: QuestionType;
+}
+
+export interface Category {
+    title: string;
+    icon: string;
+    questions: Question[];
+}
+
+export const categories: Category[] = [
     { 
         title: "Algemeen & Fitheid", 
         icon: "fa-user-clock", 

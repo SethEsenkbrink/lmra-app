@@ -1,24 +1,39 @@
-/* src/app.js - v9.5 (Full & Complete - Self Destruct Enabled) */
-import { UI } from './ui.js';
-import { Database } from './database.js';
-import { CryptoManager, SecureStorage } from './security.js';
-import { categories } from './data.js';
+/* src/app.ts - v9.5 (Full & Complete - Self Destruct Enabled) */
+import { UI } from './ui';
+import { Database, LMRAReport } from './database';
+import { CryptoManager, SecureStorage } from './security';
+import { categories } from './data';
 import { 
     ACTIVE_SESSION_KEY, 
     SECURITY_CHECK_KEY, 
     HISTORY_KEY, 
     APP_VERSION 
-} from './config.js';
+} from './config';
 import DOMPurify from 'dompurify';
 
-const state = {
+// Interface voor de applicatie status
+interface AppState {
+    answers: Record<number, string>;
+    actions: Record<number, string>;
+    isUnlocked: boolean;
+}
+
+// Interface voor opgeslagen sessie
+interface StoredSession {
+    date: string;
+    name: string;
+    task: string;
+    wo: string;
+}
+
+const state: AppState = {
     answers: {},
     actions: {},
     isUnlocked: false
 };
 
 export const App = {
-    async init() {
+    async init(): Promise<void> {
         console.log(`LMRA Pro v${APP_VERSION} Init...`);
         this.attachEventListeners();
         this.checkChangelog();
@@ -38,7 +53,7 @@ export const App = {
         });
     },
 
-    attachEventListeners() {
+    attachEventListeners(): void {
         // Knoppen
         document.getElementById('btnUnlock')?.addEventListener('click', () => this.handleUnlock());
         document.getElementById('submitBtn')?.addEventListener('click', () => this.handleSubmit());
@@ -61,28 +76,34 @@ export const App = {
 
         // Buddy Check
         document.getElementById('buddyToggle')?.addEventListener('change', (e) => {
-            UI.toggleBuddyField(e.target.checked);
+            UI.toggleBuddyField((e.target as HTMLInputElement).checked);
         });
 
         // PIN inputs
-        const inputs = document.querySelectorAll('.pin-digit');
+        const inputs = document.querySelectorAll('.pin-digit') as NodeListOf<HTMLInputElement>;
         inputs.forEach((input, index) => {
             input.oninput = (e) => {
-                if (e.target.value.length === 1 && index < inputs.length - 1) inputs[index + 1].focus();
+                const target = e.target as HTMLInputElement;
+                if (target.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
             };
             input.onkeydown = (e) => {
-                if (e.key === 'Backspace' && e.target.value === '' && index > 0) inputs[index - 1].focus();
+                const target = e.target as HTMLInputElement;
+                if (e.key === 'Backspace' && target.value === '' && index > 0) {
+                    inputs[index - 1].focus();
+                }
                 if (e.key === 'Enter') this.handleUnlock();
             };
         });
     },
 
-    setDefaultTimes() {
+    setDefaultTimes(): void {
         const now = new Date();
         const end = new Date(now.getTime() + 4*60*60*1000); 
         
-        const elStart = document.getElementById('timeStart');
-        const elEnd = document.getElementById('timeEnd');
+        const elStart = document.getElementById('timeStart') as HTMLInputElement;
+        const elEnd = document.getElementById('timeEnd') as HTMLInputElement;
         
         // Alleen invullen als ze leeg zijn
         if(elStart && !elStart.value) elStart.value = now.toTimeString().slice(0,5);
@@ -90,35 +111,46 @@ export const App = {
     },
 
     /* --- PIN FLOW (MET SELF-DESTRUCT) --- */
-    startSetupFlow() {
+    startSetupFlow(): void {
         UI.toggleElement('pinModal', true);
         UI.toggleElement('setupMode', true);
-        document.getElementById('pinTitle').innerText = "Stel PIN in";
-        document.getElementById('pinDesc').innerText = "Kies 6 cijfers";
-        document.getElementById('btnUnlock').innerText = "Instellen & Starten";
+        const title = document.getElementById('pinTitle');
+        const desc = document.getElementById('pinDesc');
+        const btn = document.getElementById('btnUnlock');
+        
+        if(title) title.innerText = "Stel PIN in";
+        if(desc) desc.innerText = "Kies 6 cijfers";
+        if(btn) btn.innerText = "Instellen & Starten";
+        
         localStorage.setItem('lmra_failed_attempts', '0');
     },
 
-    startUnlockFlow() {
+    startUnlockFlow(): void {
         UI.toggleElement('pinModal', true);
         UI.toggleElement('setupMode', false);
-        document.getElementById('pinTitle').innerText = "Beveiligde Toegang";
-        document.getElementById('btnUnlock').innerText = "Ontgrendelen";
-        setTimeout(() => document.querySelector('.pin-digit')?.focus(), 100);
+        
+        const title = document.getElementById('pinTitle');
+        const btn = document.getElementById('btnUnlock');
+        
+        if(title) title.innerText = "Beveiligde Toegang";
+        if(btn) btn.innerText = "Ontgrendelen";
+        
+        setTimeout(() => (document.querySelector('.pin-digit') as HTMLInputElement)?.focus(), 100);
     },
 
-    async handleUnlock() {
-        const inputs = document.querySelectorAll('.pin-digit');
+    async handleUnlock(): Promise<void> {
+        const inputs = document.querySelectorAll('.pin-digit') as NodeListOf<HTMLInputElement>;
         let pin = '';
         inputs.forEach(i => pin += i.value);
 
-        // AANGEPAST: Check op 6 cijfers ipv 4
         if (pin.length !== 6) return UI.showToast("Voer 6 cijfers in.");
 
         UI.setLoading('btnUnlock', true);
         const errorMsg = document.getElementById('pinError');
-        errorMsg.innerText = "";
-        errorMsg.className = "text-red-500 text-xs font-bold h-4 mb-4";
+        if(errorMsg) {
+            errorMsg.innerText = "";
+            errorMsg.className = "text-red-500 text-xs font-bold h-4 mb-4";
+        }
 
         try {
             const storedSalt = localStorage.getItem('lmra_salt');
@@ -159,18 +191,20 @@ export const App = {
                 attempts++;
                 localStorage.setItem('lmra_failed_attempts', attempts.toString());
 
-                if (attempts >= 5) {
-                    await this.triggerWipe();
-                    errorMsg.innerText = "BEVEILIGING GEACTIVEERD: DATA GEWIST.";
-                    errorMsg.className = "text-red-600 font-black text-xs h-4 mb-4 animate-pulse";
-                    alert("⚠️ 5 Foute pogingen.\n\nUit veiligheidsoverwegingen is alle lokale data permanent gewist.");
-                    location.reload();
-                    return;
-                } else {
-                    const left = 5 - attempts;
-                    errorMsg.innerText = `Foutieve code. Nog ${left} pogingen.`;
+                if(errorMsg) {
+                    if (attempts >= 5) {
+                        await this.triggerWipe();
+                        errorMsg.innerText = "BEVEILIGING GEACTIVEERD: DATA GEWIST.";
+                        errorMsg.className = "text-red-600 font-black text-xs h-4 mb-4 animate-pulse";
+                        alert("⚠️ 5 Foute pogingen.\n\nUit veiligheidsoverwegingen is alle lokale data permanent gewist.");
+                        location.reload();
+                        return;
+                    } else {
+                        const left = 5 - attempts;
+                        errorMsg.innerText = `Foutieve code. Nog ${left} pogingen.`;
+                    }
                 }
-            } else {
+            } else if (errorMsg) {
                 errorMsg.innerText = "Fout bij instellen.";
             }
 
@@ -181,35 +215,35 @@ export const App = {
         }
     },
 
-    async triggerWipe() {
+    async triggerWipe(): Promise<void> {
         console.warn("🚨 SELF DESTRUCT INITIATED 🚨");
         await SecureStorage.wipeEverything();
         localStorage.clear();
     },
 
-    unlockApp() {
+    unlockApp(): void {
         state.isUnlocked = true;
         UI.toggleElement('pinModal', false);
         UI.renderCategories(categories, 'questions-container', 
-            (id, val) => this.handleAnswer(id, val), 
-            (id, txt) => this.handleAction(id, txt)
+            (id: number, val: string) => this.handleAnswer(id, val), 
+            (id: number, txt: string) => this.handleAction(id, txt)
         );
         this.checkResumeState();
         Database.processSyncQueue();
     },
 
     /* --- RESUME & SESSION LOGIC --- */
-    async checkResumeState() {
-        const session = await SecureStorage.get(ACTIVE_SESSION_KEY);
+    async checkResumeState(): Promise<void> {
+        const session = await SecureStorage.get(ACTIVE_SESSION_KEY) as StoredSession | null;
         
         if (session) {
             const today = new Date().toDateString();
             if (session.date === today) {
                 UI.toggleElement('resumeBar', true);
                 
-                const uName = document.getElementById('userName'); 
-                const tLoc = document.getElementById('taskLocation'); 
-                const wOrd = document.getElementById('workOrder');
+                const uName = document.getElementById('userName') as HTMLInputElement; 
+                const tLoc = document.getElementById('taskLocation') as HTMLInputElement; 
+                const wOrd = document.getElementById('workOrder') as HTMLInputElement;
                 
                 if(uName) uName.value = session.name || '';
                 if(tLoc) tLoc.value = session.task || '';
@@ -226,30 +260,33 @@ export const App = {
             this.setDefaultTimes();
         }
 
-        const validUntil = await SecureStorage.get('lmra_valid_until');
+        const validUntil = await SecureStorage.get('lmra_valid_until') as string | null;
         if (validUntil) {
             const now = new Date();
             const endTime = new Date(validUntil);
-            if (!isNaN(endTime) && now > endTime) {
+            if (!isNaN(endTime.getTime()) && now > endTime) {
                 UI.toggleElement('pauseAlert', true);
             }
         }
     },
 
-    confirmResume() {
+    confirmResume(): void {
         UI.toggleElement('resumeCheckModal', false);
         UI.toggleElement('resumeBar', false); 
         this.toggleFormLock(false); 
         
         const now = new Date();
         const end = new Date(now.getTime() + 4*60*60*1000);
-        document.getElementById('timeStart').value = now.toTimeString().slice(0,5);
-        document.getElementById('timeEnd').value = end.toTimeString().slice(0,5);
+        const elStart = document.getElementById('timeStart') as HTMLInputElement;
+        const elEnd = document.getElementById('timeEnd') as HTMLInputElement;
+        
+        if(elStart) elStart.value = now.toTimeString().slice(0,5);
+        if(elEnd) elEnd.value = end.toTimeString().slice(0,5);
         
         UI.showToast("✅ Werkzaamheden hervat. Tijd verlengd.");
     },
 
-    cancelResume() {
+    cancelResume(): void {
         UI.toggleElement('resumeCheckModal', false);
         UI.toggleElement('resumeBar', false);
         SecureStorage.remove(ACTIVE_SESSION_KEY);
@@ -258,19 +295,21 @@ export const App = {
         this.resetForm();
     },
 
-    toggleFormLock(locked) {
-        const elements = document.querySelectorAll('#userName, #taskLocation, #workOrder, #comments, #timeStart, #timeEnd, #buddyToggle, #buddyName, #declarationCheck');
+    toggleFormLock(locked: boolean): void {
+        const elements = document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('#userName, #taskLocation, #workOrder, #comments, #timeStart, #timeEnd, #buddyToggle, #buddyName, #declarationCheck');
         elements.forEach(el => el.disabled = locked);
-        const buttons = document.querySelectorAll('.question-card button');
+        const buttons = document.querySelectorAll('.question-card button') as NodeListOf<HTMLButtonElement>;
         buttons.forEach(btn => btn.disabled = locked);
     },
 
     /* --- FORMULIER --- */
-    handleAnswer(id, value) {
+    handleAnswer(id: number, value: string): void {
         state.answers[id] = value;
         const btnYes = document.getElementById(`btn-yes-${id}`);
         const btnNo = document.getElementById(`btn-no-${id}`);
         const actionBox = document.getElementById(`action-box-${id}`);
+
+        if(!btnYes || !btnNo || !actionBox) return;
 
         const baseClass = "py-2.5 rounded-md text-sm font-bold transition-all flex items-center justify-center gap-2 ";
         const inactiveClass = "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400";
@@ -288,11 +327,16 @@ export const App = {
         }
     },
 
-    handleAction(id, text) { state.actions[id] = text; },
+    handleAction(id: number, text: string): void { state.actions[id] = text; },
 
-    async handleSubmit() {
-        const userName = DOMPurify.sanitize(document.getElementById('userName').value);
-        const location = DOMPurify.sanitize(document.getElementById('taskLocation').value);
+    async handleSubmit(): Promise<void> {
+        const elUserName = document.getElementById('userName') as HTMLInputElement;
+        const elLocation = document.getElementById('taskLocation') as HTMLInputElement;
+        const elWorkOrder = document.getElementById('workOrder') as HTMLInputElement;
+        const elComments = document.getElementById('comments') as HTMLTextAreaElement;
+
+        const userName = DOMPurify.sanitize(elUserName.value);
+        const location = DOMPurify.sanitize(elLocation.value);
         
         if (!userName || !location) return UI.showToast("Vul naam en locatie in!");
         
@@ -300,7 +344,8 @@ export const App = {
         if (Object.keys(state.answers).length < totalQ) return UI.showToast("Beantwoord alle vragen!");
 
         for (const [id, val] of Object.entries(state.answers)) {
-            if (val === 'no' && (!state.actions[id] || state.actions[id].trim() === '')) {
+            const numericId = parseInt(id);
+            if (val === 'no' && (!state.actions[numericId] || state.actions[numericId].trim() === '')) {
                 return UI.showToast("Vul actie in bij elk 'NEE' antwoord!");
             }
         }
@@ -308,7 +353,7 @@ export const App = {
         UI.setLoading('submitBtn', true);
 
         let isSafe = true;
-        const failedPoints = [];
+        const failedPoints: string[] = [];
         categories.forEach(cat => {
             cat.questions.forEach(q => {
                 if (state.answers[q.id] === 'no') {
@@ -321,13 +366,13 @@ export const App = {
         // BEREKEN GELDIGHEID
         const validUntilDate = new Date(new Date().getTime() + 4*60*60*1000);
 
-        const report = {
+        const report: LMRAReport = {
             report_id: crypto.randomUUID(),
             monteur_naam: userName,
             locatie: location,
-            werkorder: DOMPurify.sanitize(document.getElementById('workOrder').value) || 'N.v.t.',
+            werkorder: DOMPurify.sanitize(elWorkOrder.value) || 'N.v.t.',
             is_veilig: isSafe,
-            opmerkingen: DOMPurify.sanitize(document.getElementById('comments').value),
+            opmerkingen: DOMPurify.sanitize(elComments.value),
             afkeurpunten: JSON.stringify(failedPoints),
             created_at: new Date().toISOString(),
             valid_until: validUntilDate.toISOString()
@@ -350,17 +395,18 @@ export const App = {
         this.showResult(isSafe, report, result.status);
     },
 
-    async saveToHistory(report) {
-        let history = await SecureStorage.get(HISTORY_KEY) || [];
+    async saveToHistory(report: LMRAReport): Promise<void> {
+        let history = await SecureStorage.get(HISTORY_KEY) as LMRAReport[] || [];
         history.unshift(report);
         if (history.length > 50) history.pop();
         await SecureStorage.set(HISTORY_KEY, history);
     },
 
     /* --- ARCHIEF MET STATUS --- */
-    async openArchive() {
-        const history = await SecureStorage.get(HISTORY_KEY);
+    async openArchive(): Promise<void> {
+        const history = await SecureStorage.get(HISTORY_KEY) as LMRAReport[];
         const container = document.getElementById('archiveContainer');
+        if(!container) return;
         container.innerHTML = '';
         
         if (!history || history.length === 0) {
@@ -407,7 +453,7 @@ export const App = {
         UI.toggleElement('archiveModal', true);
     },
 
-    async clearArchive() {
+    async clearArchive(): Promise<void> {
         if(confirm("Weet je zeker dat je de lokale historie wilt wissen?")) {
             await SecureStorage.remove(HISTORY_KEY);
             this.openArchive();
@@ -415,7 +461,7 @@ export const App = {
         }
     },
 
-    showResult(isSafe, report, syncStatus) {
+    showResult(isSafe: boolean, report: LMRAReport, syncStatus: string): void {
         const header = document.getElementById('resultHeader');
         const iconContainer = document.getElementById('resultIcon');
         const title = document.getElementById('resultTitle');
@@ -428,6 +474,8 @@ export const App = {
         if (syncStatus === 'cloud') statusText = "☁️ Opgeslagen in Cloud";
         else if (syncStatus === 'queued') statusText = "💾 Offline Opgeslagen (Wachtrij)";
         else statusText = "⚠️ Lokaal Opgeslagen (Fout)";
+
+        if(!header || !iconContainer || !title || !msg || !log) return;
 
         // Gratis iconen
         if (isSafe) {
@@ -454,13 +502,13 @@ export const App = {
         `;
     },
 
-    resetForm() {
+    resetForm(): void {
         if(!confirm("Formulier wissen?")) return;
         state.answers = {};
         state.actions = {};
-        document.getElementById('taskLocation').value = '';
-        document.getElementById('workOrder').value = '';
-        document.getElementById('comments').value = '';
+        (document.getElementById('taskLocation') as HTMLInputElement).value = '';
+        (document.getElementById('workOrder') as HTMLInputElement).value = '';
+        (document.getElementById('comments') as HTMLInputElement).value = '';
         UI.renderCategories(categories, 'questions-container', 
             (id, val) => this.handleAnswer(id, val), 
             (id, txt) => this.handleAction(id, txt)
@@ -468,18 +516,19 @@ export const App = {
         this.setDefaultTimes();
     },
 
-    checkChangelog() {
+    checkChangelog(): void {
         const storedVersion = localStorage.getItem('lmra_version');
         if (storedVersion !== APP_VERSION) {
             UI.toggleElement('updateModal', true);
-            document.getElementById('btnCloseUpdateModal').onclick = () => {
+            const btn = document.getElementById('btnCloseUpdateModal');
+            if(btn) btn.onclick = () => {
                 localStorage.setItem('lmra_version', APP_VERSION);
                 UI.toggleElement('updateModal', false);
             };
         }
     },
 
-    toggleTheme() {
+    toggleTheme(): void {
         document.documentElement.classList.toggle('dark');
     }
 };

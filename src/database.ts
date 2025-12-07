@@ -1,15 +1,41 @@
-/* src/database.js */
-import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_URL, SUPABASE_ANON_KEY, SYNC_QUEUE_KEY } from './config.js';
-import { SecureStorage } from './security.js';
+/* src/database.ts */
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, SYNC_QUEUE_KEY } from './config';
+import { SecureStorage } from './security';
+
+// Interface voor het rapport - De strikte blauwdruk
+export interface LMRAReport {
+    report_id: string;
+    monteur_naam: string;
+    locatie: string;
+    werkorder: string;
+    is_veilig: boolean;
+    opmerkingen: string;
+    afkeurpunten: string; // JSON string
+    created_at: string;
+    valid_until: string;
+}
+
+// Return types voor database acties
+interface SubmitResult {
+    success: boolean;
+    status: 'cloud' | 'cloud_duplicate' | 'queued' | 'error';
+    reason?: string;
+    error?: any;
+}
+
+interface QueueResult {
+    processed: number;
+    left: number;
+}
 
 // Veilige initialisatie van Supabase
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export const Database = {
     
     // Hoofdfunctie om een rapport op te slaan
-    async submitReport(reportData) {
+    async submitReport(reportData: LMRAReport): Promise<SubmitResult> {
         // Stap 1: Is er internet?
         if (!navigator.onLine) {
             console.warn("Geen internet. Opslaan in offline wachtrij.");
@@ -40,9 +66,9 @@ export const Database = {
     },
 
     // Interne functie voor offline opslag
-    async queueReport(reportData, reason) {
+    async queueReport(reportData: LMRAReport, reason: string): Promise<SubmitResult> {
         try {
-            let queue = await SecureStorage.get(SYNC_QUEUE_KEY) || [];
+            let queue = (await SecureStorage.get(SYNC_QUEUE_KEY)) as LMRAReport[] || [];
             if (!Array.isArray(queue)) queue = [];
             
             queue.push(reportData);
@@ -51,18 +77,18 @@ export const Database = {
             return { success: true, status: 'queued', reason };
         } catch (e) {
             console.error("CRITICAL: Kan niet opslaan in wachtrij!", e);
-            return { success: false, error: e };
+            return { success: false, status: 'error', error: e };
         }
     },
 
     // Functie om de wachtrij te verwerken (Sync)
-    async processSyncQueue() {
+    async processSyncQueue(): Promise<QueueResult> {
         if (!navigator.onLine) return { processed: 0, left: 0 };
 
-        const queue = await SecureStorage.get(SYNC_QUEUE_KEY);
+        const queue = (await SecureStorage.get(SYNC_QUEUE_KEY)) as LMRAReport[];
         if (!queue || queue.length === 0) return { processed: 0, left: 0 };
 
-        const remainingQueue = [];
+        const remainingQueue: LMRAReport[] = [];
         let successCount = 0;
 
         for (const report of queue) {

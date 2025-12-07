@@ -1,8 +1,13 @@
-/* src/ui.js */
+/* src/ui.ts */
 import DOMPurify from 'dompurify';
+import { Category } from './data';
+
+// Callbacks types
+type AnswerCallback = (id: number, value: string) => void;
+type ActionCallback = (id: number, text: string) => void;
 
 export const UI = {
-    showToast(msg) {
+    showToast(msg: string): void {
         const t = document.getElementById('toast');
         const m = document.getElementById('toastMsg');
         if(!t || !m) return;
@@ -11,13 +16,13 @@ export const UI = {
         setTimeout(() => t.style.opacity = '0', 3000);
     },
 
-    toggleElement(id, show) {
+    toggleElement(id: string, show: boolean): void {
         const el = document.getElementById(id);
         if (el) show ? el.classList.remove('hidden') : el.classList.add('hidden');
     },
 
     // Nieuwe functie voor Buddy Check
-    toggleBuddyField(show) {
+    toggleBuddyField(show: boolean): void {
         const field = document.getElementById('buddyField');
         if (field) {
             if (show) field.classList.remove('hidden');
@@ -25,8 +30,8 @@ export const UI = {
         }
     },
 
-    setLoading(btnId, isLoading, originalText = "") {
-        const btn = document.getElementById(btnId);
+    setLoading(btnId: string, isLoading: boolean, originalText: string = ""): void {
+        const btn = document.getElementById(btnId) as HTMLButtonElement | null;
         const txt = document.getElementById(btnId + 'Text');
         if (!btn) return;
 
@@ -41,7 +46,7 @@ export const UI = {
         }
     },
 
-    renderCategories(categories, containerId, onAnswer, onAction) {
+    renderCategories(categories: Category[], containerId: string, onAnswer: AnswerCallback, onAction: ActionCallback): void {
         const container = document.getElementById(containerId);
         if (!container) return;
         container.innerHTML = '';
@@ -97,8 +102,8 @@ export const UI = {
                     <input type="text" id="action-input-${q.id}" class="w-full bg-white dark:bg-slate-800 border border-red-300 dark:border-red-700 rounded p-2 text-xs focus:outline-none focus:ring-1 focus:ring-red-500" placeholder="Wat doe je om dit veilig te maken?">
                 `;
                 
-                const input = actionBox.querySelector('input');
-                input.oninput = (e) => onAction(q.id, DOMPurify.sanitize(e.target.value));
+                const input = actionBox.querySelector('input') as HTMLInputElement;
+                input.oninput = (e) => onAction(q.id, DOMPurify.sanitize((e.target as HTMLInputElement).value));
 
                 item.appendChild(actionBox);
                 qList.appendChild(item);

@@ -1,7 +1,7 @@
-/* src/main.js */
+/* src/main.ts */
 import './style.css';
 import '@fortawesome/fontawesome-free/css/all.css';
-import { App } from './app.js';
+import { App } from './app';
 
 // Start de applicatie
 document.addEventListener('DOMContentLoaded', () => {

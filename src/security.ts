@@ -1,10 +1,15 @@
-/* src/security.js */
+/* src/security.ts */
 import { get, set, del, clear } from 'idb-keyval';
 
+interface CryptoKeyResult {
+    key: CryptoKey;
+    salt: string;
+}
+
 export const CryptoManager = {
-    key: null,
+    key: null as CryptoKey | null,
     
-    async deriveKey(pin, salt) {
+    async deriveKey(pin: string, salt: string | null): Promise<CryptoKeyResult> {
         const enc = new TextEncoder();
         const keyMaterial = await window.crypto.subtle.importKey(
             "raw", 
@@ -30,7 +35,7 @@ export const CryptoManager = {
         return { key, salt: btoa(String.fromCharCode(...saltBuffer)) };
     },
 
-    async encrypt(data) {
+    async encrypt(data: any): Promise<string> {
         if (!this.key) throw new Error("App is vergrendeld - Geen sleutel beschikbaar");
         
         const enc = new TextEncoder();
@@ -48,10 +53,13 @@ export const CryptoManager = {
         return `${ivStr}:${dataStr}`;
     },
 
-    async decrypt(encryptedStr) {
+    async decrypt(encryptedStr: string): Promise<any | null> {
         if (!this.key) throw new Error("App is vergrendeld");
         try {
-            const [ivStr, dataStr] = encryptedStr.split(':');
+            const parts = encryptedStr.split(':');
+            if (parts.length !== 2) return null;
+            
+            const [ivStr, dataStr] = parts;
             if (!ivStr || !dataStr) return null;
 
             const iv = Uint8Array.from(atob(ivStr), c => c.charCodeAt(0));
@@ -74,7 +82,7 @@ export const CryptoManager = {
 
 /* Wrapper voor IndexedDB die automatisch versleutelt */
 export const SecureStorage = {
-    async set(key, value) { 
+    async set(key: string, value: any): Promise<void> { 
         try { 
             const encrypted = await CryptoManager.encrypt(value); 
             await set(key, encrypted); 
@@ -84,7 +92,7 @@ export const SecureStorage = {
         } 
     },
     
-    async get(key) { 
+    async get(key: string): Promise<any | null> { 
         try {
             const item = await get(key); 
             if (!item) return null; 
@@ -95,12 +103,12 @@ export const SecureStorage = {
         }
     },
     
-    async remove(key) { 
+    async remove(key: string): Promise<void> { 
         await del(key); 
     },
 
     // Self-destruct functie
-    async wipeEverything() {
+    async wipeEverything(): Promise<void> {
         console.warn("SECURITY WIPE INITIATED");
         await clear();
         localStorage.clear(); // Voor de zekerheid ook oude storage legen
