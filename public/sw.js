@@ -1,6 +1,6 @@
 /* public/sw.js - LMRA Pro v9.8 Sentinel */
 
-const CACHE_NAME = 'lmra-sentinel-v9.8';
+const CACHE_NAME = 'lmra-sentinel-v9.8.1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
