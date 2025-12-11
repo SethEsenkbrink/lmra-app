@@ -1,14 +1,14 @@
 /* src/app.ts - v9.8 (Final: Sentinel Architecture + Cloud Gate) */
 import { UI } from './ui';
-import { Database, LMRAReport } from './database';
+import { Database, LMRAReport, supabase } from './database';
 import { SecureStorage } from './security';
 import { HISTORY_KEY, APP_VERSION } from './config';
 import DOMPurify from 'dompurify';
 
 // Services
 import { PDFService } from './services/pdf';
-import { AuthService } from './services/auth'; // Local PIN Auth
-import { CloudAuthService } from './services/cloud-auth'; // Cloud Login (Nieuw)
+import { AuthService } from './services/auth';
+import { CloudAuthService } from './services/cloud-auth';
 import { SessionService } from './services/session';
 import { FormService } from './services/form';
 
@@ -26,6 +26,15 @@ export const App = {
         this.attachEventListeners();
         this.checkChangelog();
         
+        // AANGEPAST: ', session' verwijderd om de foutmelding op te lossen
+        supabase.auth.onAuthStateChange(async (event) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                console.log("🔓 Wachtwoord herstel modus gedetecteerd!");
+                // Forceer het openen van het wachtwoord reset scherm
+                CloudAuthService.handlePasswordReset();
+            }
+        });
+
         // STAP 1: Cloud Gatekeeper Check
         // Eerst controleren of de gebruiker een geldige Supabase sessie heeft.
         const isCloudAuthenticated = await CloudAuthService.checkSession();
@@ -52,7 +61,6 @@ export const App = {
 
     // De "Oude" startfunctie, nu aangeroepen NA cloud auth
     startLocalSecurity(): void {
-        // FIX: We tonen nu de wrapper i.p.v. de knop direct, voor de juiste lay-out
         const btnLogOutWrapper = document.getElementById('btnLogOutWrapper');
         if(btnLogOutWrapper) btnLogOutWrapper.classList.remove('hidden'); 
         
