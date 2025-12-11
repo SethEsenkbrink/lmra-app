@@ -11,27 +11,27 @@ export const PDFService = {
 
         UI.showToast("PDF Genereren... Even geduld.");
 
-        // 1. Maak een tijdelijke container
-        // FIX: We plaatsen hem op 0,0 (in beeld) maar met een lage z-index (erachter)
-        // Dit lost het 'witte pagina' probleem op omdat de browser het element nu daadwerkelijk rendert.
+        // 1. Container aanmaken
+        // We gebruiken 'fixed' op 0,0 zodat het altijd bovenaan de viewport staat.
+        // z-index -9999 zorgt dat het achter je huidige scherm staat (niet zichtbaar voor jou, wel voor de generator).
         const container = document.createElement('div');
-        container.style.position = 'absolute';
+        container.style.position = 'fixed'; 
         container.style.left = '0';
-        container.style.top = '0';
-        container.style.zIndex = '-9999'; // Verstop achter de app
-        container.style.width = '210mm';  // A4 breedte
-        container.style.minHeight = '297mm'; // A4 hoogte
-        container.style.backgroundColor = 'white';
+        container.style.top = '0'; 
+        container.style.zIndex = '-9999'; 
+        container.style.width = '210mm'; 
+        container.style.minHeight = '297mm';
+        container.style.backgroundColor = '#ffffff'; // Forceer wit canvas
         container.style.color = '#333';
         container.style.fontFamily = 'Arial, sans-serif';
         
         document.body.appendChild(container);
 
         try {
-            // 2. Vul de container met de template
+            // 2. Template vullen
             container.innerHTML = this.buildTemplate(report);
 
-            // 3. Wacht op afbeeldingen (het logo)
+            // 3. Wachten op afbeeldingen (Het logo)
             const images = Array.from(container.querySelectorAll('img'));
             await Promise.all(images.map(img => {
                 if (img.complete) return Promise.resolve();
@@ -41,27 +41,30 @@ export const PDFService = {
                 });
             }));
 
-            // 4. ESSENTIEEL: Korte vertraging om de browser te laten 'painten'
-            // Zonder dit is de DOM soms nog niet klaar voor de snapshot
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // 4. Korte pauze voor rendering (zodat de browser tijd heeft om fonts/kleuren te tekenen)
+            await new Promise(r => setTimeout(r, 500));
 
             // 5. Configuratie
+            // CRUCIAAL: scrollX/Y en x/y op 0 zetten voorkomt dat de PDF wit is als je gescrold bent.
             const opt: any = {
-                margin:       [10, 10, 15, 10],
+                margin:       [10, 10, 15, 10], 
                 filename:     `LMRA_${report.werkorder.replace(/[^a-zA-Z0-9]/g, '-')}_${new Date(report.created_at).toISOString().split('T')[0]}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true, 
-                    logging: false,
-                    scrollY: 0, // Forceer start bovenaan
-                    windowWidth: 1200 // Simuleer desktop breedte voor juiste layout
+                    logging: false, // Zet op true als je errors in console wilt zien van html2canvas
+                    scrollX: 0,     // FIX: Negeer horizontale scroll
+                    scrollY: 0,     // FIX: Negeer verticale scroll
+                    x: 0,           // FIX: Start capture exact linksboven
+                    y: 0,           // FIX: Start capture exact linksboven
+                    windowWidth: 1200 // Forceer desktop breedte voor consistente layout
                 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
-            // 6. Genereer en save
+            // 6. Genereren
             await html2pdf().set(opt).from(container).save();
             UI.showToast("✅ PDF Succesvol Gedownload");
 
@@ -84,9 +87,9 @@ export const PDFService = {
         const statusText = report.is_veilig ? 'VEILIG / GOEDGEKEURD' : 'ONVEILIG / AFGEKEURD';
         const statusIcon = report.is_veilig ? '✓' : '⚠️';
 
-        // Let op: Inline styles zijn cruciaal voor PDF generatie
+        // Inline CSS is essentieel voor PDF generatie
         return `
-            <div style="padding: 20px; font-size: 14px; line-height: 1.5; background: white;">
+            <div style="padding: 20px; font-size: 14px; line-height: 1.5; background-color: #ffffff;">
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00447c; padding-bottom: 15px; margin-bottom: 20px;">
                     <div>
@@ -98,7 +101,7 @@ export const PDFService = {
                     </div>
                 </div>
 
-                <div style="background-color: ${statusColor}; color: white; padding: 10px 15px; font-weight: bold; text-align: center; border-radius: 6px; margin-bottom: 25px; font-size: 16px;">
+                <div style="background-color: ${statusColor}; color: white; padding: 10px 15px; font-weight: bold; text-align: center; border-radius: 6px; margin-bottom: 25px; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     <span style="margin-right: 10px; font-size: 18px;">${statusIcon}</span> ${statusText}
                 </div>
 
@@ -127,7 +130,7 @@ export const PDFService = {
                     
                     ${report.is_veilig 
                         ? `<div style="padding: 15px; border-left: 4px solid #16a34a; background: #f0fdf4; color: #166534;">
-                                <strong>✅ Geen afwijkingen.</strong> Alle controlepunten zijn positief beoordeeld.
+                                <strong>✅ Geen afwijkingen.</strong> Alle controlepunten zijn positief beoordeeld. De werkzaamheden kunnen veilig starten conform de procedures.
                            </div>`
                         : `<table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                                 <thead>
