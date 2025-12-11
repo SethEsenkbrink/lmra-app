@@ -1,4 +1,4 @@
-/* src/app.ts - v9.8 (Final: Sentinel Architecture + Cloud Gate) */
+/* src/app.ts - v9.8.2 (Fix: Password Reset Priority) */
 import { UI } from './ui';
 import { Database, LMRAReport, supabase } from './database';
 import { SecureStorage } from './security';
@@ -26,26 +26,44 @@ export const App = {
         this.attachEventListeners();
         this.checkChangelog();
         
-        // AANGEPAST: ', session' verwijderd om de foutmelding op te lossen
+        // 1. Luister naar Auth Events (zoals Password Recovery)
         supabase.auth.onAuthStateChange(async (event) => {
             if (event === 'PASSWORD_RECOVERY') {
-                console.log("🔓 Wachtwoord herstel modus gedetecteerd!");
-                // Forceer het openen van het wachtwoord reset scherm
+                console.log("🔓 Wachtwoord herstel modus geactiveerd!");
+                // Sluit eventuele andere modals
+                UI.toggleElement('cloudLoginModal', false);
+                UI.toggleElement('pinModal', false);
+                // Open de reset modal
                 CloudAuthService.handlePasswordReset();
             }
         });
 
-        // STAP 1: Cloud Gatekeeper Check
-        // Eerst controleren of de gebruiker een geldige Supabase sessie heeft.
+        // 2. CRUCIALE CHECK: Is dit een reset link?
+        // Als er 'type=recovery' in de URL staat, moeten we WACHTEN op Supabase.
+        // We voeren de standaard checkSession dan NIET uit, anders overruled die de reset.
+        const hash = window.location.hash;
+        if (hash && hash.includes('type=recovery')) {
+            console.log("⏳ Recovery link gedetecteerd. Wachten op Supabase event...");
+            UI.showToast("Wachtwoord herstel laden...");
+            return; // STOP HIER. De onAuthStateChange hierboven pakt het verder op.
+        }
+
+        // 3. Foutafhandeling (zoals in je screenshot: link expired)
+        if (hash && hash.includes('error_code=otp_expired')) {
+            UI.showToast("⚠️ Link is verlopen. Vraag een nieuwe aan.");
+            // We laten de code hieronder doorlopen zodat het inlogscherm verschijnt
+            // en ze een nieuwe kunnen aanvragen.
+            window.location.hash = ''; // URL opschonen
+        }
+
+        // 4. Standaard Flow: Cloud Gatekeeper Check
+        // Dit voeren we alleen uit als we NIET in een recovery flow zitten
         const isCloudAuthenticated = await CloudAuthService.checkSession();
 
         if (isCloudAuthenticated) {
-            // Sessie geldig? Start dan pas de lokale PIN beveiliging.
             this.startLocalSecurity(); 
         } else {
-            // Geen sessie? Toon het cloud login scherm.
             CloudAuthService.showLogin(() => {
-                // Callback: Login succesvol? Dan starten we de PIN procedure.
                 this.startLocalSecurity();
             });
         }
@@ -59,12 +77,10 @@ export const App = {
         });
     },
 
-    // De "Oude" startfunctie, nu aangeroepen NA cloud auth
     startLocalSecurity(): void {
         const btnLogOutWrapper = document.getElementById('btnLogOutWrapper');
         if(btnLogOutWrapper) btnLogOutWrapper.classList.remove('hidden'); 
         
-        // Start de lokale PIN beveiliging (Sentinel)
         AuthService.init(() => this.unlockApp());
     },
 
@@ -80,7 +96,6 @@ export const App = {
         document.getElementById('btnResetApp')?.addEventListener('click', () => this.resetForm(true));
         document.getElementById('btnToggleTheme')?.addEventListener('click', () => this.toggleTheme());
         
-        // NIEUW: Uitlogknop koppelen aan CloudAuthService
         document.getElementById('btnLogOut')?.addEventListener('click', () => CloudAuthService.signOut());
         
         document.getElementById('btnOpenArchive')?.addEventListener('click', () => this.openArchive());
@@ -126,12 +141,10 @@ export const App = {
             if (!elBuddySig.checked) return UI.showToast("Buddy moet de verklaring aanvinken!");
         }
         
-        // Gebruik FormService voor validatie
         if (!FormService.validate()) return;
 
         UI.setLoading('submitBtn', true);
 
-        // Haal data op uit FormService
         const { isSafe, failedPoints } = FormService.getReportData();
 
         const buddyInfo = elBuddyToggle.checked ? ` (Buddy: ${DOMPurify.sanitize(elBuddyName.value)})` : "";
