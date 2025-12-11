@@ -11,16 +11,16 @@ export const PDFService = {
 
         UI.showToast("PDF Genereren... Even geduld.");
 
-        // 1. Maak een tijdelijke container voor de PDF layout
-        // FIX: Gebruik 'absolute' i.p.v. 'fixed' om rendering issues (witte pagina's) te voorkomen
-        // We zetten hem op z-index -100 zodat hij achter de app staat, maar wel 'in beeld' is voor de renderer.
+        // 1. Maak een tijdelijke container
+        // FIX: We plaatsen hem op 0,0 (in beeld) maar met een lage z-index (erachter)
+        // Dit lost het 'witte pagina' probleem op omdat de browser het element nu daadwerkelijk rendert.
         const container = document.createElement('div');
-        container.style.position = 'absolute'; 
-        container.style.left = '-9999px';
-        container.style.top = '0'; 
-        container.style.zIndex = '-100'; 
-        container.style.width = '210mm'; // Exact A4 breedte
-        container.style.minHeight = '297mm';
+        container.style.position = 'absolute';
+        container.style.left = '0';
+        container.style.top = '0';
+        container.style.zIndex = '-9999'; // Verstop achter de app
+        container.style.width = '210mm';  // A4 breedte
+        container.style.minHeight = '297mm'; // A4 hoogte
         container.style.backgroundColor = 'white';
         container.style.color = '#333';
         container.style.fontFamily = 'Arial, sans-serif';
@@ -28,37 +28,40 @@ export const PDFService = {
         document.body.appendChild(container);
 
         try {
-            // 2. Vul de container met de "Professional" template
+            // 2. Vul de container met de template
             container.innerHTML = this.buildTemplate(report);
 
-            // FIX: Wacht expliciet tot de afbeelding(en) geladen zijn voordat we renderen.
-            // Dit voorkomt dat html2canvas start voordat het logo zichtbaar is.
+            // 3. Wacht op afbeeldingen (het logo)
             const images = Array.from(container.querySelectorAll('img'));
             await Promise.all(images.map(img => {
                 if (img.complete) return Promise.resolve();
                 return new Promise((resolve) => { 
                     img.onload = resolve; 
-                    img.onerror = resolve; // Doorgaan, ook als plaatje faalt, anders hangt de app
+                    img.onerror = resolve; 
                 });
             }));
 
-            // 3. Configuratie voor html2pdf
+            // 4. ESSENTIEEL: Korte vertraging om de browser te laten 'painten'
+            // Zonder dit is de DOM soms nog niet klaar voor de snapshot
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // 5. Configuratie
             const opt: any = {
-                margin:       [10, 10, 15, 10], // Top, Left, Bottom, Right (mm)
+                margin:       [10, 10, 15, 10],
                 filename:     `LMRA_${report.werkorder.replace(/[^a-zA-Z0-9]/g, '-')}_${new Date(report.created_at).toISOString().split('T')[0]}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true, 
                     logging: false,
-                    // FIX: Specificeer window afmetingen om scaling issues op mobiel te voorkomen
-                    windowWidth: 1200 
+                    scrollY: 0, // Forceer start bovenaan
+                    windowWidth: 1200 // Simuleer desktop breedte voor juiste layout
                 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
-            // 4. Genereer en save
+            // 6. Genereer en save
             await html2pdf().set(opt).from(container).save();
             UI.showToast("✅ PDF Succesvol Gedownload");
 
@@ -66,13 +69,10 @@ export const PDFService = {
             console.error("PDF Error:", err);
             UI.showToast("❌ Fout bij genereren PDF");
         } finally {
-            // 5. Ruim op: verwijder de tijdelijke container
-            // We gebruiken een kleine timeout om zeker te weten dat de library klaar is met lezen
-            setTimeout(() => {
-                if(document.body.contains(container)) {
-                    document.body.removeChild(container);
-                }
-            }, 100);
+            // 7. Opruimen
+            if(document.body.contains(container)) {
+                document.body.removeChild(container);
+            }
         }
     },
 
@@ -80,12 +80,13 @@ export const PDFService = {
         const dateCreated = new Date(report.created_at);
         const dateValid = new Date(report.valid_until);
         const afkeurpunten = JSON.parse(report.afkeurpunten || "[]");
-        const statusColor = report.is_veilig ? '#16a34a' : '#dc2626'; // Green vs Red
+        const statusColor = report.is_veilig ? '#16a34a' : '#dc2626'; 
         const statusText = report.is_veilig ? 'VEILIG / GOEDGEKEURD' : 'ONVEILIG / AFGEKEURD';
         const statusIcon = report.is_veilig ? '✓' : '⚠️';
 
+        // Let op: Inline styles zijn cruciaal voor PDF generatie
         return `
-            <div style="padding: 20px; font-size: 14px; line-height: 1.5;">
+            <div style="padding: 20px; font-size: 14px; line-height: 1.5; background: white;">
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00447c; padding-bottom: 15px; margin-bottom: 20px;">
                     <div>
@@ -97,7 +98,7 @@ export const PDFService = {
                     </div>
                 </div>
 
-                <div style="background-color: ${statusColor}; color: white; padding: 10px 15px; font-weight: bold; text-align: center; border-radius: 6px; margin-bottom: 25px; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="background-color: ${statusColor}; color: white; padding: 10px 15px; font-weight: bold; text-align: center; border-radius: 6px; margin-bottom: 25px; font-size: 16px;">
                     <span style="margin-right: 10px; font-size: 18px;">${statusIcon}</span> ${statusText}
                 </div>
 
@@ -126,7 +127,7 @@ export const PDFService = {
                     
                     ${report.is_veilig 
                         ? `<div style="padding: 15px; border-left: 4px solid #16a34a; background: #f0fdf4; color: #166534;">
-                                <strong>✅ Geen afwijkingen.</strong> Alle controlepunten zijn positief beoordeeld. De werkzaamheden kunnen veilig starten conform de procedures.
+                                <strong>✅ Geen afwijkingen.</strong> Alle controlepunten zijn positief beoordeeld.
                            </div>`
                         : `<table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                                 <thead>
@@ -162,7 +163,6 @@ export const PDFService = {
                         Gegenereerd: ${new Date().toLocaleString()}
                     </div>
                 </div>
-
             </div>
         `;
     }
