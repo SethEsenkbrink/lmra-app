@@ -1,4 +1,4 @@
-/* src/app.ts - v9.8.2 (Fix: Password Reset Priority) */
+/* src/app.ts - v9.8.2 (Fix: Unused variable & Password Reset Priority) */
 import { UI } from './ui';
 import { Database, LMRAReport, supabase } from './database';
 import { SecureStorage } from './security';
@@ -27,6 +27,7 @@ export const App = {
         this.checkChangelog();
         
         // 1. Luister naar Auth Events (zoals Password Recovery)
+        // AANGEPAST: ', session' verwijderd omdat we die niet gebruiken
         supabase.auth.onAuthStateChange(async (event) => {
             if (event === 'PASSWORD_RECOVERY') {
                 console.log("🔓 Wachtwoord herstel modus geactiveerd!");
@@ -39,8 +40,6 @@ export const App = {
         });
 
         // 2. CRUCIALE CHECK: Is dit een reset link?
-        // Als er 'type=recovery' in de URL staat, moeten we WACHTEN op Supabase.
-        // We voeren de standaard checkSession dan NIET uit, anders overruled die de reset.
         const hash = window.location.hash;
         if (hash && hash.includes('type=recovery')) {
             console.log("⏳ Recovery link gedetecteerd. Wachten op Supabase event...");
@@ -48,16 +47,13 @@ export const App = {
             return; // STOP HIER. De onAuthStateChange hierboven pakt het verder op.
         }
 
-        // 3. Foutafhandeling (zoals in je screenshot: link expired)
+        // 3. Foutafhandeling
         if (hash && hash.includes('error_code=otp_expired')) {
             UI.showToast("⚠️ Link is verlopen. Vraag een nieuwe aan.");
-            // We laten de code hieronder doorlopen zodat het inlogscherm verschijnt
-            // en ze een nieuwe kunnen aanvragen.
             window.location.hash = ''; // URL opschonen
         }
 
         // 4. Standaard Flow: Cloud Gatekeeper Check
-        // Dit voeren we alleen uit als we NIET in een recovery flow zitten
         const isCloudAuthenticated = await CloudAuthService.checkSession();
 
         if (isCloudAuthenticated) {
