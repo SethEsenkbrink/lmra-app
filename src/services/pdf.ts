@@ -12,10 +12,13 @@ export const PDFService = {
         UI.showToast("PDF Genereren... Even geduld.");
 
         // 1. Maak een tijdelijke container voor de PDF layout
+        // FIX: Gebruik 'absolute' i.p.v. 'fixed' om rendering issues (witte pagina's) te voorkomen
+        // We zetten hem op z-index -100 zodat hij achter de app staat, maar wel 'in beeld' is voor de renderer.
         const container = document.createElement('div');
-        container.style.position = 'fixed';
+        container.style.position = 'absolute'; 
         container.style.left = '-9999px';
-        container.style.top = '0';
+        container.style.top = '0'; 
+        container.style.zIndex = '-100'; 
         container.style.width = '210mm'; // Exact A4 breedte
         container.style.minHeight = '297mm';
         container.style.backgroundColor = 'white';
@@ -24,30 +27,52 @@ export const PDFService = {
         
         document.body.appendChild(container);
 
-        // 2. Vul de container met de "Professional" template
-        container.innerHTML = this.buildTemplate(report);
-
-        // 3. Configuratie voor html2pdf
-        // AANGEPAST: Type ': any' toegevoegd om TS errors over 'margin' te voorkomen
-        const opt: any = {
-            margin:       [10, 10, 15, 10], // Top, Left, Bottom, Right (mm)
-            filename:     `LMRA_${report.werkorder.replace(/[^a-zA-Z0-9]/g, '-')}_${new Date(report.created_at).toISOString().split('T')[0]}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, logging: false },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-        };
-
-        // 4. Genereer en save
         try {
+            // 2. Vul de container met de "Professional" template
+            container.innerHTML = this.buildTemplate(report);
+
+            // FIX: Wacht expliciet tot de afbeelding(en) geladen zijn voordat we renderen.
+            // Dit voorkomt dat html2canvas start voordat het logo zichtbaar is.
+            const images = Array.from(container.querySelectorAll('img'));
+            await Promise.all(images.map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise((resolve) => { 
+                    img.onload = resolve; 
+                    img.onerror = resolve; // Doorgaan, ook als plaatje faalt, anders hangt de app
+                });
+            }));
+
+            // 3. Configuratie voor html2pdf
+            const opt: any = {
+                margin:       [10, 10, 15, 10], // Top, Left, Bottom, Right (mm)
+                filename:     `LMRA_${report.werkorder.replace(/[^a-zA-Z0-9]/g, '-')}_${new Date(report.created_at).toISOString().split('T')[0]}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true, 
+                    logging: false,
+                    // FIX: Specificeer window afmetingen om scaling issues op mobiel te voorkomen
+                    windowWidth: 1200 
+                },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            // 4. Genereer en save
             await html2pdf().set(opt).from(container).save();
             UI.showToast("✅ PDF Succesvol Gedownload");
+
         } catch (err: any) {
             console.error("PDF Error:", err);
             UI.showToast("❌ Fout bij genereren PDF");
         } finally {
             // 5. Ruim op: verwijder de tijdelijke container
-            document.body.removeChild(container);
+            // We gebruiken een kleine timeout om zeker te weten dat de library klaar is met lezen
+            setTimeout(() => {
+                if(document.body.contains(container)) {
+                    document.body.removeChild(container);
+                }
+            }, 100);
         }
     },
 
