@@ -58,10 +58,15 @@ LMRA Pro maakt gebruik van de volgende open-source softwarecomponenten. Het gebr
 
 ## Functies & Rapportage
 
-### html2pdf.js
-- **Copyright:** (c) 2017 Erik Koopmans
+### jsPDF
+- **Copyright:** (c) 2010-2021 James Hall, yWorks GmbH, et al.
 - **License:** MIT
-- **Source:** https://github.com/eKoopmans/html2pdf.js
+- **Source:** https://github.com/parallax/jsPDF
+
+### jsPDF-AutoTable
+- **Copyright:** (c) 2014 Simon Bengtsson
+- **License:** MIT
+- **Source:** https://github.com/simonbengtsson/jsPDF-AutoTable
 
 ---
 
