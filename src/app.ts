@@ -1,4 +1,4 @@
-/* src/app.ts - v9.8.2 (Fix: Unused variable & Password Reset Priority) */
+/* src/app.ts - v9.8.5 (Fix: Timer Reset & Archive Update) */
 import { UI } from './ui';
 import { Database, LMRAReport, supabase } from './database';
 import { SecureStorage } from './security';
@@ -26,34 +26,27 @@ export const App = {
         this.attachEventListeners();
         this.checkChangelog();
         
-        // 1. Luister naar Auth Events (zoals Password Recovery)
-        // AANGEPAST: ', session' verwijderd omdat we die niet gebruiken
         supabase.auth.onAuthStateChange(async (event) => {
             if (event === 'PASSWORD_RECOVERY') {
                 console.log("🔓 Wachtwoord herstel modus geactiveerd!");
-                // Sluit eventuele andere modals
                 UI.toggleElement('cloudLoginModal', false);
                 UI.toggleElement('pinModal', false);
-                // Open de reset modal
                 CloudAuthService.handlePasswordReset();
             }
         });
 
-        // 2. CRUCIALE CHECK: Is dit een reset link?
         const hash = window.location.hash;
         if (hash && hash.includes('type=recovery')) {
             console.log("⏳ Recovery link gedetecteerd. Wachten op Supabase event...");
             UI.showToast("Wachtwoord herstel laden...");
-            return; // STOP HIER. De onAuthStateChange hierboven pakt het verder op.
+            return; 
         }
 
-        // 3. Foutafhandeling
         if (hash && hash.includes('error_code=otp_expired')) {
             UI.showToast("⚠️ Link is verlopen. Vraag een nieuwe aan.");
-            window.location.hash = ''; // URL opschonen
+            window.location.hash = ''; 
         }
 
-        // 4. Standaard Flow: Cloud Gatekeeper Check
         const isCloudAuthenticated = await CloudAuthService.checkSession();
 
         if (isCloudAuthenticated) {
@@ -64,7 +57,6 @@ export const App = {
             });
         }
         
-        // Luister naar netwerk herstel voor sync
         window.addEventListener('online', () => {
             UI.showToast("Verbinding hersteld. Synchroniseren...");
             Database.processSyncQueue().then(res => {
@@ -106,7 +98,12 @@ export const App = {
         document.getElementById('btnCloseDetail')?.addEventListener('click', () => UI.toggleElement('detailModal', false));
         
         document.getElementById('btnTriggerResume')?.addEventListener('click', () => SessionService.confirmResume());
-        document.getElementById('btnCancelResume')?.addEventListener('click', () => SessionService.cancelResume(() => this.resetForm(false)));
+        
+        // AANGEPAST: Bij annuleren updaten we nu eerst de historie
+        document.getElementById('btnCancelResume')?.addEventListener('click', async () => {
+            await this.expireLastSessionInHistory();
+            SessionService.cancelResume(() => this.resetForm(false));
+        });
 
         document.getElementById('buddyToggle')?.addEventListener('change', (e) => {
             UI.toggleBuddyField((e.target as HTMLInputElement).checked);
@@ -174,6 +171,36 @@ export const App = {
         await SecureStorage.set(HISTORY_KEY, history);
     },
 
+    // NIEUWE FUNCTIE: Deze zorgt dat de laatste LMRA als 'verlopen' wordt gemarkeerd in de historie
+    async expireLastSessionInHistory(): Promise<void> {
+        try {
+            let history = await SecureStorage.get(HISTORY_KEY) as LMRAReport[] || [];
+            
+            // Als er geen historie is, kunnen we niks updaten
+            if (history.length === 0) return;
+
+            // We pakken de meest recente (index 0)
+            const lastReport = history[0];
+
+            // Alleen updaten als hij Veilig was (want onveilige zijn sws al rood/afgekeurd)
+            // En check of de valid_until in de toekomst ligt, zo ja: zet hem op NU.
+            const now = new Date();
+            const validUntil = new Date(lastReport.valid_until);
+
+            if (lastReport.is_veilig && validUntil > now) {
+                lastReport.valid_until = now.toISOString(); // Zet geldigheidsdatum naar nu (dus verlopen)
+                
+                // Opslaan in beveiligde opslag
+                // De array is 'by reference' aangepast, dus we slaan de hele array opnieuw op
+                await SecureStorage.set(HISTORY_KEY, history);
+                
+                UI.showToast("📁 Dossier bijgewerkt: Werkzaamheden beëindigd.");
+            }
+        } catch (e) {
+            console.error("Kon historie niet bijwerken bij stoppen sessie", e);
+        }
+    },
+
     async openArchive(): Promise<void> {
         const history = await SecureStorage.get(HISTORY_KEY) as LMRAReport[];
         const container = document.getElementById('archiveContainer');
@@ -193,7 +220,7 @@ export const App = {
                     const validUntil = h.valid_until ? new Date(h.valid_until) : null;
                     if (validUntil && now > validUntil) {
                         statusDot = 'bg-slate-400';
-                        statusText = 'Verlopen';
+                        statusText = 'Verlopen / Gestopt'; // Tekst iets aangepast voor duidelijkheid
                         borderColor = 'border-slate-400';
                     } else {
                         statusDot = 'bg-green-500';

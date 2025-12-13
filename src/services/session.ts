@@ -20,8 +20,10 @@ export const SessionService = {
         const elStart = document.getElementById('timeStart') as HTMLInputElement;
         const elEnd = document.getElementById('timeEnd') as HTMLInputElement;
         
-        if(elStart && !elStart.value) elStart.value = now.toTimeString().slice(0,5);
-        if(elEnd && !elEnd.value) elEnd.value = end.toTimeString().slice(0,5);
+        // AANGEPAST: We overschrijven altijd de waarde, zodat bij een stop/reset de tijd actueel is.
+        // Oude code had: if(elStart && !elStart.value) ...
+        if(elStart) elStart.value = now.toTimeString().slice(0,5);
+        if(elEnd) elEnd.value = end.toTimeString().slice(0,5);
     },
 
     toggleFormLock(locked: boolean): void {
