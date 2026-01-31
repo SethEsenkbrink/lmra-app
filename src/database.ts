@@ -91,11 +91,14 @@ export const Database = {
     },
 
     // Functie om de wachtrij te verwerken (Sync)
+    // Functie om de wachtrij te verwerken (Sync) - VERBETERDE VERSIE
     async processSyncQueue(): Promise<QueueResult> {
         if (!navigator.onLine) return { processed: 0, left: 0 };
 
         const queue = (await SecureStorage.get(SYNC_QUEUE_KEY)) as LMRAReport[];
         if (!queue || queue.length === 0) return { processed: 0, left: 0 };
+
+        console.log(`🔄 Sync start: ${queue.length} items in wachtrij...`);
 
         const remainingQueue: LMRAReport[] = [];
         let successCount = 0;
@@ -106,18 +109,32 @@ export const Database = {
                     .from('lmra_reports')
                     .insert([report]);
 
-                if (!error || error.code === '23505') {
+                if (!error) {
+                    successCount++;
+                } else if (error.code === '23505') {
+                    // Duplicate key error = Al opgeslagen = Succes voor ons
+                    console.log("ℹ️ Rapport bestond al (duplicate), verwijderd uit queue.");
                     successCount++;
                 } else {
+                    // Echte fout (bv. database validatie of RLS policy)
+                    console.error("❌ Sync error voor rapport:", error.message, error.details);
+                    
+                    // We laten hem in de queue staan, maar loggen wel hard zodat je het ziet
                     remainingQueue.push(report); 
                 }
             } catch (e) {
+                console.error("❌ Onverwachte netwerkfout tijdens sync:", e);
                 remainingQueue.push(report);
             }
         }
 
         // Update de wachtrij met wat overbleef
         await SecureStorage.set(SYNC_QUEUE_KEY, remainingQueue);
+        
+        if (remainingQueue.length === 0 && successCount > 0) {
+            console.log("✅ Sync volledig voltooid!");
+        }
+
         return { processed: successCount, left: remainingQueue.length };
     }
 };

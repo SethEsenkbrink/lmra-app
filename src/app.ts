@@ -110,28 +110,38 @@ export const App = {
         });
     },
 
-    async handleSubmit(): Promise<void> {
+        async handleSubmit(): Promise<void> {
         const honeypot = document.getElementById('contact_email') as HTMLInputElement;
         if (honeypot && honeypot.value !== "") return;
 
+        // 1. EERST ALLE ELEMENTEN OPHALEN (Declaraties)
         const elUserName = document.getElementById('userName') as HTMLInputElement;
         const elLocation = document.getElementById('taskLocation') as HTMLInputElement;
         const elWorkOrder = document.getElementById('workOrder') as HTMLInputElement;
         const elComments = document.getElementById('comments') as HTMLTextAreaElement;
         
         const elBuddyToggle = document.getElementById('buddyToggle') as HTMLInputElement;
-        const elBuddyName = document.getElementById('buddyName') as HTMLInputElement;
-        const elBuddySig = document.getElementById('buddySignature') as HTMLInputElement;
+        const elBuddyName = document.getElementById('buddyName') as HTMLInputElement;     
+        const elBuddySig = document.getElementById('buddySignature') as HTMLInputElement; 
+        const elDeclaration = document.getElementById('declarationCheck') as HTMLInputElement; // Nieuw toegevoegd
 
+        // 2. DAARNA PAS GEBRUIKEN (Logica)
         const userName = DOMPurify.sanitize(elUserName.value);
         const location = DOMPurify.sanitize(elLocation.value);
         
         if (!userName || !location) return UI.showToast("Vul naam en locatie in!");
+
+        // Check: Eigen verklaring
+        if (!elDeclaration.checked) {
+            return UI.showToast("⚠️ Je moet verklaren dat je de LMRA naar waarheid hebt ingevuld.");
+        }
         
+        // Check: Buddy logica
         if (elBuddyToggle.checked) {
             const buddyName = DOMPurify.sanitize(elBuddyName.value);
+            
             if (!buddyName) return UI.showToast("Naam van buddy is verplicht!");
-            if (!elBuddySig.checked) return UI.showToast("Buddy moet de verklaring aanvinken!");
+            if (!elBuddySig.checked) return UI.showToast("⚠️ Buddy moet de verklaring aanvinken!");
         }
         
         if (!FormService.validate()) return;
@@ -157,7 +167,7 @@ export const App = {
         const result = await Database.submitReport(report);
 
         if (isSafe) {
-            await SessionService.startSession(userName, location, report.werkorder);
+            await SessionService.startSession(userName, location, report.werkorder, report.report_id);
         }
 
         UI.setLoading('submitBtn', false, "Beoordeel Veiligheid");

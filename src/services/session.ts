@@ -1,17 +1,20 @@
 /* src/services/session.ts */
 import { UI } from '../ui';
 import { SecureStorage } from '../security';
-import { ACTIVE_SESSION_KEY } from '../config';
+import { ACTIVE_SESSION_KEY, HISTORY_KEY } from '../config'; // HISTORY_KEY toegevoegd
+import { LMRAReport } from '../database'; // Type import toegevoegd
 
 interface StoredSession {
     date: string;
     name: string;
     task: string;
     wo: string;
+    reportId?: string; // NIEUW: We moeten weten welk rapport bij deze sessie hoort
 }
 
 export const SessionService = {
     timerInterval: null as number | null,
+    currentReportId: null as string | null, // NIEUW: Lokale state
 
     setDefaultTimes(): void {
         const now = new Date();
@@ -20,8 +23,6 @@ export const SessionService = {
         const elStart = document.getElementById('timeStart') as HTMLInputElement;
         const elEnd = document.getElementById('timeEnd') as HTMLInputElement;
         
-        // AANGEPAST: We overschrijven altijd de waarde, zodat bij een stop/reset de tijd actueel is.
-        // Oude code had: if(elStart && !elStart.value) ...
         if(elStart) elStart.value = now.toTimeString().slice(0,5);
         if(elEnd) elEnd.value = end.toTimeString().slice(0,5);
     },
@@ -39,14 +40,17 @@ export const SessionService = {
         
         if (session && validUntilStr) {
             if (session.date === new Date().toDateString()) {
-                // Herstel formulier data
                 const uName = document.getElementById('userName') as HTMLInputElement; 
                 const tLoc = document.getElementById('taskLocation') as HTMLInputElement; 
                 const wOrd = document.getElementById('workOrder') as HTMLInputElement;
+                
                 if(uName) uName.value = session.name || '';
                 if(tLoc) tLoc.value = session.task || '';
                 if(wOrd) wOrd.value = session.wo || '';
                 
+                // NIEUW: Herstel het ID
+                if(session.reportId) this.currentReportId = session.reportId;
+
                 this.activateLockedSession(new Date(validUntilStr));
             } else {
                 this.cancelResume(onReset);
@@ -102,12 +106,33 @@ export const SessionService = {
         this.timerInterval = setInterval(updateTimer, 1000);
     },
 
-    confirmResume(): void {
+    // NIEUW: Deze functie update nu ook de historie
+    async confirmResume(): Promise<void> {
         const newEnd = new Date(Date.now() + 4*60*60*1000);
-        SecureStorage.set('lmra_valid_until', newEnd.toISOString()).then(() => {
-            UI.showToast("✅ Werkzaamheden verlengd (+4 uur)");
-            this.activateLockedSession(newEnd);
-        });
+        
+        // 1. Update Sessie Validatie
+        await SecureStorage.set('lmra_valid_until', newEnd.toISOString());
+
+        // 2. Update Historie (De Fix)
+        if (this.currentReportId) {
+            try {
+                const history = await SecureStorage.get(HISTORY_KEY) as LMRAReport[] || [];
+                const reportIndex = history.findIndex(r => r.report_id === this.currentReportId);
+                
+                if (reportIndex !== -1) {
+                    // Update de tijd in de historie array
+                    history[reportIndex].valid_until = newEnd.toISOString();
+                    // Sla de hele array weer beveiligd op
+                    await SecureStorage.set(HISTORY_KEY, history);
+                    console.log("✅ Historie bijgewerkt met nieuwe eindtijd");
+                }
+            } catch (e) {
+                console.error("Kon historie niet updaten", e);
+            }
+        }
+
+        UI.showToast("✅ Werkzaamheden verlengd (+4 uur)");
+        this.activateLockedSession(newEnd);
     },
 
     cancelResume(onReset: () => void): void {
@@ -115,6 +140,8 @@ export const SessionService = {
         SecureStorage.remove(ACTIVE_SESSION_KEY);
         SecureStorage.remove('lmra_valid_until');
         
+        this.currentReportId = null; // Reset ID
+
         UI.toggleElement('resumeBar', false);
         UI.toggleElement('pauseAlert', false);
         UI.toggleElement('submitBtn', true);
@@ -123,14 +150,17 @@ export const SessionService = {
         onReset();
     },
 
-    async startSession(name: string, location: string, wo: string): Promise<void> {
+    // AANGEPAST: Accepteert nu ook reportId
+    async startSession(name: string, location: string, wo: string, reportId: string): Promise<void> {
         const validUntil = new Date(Date.now() + 4*60*60*1000);
+        this.currentReportId = reportId;
         
         await SecureStorage.set(ACTIVE_SESSION_KEY, { 
             date: new Date().toDateString(), 
             name: name, 
             task: location, 
-            wo: wo 
+            wo: wo,
+            reportId: reportId // Opslaan
         });
         await SecureStorage.set('lmra_valid_until', validUntil.toISOString());
         
