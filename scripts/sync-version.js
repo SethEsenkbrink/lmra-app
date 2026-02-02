@@ -25,11 +25,9 @@ if (fs.existsSync(manifestPath)) {
 }
 
 // 3. Update sw.js (Cache Naam)
-// Dit is CRUCIAAL: als dit niet gebeurt, zien gebruikers de nieuwe versie niet
 const swPath = path.join(rootDir, 'public/sw.js');
 if (fs.existsSync(swPath)) {
     let swContent = fs.readFileSync(swPath, 'utf8');
-    // Vervang de cache-naam regel
     swContent = swContent.replace(
         /const CACHE_NAME = 'lmra-sentinel-v.*';/, 
         `const CACHE_NAME = 'lmra-sentinel-v${newVersion}';`
@@ -43,25 +41,21 @@ const indexPath = path.join(rootDir, 'index.html');
 if (fs.existsSync(indexPath)) {
     let htmlContent = fs.readFileSync(indexPath, 'utf8');
     
-    // Update Title tag
     htmlContent = htmlContent.replace(
         /<title>LMRA Pro .*<\/title>/,
         `<title>LMRA Pro ${newVersion}</title>`
     );
     
-    // Update Header tekst (v... - Sentinel Safe)
     htmlContent = htmlContent.replace(
         /v\d+\.\d+(\.\d+)? - Sentinel Safe/,
         `v${newVersion} - Sentinel Safe`
     );
 
-    // Update Footer tekst
     htmlContent = htmlContent.replace(
         /LMRA Pro v\d+\.\d+(\.\d+)? &bull;/,
         `LMRA Pro v${newVersion} &bull;`
     );
     
-    // Update de tekst in de update modal
     htmlContent = htmlContent.replace(
         /Update: v\d+\.\d+(\.\d+)? Sentinel/,
         `Update: v${newVersion} Sentinel`
@@ -69,6 +63,21 @@ if (fs.existsSync(indexPath)) {
 
     fs.writeFileSync(indexPath, htmlContent);
     console.log('✅ index.html bijgewerkt');
+}
+
+// 5. NIEUW: Update src/config.ts (De interne app logica)
+const configPath = path.join(rootDir, 'src/config.ts');
+if (fs.existsSync(configPath)) {
+    let configContent = fs.readFileSync(configPath, 'utf8');
+    
+    // Zoek naar: export const APP_VERSION = '...';
+    configContent = configContent.replace(
+        /export const APP_VERSION = '.*';/,
+        `export const APP_VERSION = '${newVersion}';`
+    );
+    
+    fs.writeFileSync(configPath, configContent);
+    console.log('✅ src/config.ts bijgewerkt');
 }
 
 console.log(`🎉 Versie synchronisatie naar v${newVersion} voltooid!`);
