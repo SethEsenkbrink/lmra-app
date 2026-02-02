@@ -31,9 +31,14 @@ export const PDFService = {
             const DANGER_COLOR = { r: 220, g: 38, b: 38 };  // Red 600
             const DANGER_BG = { r: 254, g: 242, b: 242 };   // Red 50
 
-            // 2. Logo inladen
+            // 2. Logo inladen (Veilig)
             const logoUrl = '/icon-192.png';
-            const logoImg = await this.loadImage(logoUrl);
+            let logoImg: HTMLImageElement | null = null;
+            try {
+                logoImg = await this.loadImage(logoUrl);
+            } catch (e) {
+                console.warn("Logo kon niet geladen worden, doorgaan zonder logo.");
+            }
 
             // --- HEADER SECTIE ---
             // Blauwe balk
@@ -42,7 +47,11 @@ export const PDFService = {
 
             // Logo linksboven
             if (logoImg) {
-                doc.addImage(logoImg, 'PNG', 10, 5, 25, 25);
+                try {
+                    doc.addImage(logoImg, 'PNG', 10, 5, 25, 25);
+                } catch (imgErr) {
+                    console.warn("Fout bij plaatsen logo:", imgErr);
+                }
             }
 
             // Titel & Subtitel
@@ -85,7 +94,9 @@ export const PDFService = {
             const dateCreated = new Date(report.created_at);
             const dateValid = new Date(report.valid_until);
 
-            // We gebruiken autoTable om een strakke layout te maken zonder zichtbare tabel-lijnen
+            // Variabele om de eind-Y positie van de tabel veilig op te vangen
+            let finalY_Project = yPos;
+
             autoTable(doc, {
                 startY: yPos,
                 theme: 'grid',
@@ -114,11 +125,15 @@ export const PDFService = {
                 columnStyles: {
                     0: { cellWidth: 110 },
                     1: { cellWidth: 'auto' }
+                },
+                // VEILIGE MANIER: Gebruik de hook om de positie te bepalen
+                didDrawPage: (data: any) => {
+                    finalY_Project = data.cursor.y;
                 }
             });
 
-            // @ts-ignore
-            yPos = doc.lastAutoTable.finalY + 15;
+            // Update yPos veilig
+            yPos = finalY_Project + 15;
 
             // --- RESULTATEN ---
             doc.setFontSize(12);
@@ -156,6 +171,8 @@ export const PDFService = {
                 // Rode tabel voor afkeurpunten
                 const afkeurpunten = JSON.parse(report.afkeurpunten || "[]");
                 const rows = afkeurpunten.map((p: string) => [p]);
+                
+                let finalY_Risks = yPos;
 
                 autoTable(doc, {
                     startY: yPos,
@@ -174,10 +191,13 @@ export const PDFService = {
                     }, 
                     alternateRowStyles: {
                         fillColor: [DANGER_BG.r, DANGER_BG.g, DANGER_BG.b]
+                    },
+                    didDrawPage: (data: any) => {
+                        finalY_Risks = data.cursor.y;
                     }
                 });
-                 // @ts-ignore
-                yPos = doc.lastAutoTable.finalY + 15;
+                
+                yPos = finalY_Risks + 15;
             }
 
             // --- OPMERKINGEN ---
@@ -237,7 +257,8 @@ export const PDFService = {
         } catch (err: any) {
             console.error("PDF Error:", err);
             UI.showToast("❌ Fout bij genereren PDF");
-            alert("Fout details: " + err.message);
+            // Verbeterde foutmelding voor de gebruiker
+            alert("Er ging iets mis bij het maken van de PDF. \nDetails: " + (err.message || "Onbekende fout"));
         } finally {
             UI.setLoading('btnGeneratePDF', false, "Download PDF");
         }
@@ -245,13 +266,15 @@ export const PDFService = {
 
     // Hulpfunctie om plaatjes te laden (No-Crash versie)
     loadImage(url: string): Promise<HTMLImageElement> {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const img = new Image();
             img.src = url;
             img.onload = () => resolve(img);
             img.onerror = (e) => {
-                console.warn("Kon logo niet laden voor PDF", e);
-                resolve(img); 
+                // We rejecten niet hard, maar loggen warning en geven resolve(img) zodat de rest doorgaat
+                // Of we kunnen rejecten en opvangen in de try/catch hierboven.
+                // In dit geval rejecten we om het netjes af te handelen in de main flow.
+                reject(e); 
             };
         });
     }
