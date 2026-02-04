@@ -2,7 +2,8 @@
 export default {
   darkMode: 'class',
   content: [
-    "./index.html",
+    "./index.html",  // De nieuwe landingspagina
+    "./app.html",    // <--- DEZE ONTSTRAK: De applicatie zelf!
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
