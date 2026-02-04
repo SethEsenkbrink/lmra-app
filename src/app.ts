@@ -11,6 +11,7 @@ import { AuthService } from './services/auth';
 import { CloudAuthService } from './services/cloud-auth';
 import { SessionService } from './services/session';
 import { FormService } from './services/form';
+import { RELEASE_INFO } from './release';
 
 interface AppState {
     viewingReport: LMRAReport | null;
@@ -402,13 +403,42 @@ export const App = {
 
     checkChangelog(): void {
         const storedVersion = localStorage.getItem('lmra_version');
-        if (storedVersion !== APP_VERSION) {
+        
+        // Check: Is de versie veranderd OF forceren we de melding?
+        if (storedVersion !== APP_VERSION || RELEASE_INFO.forceShow) {
+            
+            // 1. Vul de gegevens in de UI
+            const elVersion = document.getElementById('updateVersionDisplay');
+            const elTitle = document.getElementById('updateTitleDisplay');
+            const elList = document.getElementById('updateListDisplay');
+
+            if (elVersion) elVersion.innerText = `v${APP_VERSION}`;
+            if (elTitle) elTitle.innerText = RELEASE_INFO.title;
+            
+            if (elList) {
+                // Maak de lijst leeg en vul opnieuw
+                elList.innerHTML = '';
+                RELEASE_INFO.features.forEach(feature => {
+                    const li = document.createElement('li');
+                    li.textContent = feature;
+                    elList.appendChild(li);
+                });
+            }
+
+            // 2. Toon de modal
             UI.toggleElement('updateModal', true);
+
+            // 3. Koppel de sluit-knop
             const btn = document.getElementById('btnCloseUpdateModal');
-            if(btn) btn.onclick = () => { localStorage.setItem('lmra_version', APP_VERSION); UI.toggleElement('updateModal', false); };
+            if(btn) {
+                btn.onclick = () => { 
+                    // Sla op dat de gebruiker deze versie gezien heeft
+                    localStorage.setItem('lmra_version', APP_VERSION); 
+                    UI.toggleElement('updateModal', false); 
+                };
+            }
         }
     },
-
     toggleTheme(): void {
         document.documentElement.classList.toggle('dark');
     }
