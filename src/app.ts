@@ -1,4 +1,4 @@
-/* src/app.ts - v9.8.5 (Fix: Timer Reset & Archive Update) */
+/* src/app.ts - v9.8.5 (Updated: Status Indicator & Version Fix) */
 import { UI } from './ui';
 import { Database, LMRAReport, supabase } from './database';
 import { SecureStorage } from './security';
@@ -25,8 +25,11 @@ export const App = {
         console.log(`LMRA Pro v${APP_VERSION} Init...`);
         this.attachEventListeners();
         this.checkChangelog();
-        
+        this.updateConnectionStatus(); // <--- NIEUW: Check direct bij start
+
         supabase.auth.onAuthStateChange(async (event) => {
+            this.updateConnectionStatus(); // <--- NIEUW: Update bij login/logout
+            
             if (event === 'PASSWORD_RECOVERY') {
                 console.log("🔓 Wachtwoord herstel modus geactiveerd!");
                 UI.toggleElement('cloudLoginModal', false);
@@ -54,15 +57,50 @@ export const App = {
         } else {
             CloudAuthService.showLogin(() => {
                 this.startLocalSecurity();
+                this.updateConnectionStatus(); // <--- NIEUW: Update na inloggen
             });
         }
         
         window.addEventListener('online', () => {
+            this.updateConnectionStatus(); // <--- NIEUW: Update bij herstel
             UI.showToast("Verbinding hersteld. Synchroniseren...");
             Database.processSyncQueue().then(res => {
                 if(res.processed > 0) UI.showToast(`✅ ${res.processed} rapporten verzonden!`);
             });
         });
+
+        // <--- NIEUW: Listener voor offline gaan
+        window.addEventListener('offline', () => {
+            this.updateConnectionStatus();
+            UI.showToast("⚠️ Geen internetverbinding. Offline modus.");
+        });
+    },
+
+    // --- NIEUW: Status Indicator Logica ---
+    // Deze functie controleert internet + database rechten en toont dit in de header
+    async updateConnectionStatus(): Promise<void> {
+        const el = document.getElementById('cloudStatus');
+        if (!el) return;
+
+        // Reset classes
+        el.classList.remove('hidden', 'bg-red-500', 'bg-green-500', 'bg-yellow-500', 'text-white');
+        
+        // 1. Check Internet
+        if (!navigator.onLine) {
+            el.className = "text-[10px] font-bold px-2 py-1 bg-red-500 text-white rounded flex items-center gap-1 shadow-sm";
+            el.innerHTML = '<i class="fa-solid fa-wifi"></i> Offline';
+            return;
+        }
+
+        // 2. Check Auth (Rechten)
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+            el.className = "text-[10px] font-bold px-2 py-1 bg-green-500 text-white rounded flex items-center gap-1 shadow-sm";
+            el.innerHTML = '<i class="fa-solid fa-cloud"></i> Verbonden';
+        } else {
+            el.className = "text-[10px] font-bold px-2 py-1 bg-yellow-500 text-white rounded flex items-center gap-1 shadow-sm";
+            el.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Niet Ingelogd';
+        }
     },
 
     startLocalSecurity(): void {
@@ -110,7 +148,7 @@ export const App = {
         });
     },
 
-        async handleSubmit(): Promise<void> {
+    async handleSubmit(): Promise<void> {
         const honeypot = document.getElementById('contact_email') as HTMLInputElement;
         if (honeypot && honeypot.value !== "") return;
 
