@@ -1,28 +1,31 @@
 /* public/sw.js - LMRA Pro v9.8 Sentinel */
 
-const CACHE_NAME = 'lmra-sentinel-v9.8.4';
+// Let op: De versie wordt automatisch geüpdatet door je build script, 
+// maar het is goed om hier vast de structuur correct te hebben.
+const CACHE_NAME = 'lmra-sentinel-v9.8.5';
+
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
+  '/',                // De landingspagina (Voor marketing offline)
+  '/index.html',      // Expliciete verwijzing naar landing
+  '/app.html',        // <--- CRUCIAAL: DE APPLICATIE ZELF (Dit ontbrak!)
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'
-  // Vite bouwt de JS/CSS bestanden met hash-namen (bv index-a1b2.js).
-  // De 'fetch' handler hieronder zal die automatisch cachen zodra ze bezocht worden.
+  // Vite assets (JS/CSS) worden automatisch gecached door de 'fetch' handler hieronder
 ];
 
-// 1. Installatie: Cache de basis bestanden
+// 1. Installatie: Cache de basis bestanden (Nu inclusief app.html!)
 self.addEventListener('install', (event) => {
   self.skipWaiting(); // Forceer direct activeren
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[ServiceWorker] Caching core assets');
+      console.log('[ServiceWorker] Caching core assets (Landing + App)');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
 });
 
-// 2. Activatie: Ruim oude caches op (Cruciaal voor versie updates!)
+// 2. Activatie: Ruim oude caches op
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keyList) => {
@@ -39,9 +42,9 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-// 3. Fetch: Network First, falling back to Cache (Veiligste voor updates)
+// 3. Fetch: Network First, falling back to Cache
 self.addEventListener('fetch', (event) => {
-  // Negeer API calls naar Supabase (die moeten live zijn of via database.ts queue gaan)
+  // Negeer API calls naar Supabase
   if (event.request.url.includes('supabase.co')) {
     return;
   }
@@ -49,7 +52,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Als we online zijn: return response EN stop hem in de cache voor later
+        // Als we online zijn: return response EN update de cache
         if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }

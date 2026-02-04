@@ -7,13 +7,17 @@ const packageJson = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 
 const version = packageJson.version;
 
 export default defineConfig({
-  // Hier definiëren we globale constanten die tijdens de build worden vervangen
   define: {
     __APP_VERSION__: JSON.stringify(version),
   },
   build: {
-    // Zorgt voor schone builds in de 'dist' map
     outDir: 'dist',
     emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'), // De nieuwe Landingspagina
+        app: resolve(__dirname, 'app.html')     // De bestaande LMRA App
+      }
+    }
   }
 });
