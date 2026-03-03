@@ -2,17 +2,18 @@
 // DIT IS HET ENIGE BESTAND DAT JE AANPAST VOOR DE MELDING NA EEN UPDATE
 
 export const RELEASE_INFO = {
-    // Titel van de update (bijv. "Sentinel Security Patch" of "Feature Update")
-    title: "Sentinel Security Patch & Dynamic UI",
+    // Titel van de update
+    title: "UI Overhaul & Slimme Timer Update",
     
-    // De bullet points die de gebruiker ziet
+    // De bullet points die de gebruiker (de monteur) ziet in de pop-up
     features: [
-        "Dynamische update meldingen geïmplementeerd",
-        "Verbeterde stabiliteit bij offline gebruik",
-        "Performance optimalisatie database verbinding"
+        "Nieuw overzichtelijk zijmenu toegevoegd voor snellere navigatie",
+        "Timer bug gefixt: berekening klopt nu altijd, ook bij nachtdiensten",
+        "Informatie & Roadmap pagina toegevoegd om onze visie te delen",
+        "Update-geschiedenis is vanaf nu altijd handmatig terug te lezen via het menu"
     ],
 
-    // Belangrijk: Als dit true is, wordt de gebruiker gedwongen de update te zien
-    // zelfs als ze hem al eens hebben weggeklikt (alleen bij kritieke bugs)
-    forceShow: false
+    // Belangrijk: Omdat de knoppen zijn verplaatst naar een nieuw menu,
+    // dwingen we deze pop-up eenmalig af bij alle gebruikers zodat ze op de hoogte zijn.
+    forceShow: true
 };

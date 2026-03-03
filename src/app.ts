@@ -120,8 +120,30 @@ export const App = {
 
     attachEventListeners(): void {
         document.getElementById('submitBtn')?.addEventListener('click', () => this.handleSubmit());
-        document.getElementById('btnResetApp')?.addEventListener('click', () => this.resetForm(true));
-        document.getElementById('btnToggleTheme')?.addEventListener('click', () => this.toggleTheme());
+        
+        // --- NIEUWE MENU EVENT LISTENERS ---
+        document.getElementById('btnOpenMenu')?.addEventListener('click', () => UI.toggleElement('menuModal', true));
+        document.getElementById('btnCloseMenu')?.addEventListener('click', () => UI.toggleElement('menuModal', false));
+        document.getElementById('btnShowUpdates')?.addEventListener('click', () => {
+            UI.toggleElement('menuModal', false); // Sluit menu eerst netjes
+            this.forceShowChangelog(); // Open de update modal handmatig
+        });
+
+        // Bestaande reset functionaliteit, nu met toevoeging dat eventueel het menu sluit
+        document.getElementById('btnResetApp')?.addEventListener('click', () => {
+            UI.toggleElement('menuModal', false);
+            this.resetForm(true);
+        });
+        
+        document.getElementById('btnToggleTheme')?.addEventListener('click', () => {
+            UI.toggleElement('menuModal', false);
+            this.toggleTheme();
+        });
+        
+        // NIEUW: Navigeer bewust terug naar de landingspagina voor info
+        document.getElementById('btnBackToInfo')?.addEventListener('click', () => {
+            window.location.href = '/?info=true';
+        });
         
         document.getElementById('btnLogOut')?.addEventListener('click', () => CloudAuthService.signOut());
         
@@ -163,6 +185,9 @@ export const App = {
         const elBuddyName = document.getElementById('buddyName') as HTMLInputElement;     
         const elBuddySig = document.getElementById('buddySignature') as HTMLInputElement; 
         const elDeclaration = document.getElementById('declarationCheck') as HTMLInputElement; // Nieuw toegevoegd
+        
+        // NIEUW: Haal de opgegeven eindtijd op
+        const elTimeEnd = document.getElementById('timeEnd') as HTMLInputElement;
 
         // 2. DAARNA PAS GEBRUIKEN (Logica)
         const userName = DOMPurify.sanitize(elUserName.value);
@@ -189,6 +214,20 @@ export const App = {
 
         const { isSafe, failedPoints } = FormService.getReportData();
 
+        // Dynamische tijdsberekening gebaseerd op input timeEnd
+        const now = new Date();
+        let validUntilDate = new Date(now.getTime() + 4 * 60 * 60 * 1000); // Standaard 4 uur fallback
+
+        if (elTimeEnd && elTimeEnd.value) {
+            const [endHours, endMinutes] = elTimeEnd.value.split(':').map(Number);
+            validUntilDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHours, endMinutes, 0);
+            
+            // Als de gekozen eindtijd vóór het huidige moment ligt, is de shift over middernacht gegaan
+            if (validUntilDate < now) {
+                validUntilDate.setDate(validUntilDate.getDate() + 1);
+            }
+        }
+
         const buddyInfo = elBuddyToggle.checked ? ` (Buddy: ${DOMPurify.sanitize(elBuddyName.value)})` : "";
         const report: LMRAReport = {
             report_id: crypto.randomUUID(),
@@ -198,15 +237,16 @@ export const App = {
             is_veilig: isSafe,
             opmerkingen: DOMPurify.sanitize(elComments.value),
             afkeurpunten: JSON.stringify(failedPoints),
-            created_at: new Date().toISOString(),
-            valid_until: new Date(Date.now() + 4*60*60*1000).toISOString()
+            created_at: now.toISOString(),
+            valid_until: validUntilDate.toISOString() // Nu dynamisch!
         };
 
         await this.saveToHistory(report);
         const result = await Database.submitReport(report);
 
         if (isSafe) {
-            await SessionService.startSession(userName, location, report.werkorder, report.report_id);
+            // Geef de berekende tijd correct door aan sessie start
+            await SessionService.startSession(userName, location, report.werkorder, report.report_id, report.valid_until);
         }
 
         UI.setLoading('submitBtn', false, "Beoordeel Veiligheid");
@@ -401,32 +441,37 @@ export const App = {
         SessionService.setDefaultTimes();
     },
 
+    // --- NIEUWE FUNCTIE OM HANDMATIG DE UPDATE MODAL TE VULLEN ---
+    forceShowChangelog(): void {
+        // 1. Vul de gegevens in de UI
+        const elVersion = document.getElementById('updateVersionDisplay');
+        const elTitle = document.getElementById('updateTitleDisplay');
+        const elList = document.getElementById('updateListDisplay');
+
+        if (elVersion) elVersion.innerText = `v${APP_VERSION}`;
+        if (elTitle) elTitle.innerText = RELEASE_INFO.title;
+        
+        if (elList) {
+            // Maak de lijst leeg en vul opnieuw
+            elList.innerHTML = '';
+            RELEASE_INFO.features.forEach(feature => {
+                const li = document.createElement('li');
+                li.textContent = feature;
+                elList.appendChild(li);
+            });
+        }
+
+        // 2. Toon de modal
+        UI.toggleElement('updateModal', true);
+    },
+
     checkChangelog(): void {
         const storedVersion = localStorage.getItem('lmra_version');
         
         // Check: Is de versie veranderd OF forceren we de melding?
         if (storedVersion !== APP_VERSION || RELEASE_INFO.forceShow) {
             
-            // 1. Vul de gegevens in de UI
-            const elVersion = document.getElementById('updateVersionDisplay');
-            const elTitle = document.getElementById('updateTitleDisplay');
-            const elList = document.getElementById('updateListDisplay');
-
-            if (elVersion) elVersion.innerText = `v${APP_VERSION}`;
-            if (elTitle) elTitle.innerText = RELEASE_INFO.title;
-            
-            if (elList) {
-                // Maak de lijst leeg en vul opnieuw
-                elList.innerHTML = '';
-                RELEASE_INFO.features.forEach(feature => {
-                    const li = document.createElement('li');
-                    li.textContent = feature;
-                    elList.appendChild(li);
-                });
-            }
-
-            // 2. Toon de modal
-            UI.toggleElement('updateModal', true);
+            this.forceShowChangelog();
 
             // 3. Koppel de sluit-knop
             const btn = document.getElementById('btnCloseUpdateModal');
@@ -437,8 +482,15 @@ export const App = {
                     UI.toggleElement('updateModal', false); 
                 };
             }
+        } else {
+            // Zorg dat de sluit-knop ook werkt als de gebruiker het handmatig opent via het menu
+            const btn = document.getElementById('btnCloseUpdateModal');
+            if(btn) {
+                btn.onclick = () => UI.toggleElement('updateModal', false);
+            }
         }
     },
+
     toggleTheme(): void {
         document.documentElement.classList.toggle('dark');
     }

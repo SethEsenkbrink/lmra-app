@@ -12,6 +12,14 @@ interface StoredSession {
     reportId?: string; // NIEUW: We moeten weten welk rapport bij deze sessie hoort
 }
 
+// FIX: Throttling voorkomen door update af te dwingen als de app weer in beeld komt
+document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible' && SessionService.timerInterval) {
+        const validUntilStr = await SecureStorage.get('lmra_valid_until') as string;
+        if (validUntilStr) SessionService.activateLockedSession(new Date(validUntilStr));
+    }
+});
+
 export const SessionService = {
     timerInterval: null as number | null,
     currentReportId: null as string | null, // NIEUW: Lokale state
@@ -39,7 +47,11 @@ export const SessionService = {
         const validUntilStr = await SecureStorage.get('lmra_valid_until') as string | null;
         
         if (session && validUntilStr) {
-            if (session.date === new Date().toDateString()) {
+            const validUntil = new Date(validUntilStr);
+            const now = new Date();
+
+            // FIX: Geen dag string vergelijken meer (Voorkomt de Midnight bug). Check uitsluitend of eindtijd > nu is.
+            if (validUntil > now) {
                 const uName = document.getElementById('userName') as HTMLInputElement; 
                 const tLoc = document.getElementById('taskLocation') as HTMLInputElement; 
                 const wOrd = document.getElementById('workOrder') as HTMLInputElement;
@@ -51,7 +63,7 @@ export const SessionService = {
                 // NIEUW: Herstel het ID
                 if(session.reportId) this.currentReportId = session.reportId;
 
-                this.activateLockedSession(new Date(validUntilStr));
+                this.activateLockedSession(validUntil);
             } else {
                 this.cancelResume(onReset);
             }
@@ -106,9 +118,9 @@ export const SessionService = {
         this.timerInterval = setInterval(updateTimer, 1000);
     },
 
-    // NIEUW: Deze functie update nu ook de historie
+    // NIEUW: Deze functie update nu ook de historie en verlengt met 2 uur ipv 4
     async confirmResume(): Promise<void> {
-        const newEnd = new Date(Date.now() + 4*60*60*1000);
+        const newEnd = new Date(Date.now() + 2*60*60*1000); // 2 uur verlenging voor een vlottere flow
         
         // 1. Update Sessie Validatie
         await SecureStorage.set('lmra_valid_until', newEnd.toISOString());
@@ -131,7 +143,7 @@ export const SessionService = {
             }
         }
 
-        UI.showToast("✅ Werkzaamheden verlengd (+4 uur)");
+        UI.showToast("✅ Werkzaamheden verlengd (+2 uur)");
         this.activateLockedSession(newEnd);
     },
 
@@ -150,12 +162,13 @@ export const SessionService = {
         onReset();
     },
 
-    // AANGEPAST: Accepteert nu ook reportId
-    async startSession(name: string, location: string, wo: string, reportId: string): Promise<void> {
-        const validUntil = new Date(Date.now() + 4*60*60*1000);
+    // AANGEPAST: Accepteert nu ook de berekende validUntil string van de input
+    async startSession(name: string, location: string, wo: string, reportId: string, validUntilStr: string): Promise<void> {
+        const validUntil = new Date(validUntilStr);
         this.currentReportId = reportId;
         
         await SecureStorage.set(ACTIVE_SESSION_KEY, { 
+            // Datum hier is nu puur voor referentie, validatie loopt op de ISO string
             date: new Date().toDateString(), 
             name: name, 
             task: location, 
