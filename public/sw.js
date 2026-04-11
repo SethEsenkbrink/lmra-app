@@ -2,7 +2,7 @@
 
 // Let op: De versie wordt automatisch geüpdatet door je build script, 
 // maar het is goed om hier vast de structuur correct te hebben.
-const CACHE_NAME = 'lmra-sentinel-v9.8.9';
+const CACHE_NAME = 'lmra-sentinel-v9.8.10';
 
 const ASSETS_TO_CACHE = [
   '/',                // De landingspagina (Voor marketing offline)
