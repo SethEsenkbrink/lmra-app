@@ -2,24 +2,28 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { SUPABASE_URL, SUPABASE_ANON_KEY, SYNC_QUEUE_KEY } from './config';
 import { SecureStorage } from './security';
+import { z } from 'zod';
 
-// Interface voor het rapport - De strikte blauwdruk
-export interface LMRAReport {
-    report_id: string;
-    monteur_naam: string;
-    locatie: string;
-    werkorder: string;
-    is_veilig: boolean;
-    opmerkingen: string;
-    afkeurpunten: string; // JSON string
-    created_at: string;
-    valid_until: string;
-}
+// Zod Schema voor validatie
+const LMRAReportSchema = z.object({
+    report_id: z.string().uuid(),
+    monteur_naam: z.string().min(1, "Naam is verplicht"),
+    locatie: z.string().min(1, "Locatie is verplicht"),
+    werkorder: z.string(),
+    is_veilig: z.boolean(),
+    opmerkingen: z.string(),
+    afkeurpunten: z.string(), // Moet een valide JSON string zijn, maar z.string() is voor nu ok
+    created_at: z.string().datetime(),
+    valid_until: z.string().datetime()
+});
+
+// Infer het type direct vanuit Zod
+export type LMRAReport = z.infer<typeof LMRAReportSchema>;
 
 // Return types voor database acties
 interface SubmitResult {
     success: boolean;
-    status: 'cloud' | 'cloud_duplicate' | 'queued' | 'error';
+    status: 'cloud' | 'cloud_duplicate' | 'queued' | 'error' | 'validation_error';
     reason?: string;
     error?: any;
 }
@@ -37,17 +41,27 @@ export const Database = {
     
     // Hoofdfunctie om een rapport op te slaan
     async submitReport(reportData: LMRAReport): Promise<SubmitResult> {
+        // Stap 0: Validatie met Zod
+        const validation = LMRAReportSchema.safeParse(reportData);
+        if (!validation.success) {
+            console.error("❌ Data validatie mislukt:", validation.error.format());
+            return { success: false, status: 'validation_error', error: validation.error };
+        }
+
+        // Gebruik gevalideerde data
+        const validatedData = validation.data;
+
         // Stap 1: Is er internet?
         if (!navigator.onLine) {
             console.warn("Geen internet. Opslaan in offline wachtrij.");
-            return await this.queueReport(reportData, "Offline");
+            return await this.queueReport(validatedData, "Offline");
         }
 
         try {
             // Stap 2: Probeer direct naar Cloud
             const { error } = await supabase
                 .from('lmra_reports')
-                .insert([reportData]);
+                .insert([validatedData]);
 
             if (error) {
                 // Duplicate key error negeren we (is eigenlijk succes)
@@ -70,7 +84,7 @@ export const Database = {
 
         } catch (error) {
             // Stap 3: Bij cloud-fout, alsnog lokaal opslaan
-            return await this.queueReport(reportData, "Error-Fallback");
+            return await this.queueReport(validatedData, "Error-Fallback");
         }
     },
 

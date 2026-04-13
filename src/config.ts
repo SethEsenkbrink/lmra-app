@@ -1,6 +1,6 @@
 /* src/config.ts */
-export const SUPABASE_URL: string = 'https://zgbxlucbhyyrfwxqdntg.supabase.co'; 
-export const SUPABASE_ANON_KEY: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnYnhsdWNiaHl5cmZ3eHFkbnRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwMzM0NzcsImV4cCI6MjA4MDYwOTQ3N30.fF5S84dxbwLnzC8NIrx8v_CYSRjp_zcHYKC4tb8HPnE'; 
+export const SUPABASE_URL: string = import.meta.env.VITE_SUPABASE_URL; 
+export const SUPABASE_ANON_KEY: string = import.meta.env.VITE_SUPABASE_ANON_KEY; 
 
 // DIT IS NIEUW: Versie komt nu automatisch uit de build pipeline via vite.config.ts
 export const APP_VERSION: string = __APP_VERSION__;

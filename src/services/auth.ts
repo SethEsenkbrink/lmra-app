@@ -2,6 +2,9 @@
 import { UI } from '../ui';
 import { CryptoManager, SecureStorage } from '../security';
 import { SECURITY_CHECK_KEY } from '../config';
+import { get, set } from 'idb-keyval';
+
+const ATTEMPTS_KEY = 'lmra_failed_attempts_idb';
 
 export const AuthService = {
     async init(onUnlock: () => void): Promise<void> {
@@ -35,7 +38,7 @@ export const AuthService = {
         });
     },
 
-    startSetupFlow(): void {
+    async startSetupFlow(): Promise<void> {
         UI.toggleElement('pinModal', true);
         UI.toggleElement('setupMode', true);
         const title = document.getElementById('pinTitle');
@@ -46,7 +49,7 @@ export const AuthService = {
         if(desc) desc.innerText = "Kies 6 cijfers";
         if(btn) btn.innerText = "Instellen & Starten";
         
-        localStorage.setItem('lmra_failed_attempts', '0');
+        await set(ATTEMPTS_KEY, 0);
     },
 
     startUnlockFlow(): void {
@@ -78,7 +81,7 @@ export const AuthService = {
 
         try {
             const storedSalt = localStorage.getItem('lmra_salt');
-            let attempts = parseInt(localStorage.getItem('lmra_failed_attempts') || '0');
+            let attempts = (await get(ATTEMPTS_KEY)) as number || 0;
             if (attempts >= 5) {
                 await this.triggerWipe();
                 throw new Error("SECURITY_LOCKOUT");
@@ -90,12 +93,12 @@ export const AuthService = {
             if (!storedSalt) {
                 localStorage.setItem('lmra_salt', salt);
                 await SecureStorage.set(SECURITY_CHECK_KEY, 'VALID_PIN');
-                localStorage.setItem('lmra_failed_attempts', '0');
+                await set(ATTEMPTS_KEY, 0);
                 onSuccess();
             } else {
                 const check = await SecureStorage.get(SECURITY_CHECK_KEY);
                 if (check === 'VALID_PIN') {
-                    localStorage.setItem('lmra_failed_attempts', '0');
+                    await set(ATTEMPTS_KEY, 0);
                     onSuccess();
                 } else {
                     throw new Error("Verkeerde PIN");
@@ -105,9 +108,9 @@ export const AuthService = {
             console.error(e);
             CryptoManager.key = null;
             if (localStorage.getItem('lmra_salt')) {
-                let attempts = parseInt(localStorage.getItem('lmra_failed_attempts') || '0');
+                let attempts = (await get(ATTEMPTS_KEY)) as number || 0;
                 attempts++;
-                localStorage.setItem('lmra_failed_attempts', attempts.toString());
+                await set(ATTEMPTS_KEY, attempts);
 
                 if(errorMsg) {
                     if (attempts >= 5) {
@@ -132,5 +135,6 @@ export const AuthService = {
     async triggerWipe(): Promise<void> {
         await SecureStorage.wipeEverything();
         localStorage.clear();
+        await set(ATTEMPTS_KEY, 0);
     }
 };

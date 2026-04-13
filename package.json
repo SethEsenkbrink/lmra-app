@@ -26,6 +26,7 @@
     "dompurify": "^3.3.3",
     "idb-keyval": "^6.2.2",
     "jspdf": "^4.2.1",
-    "jspdf-autotable": "^5.0.7"
+    "jspdf-autotable": "^5.0.7",
+    "zod": "^4.3.6"
   }
 }

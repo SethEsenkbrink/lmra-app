@@ -42,31 +42,42 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-// 3. Fetch: Network First, falling back to Cache
+// 3. Fetch: Stale-While-Revalidate voor assets, Network-First voor navigatie
 self.addEventListener('fetch', (event) => {
-  // Negeer API calls naar Supabase
-  if (event.request.url.includes('supabase.co')) {
+  // Negeer API calls naar Supabase of browser extensies
+  if (event.request.url.includes('supabase.co') || event.request.url.startsWith('chrome-extension')) {
     return;
   }
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Als we online zijn: return response EN update de cache
-        if (!response || response.status !== 200 || response.type !== 'basic') {
+  // Voor HTML navigatie (index.html, app.html) behouden we Network-First zodat gebruikers altijd de laatste versie krijgen als ze online zijn
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
           return response;
-        }
-        
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
 
-        return response;
-      })
-      .catch(() => {
-        // Als we offline zijn: probeer de cache
-        return caches.match(event.request);
-      })
+  // Stale-While-Revalidate voor alle andere bestanden (JS, CSS, images)
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      // Haal in de achtergrond altijd een nieuwe op
+      const fetchPromise = fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse.clone()));
+        }
+        return networkResponse;
+      }).catch(() => {
+        // Negeer netwerkfouten tijdens background update
+      });
+
+      // Geef direct cache terug als we die hebben, anders wacht op netwerk
+      return cachedResponse || fetchPromise;
+    })
   );
 });
