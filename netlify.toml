@@ -2,6 +2,10 @@
   command = "npm run build"
   publish = "dist"
 
+[build.environment]
+  VITE_SUPABASE_URL = "https://zgbxlucbhyyrfwxqdntg.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnYnhsdWNiaHl5cmZ3eHFkbnRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwMzM0NzcsImV4cCI6MjA4MDYwOTQ3N30.fF5S84dxbwLnzC8NIrx8v_CYSRjp_zcHYKC4tb8HPnE"
+
 # 1. App Routing: Zorg dat /app netjes naar app.html (de software) gaat
 [[redirects]]
   from = "/app"
