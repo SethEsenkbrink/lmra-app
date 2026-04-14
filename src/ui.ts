@@ -1,5 +1,5 @@
 /* src/ui.ts */
-import DOMPurify from 'dompurify';
+import * as DOMPurify from 'dompurify';
 import { Category } from './data';
 
 // Callbacks types
@@ -13,7 +13,7 @@ export const UI = {
         if(!t || !m) return;
         m.innerText = msg;
         t.style.opacity = '1';
-        setTimeout(() => t.style.opacity = '0', 3000);
+        setTimeout(() => { if(t) t.style.opacity = '0'; }, 3000);
     },
 
     toggleElement(id: string, show: boolean): void {
@@ -48,16 +48,26 @@ export const UI = {
 
     renderCategories(categories: Category[], containerId: string, onAnswer: AnswerCallback, onAction: ActionCallback): void {
         const container = document.getElementById(containerId);
-        if (!container) return;
+        if (!container) {
+            console.error(`Container #${containerId} niet gevonden!`);
+            return;
+        }
+        
         container.innerHTML = '';
+        if (!categories || categories.length === 0) {
+            container.innerHTML = '<div class="p-4 text-center text-red-500 font-bold">Geen vragen geladen.</div>';
+            return;
+        }
+
+        const sanitizer = (DOMPurify as any).default?.sanitize || DOMPurify.sanitize;
 
         categories.forEach(cat => {
             const section = document.createElement('div');
-            section.className = "bg-white dark:bg-cardbg rounded-xl shadow-sm overflow-hidden transition-colors";
+            section.className = "bg-white dark:bg-cardbg rounded-xl shadow-sm overflow-hidden transition-colors mb-6";
             
             section.innerHTML = `
                 <div class="bg-slate-50 dark:bg-slate-800/50 p-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
-                    <i class="fa-solid ${cat.icon} text-[#00447c] dark:text-blue-400"></i>
+                    <i class="fa-solid ${cat.icon || 'fa-question'} text-[#00447c] dark:text-blue-400"></i>
                     <span class="font-bold text-sm text-slate-700 dark:text-slate-300 uppercase">${cat.title}</span>
                 </div>
             `;
@@ -79,15 +89,17 @@ export const UI = {
                 
                 const btnYes = document.createElement('button');
                 btnYes.id = `btn-yes-${q.id}`;
+                btnYes.type = "button";
                 btnYes.className = "py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2";
                 btnYes.innerHTML = '<i class="fa-solid fa-check"></i> JA';
-                btnYes.onclick = () => onAnswer(q.id, 'yes');
+                btnYes.onclick = (e) => { e.preventDefault(); onAnswer(q.id, 'yes'); };
 
                 const btnNo = document.createElement('button');
                 btnNo.id = `btn-no-${q.id}`;
+                btnNo.type = "button";
                 btnNo.className = "py-2.5 rounded-md text-sm font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all flex items-center justify-center gap-2";
                 btnNo.innerHTML = '<i class="fa-solid fa-xmark"></i> NEE';
-                btnNo.onclick = () => onAnswer(q.id, 'no');
+                btnNo.onclick = (e) => { e.preventDefault(); onAnswer(q.id, 'no'); };
 
                 btnGrid.appendChild(btnYes);
                 btnGrid.appendChild(btnNo);
@@ -103,7 +115,7 @@ export const UI = {
                 `;
                 
                 const input = actionBox.querySelector('input') as HTMLInputElement;
-                input.oninput = (e) => onAction(q.id, DOMPurify.sanitize((e.target as HTMLInputElement).value));
+                input.oninput = (e) => onAction(q.id, sanitizer((e.target as HTMLInputElement).value));
 
                 item.appendChild(actionBox);
                 qList.appendChild(item);
@@ -113,4 +125,4 @@ export const UI = {
             container.appendChild(section);
         });
     }
-};
+};;

@@ -3,9 +3,9 @@ import { UI } from './ui';
 import { Database, LMRAReport, supabase } from './database';
 import { SecureStorage } from './security';
 import { HISTORY_KEY, APP_VERSION } from './config';
-import DOMPurify from 'dompurify';
+import * as DOMPurify from 'dompurify';
 
-// Services
+// ... rest van de imports ...
 import { PDFService } from './services/pdf';
 import { AuthService } from './services/auth';
 import { CloudAuthService } from './services/cloud-auth';
@@ -172,6 +172,7 @@ export const App = {
     },
 
     async handleSubmit(): Promise<void> {
+        const sanitizer = (DOMPurify as any).default?.sanitize || DOMPurify.sanitize;
         const honeypot = document.getElementById('contact_email') as HTMLInputElement;
         if (honeypot && honeypot.value !== "") return;
 
@@ -190,22 +191,22 @@ export const App = {
         const elTimeEnd = document.getElementById('timeEnd') as HTMLInputElement;
 
         // 2. DAARNA PAS GEBRUIKEN (Logica)
-        const userName = DOMPurify.sanitize(elUserName.value);
-        const location = DOMPurify.sanitize(elLocation.value);
+        const userName = elUserName ? sanitizer(elUserName.value) : "";
+        const location = elLocation ? sanitizer(elLocation.value) : "";
         
         if (!userName || !location) return UI.showToast("Vul naam en locatie in!");
 
         // Check: Eigen verklaring
-        if (!elDeclaration.checked) {
+        if (elDeclaration && !elDeclaration.checked) {
             return UI.showToast("⚠️ Je moet verklaren dat je de LMRA naar waarheid hebt ingevuld.");
         }
         
         // Check: Buddy logica
-        if (elBuddyToggle.checked) {
-            const buddyName = DOMPurify.sanitize(elBuddyName.value);
+        if (elBuddyToggle && elBuddyToggle.checked) {
+            const buddyName = elBuddyName ? sanitizer(elBuddyName.value) : "";
             
             if (!buddyName) return UI.showToast("Naam van buddy is verplicht!");
-            if (!elBuddySig.checked) return UI.showToast("⚠️ Buddy moet de verklaring aanvinken!");
+            if (elBuddySig && !elBuddySig.checked) return UI.showToast("⚠️ Buddy moet de verklaring aanvinken!");
         }
         
         if (!FormService.validate()) return;
@@ -228,29 +229,35 @@ export const App = {
             }
         }
 
-        const buddyInfo = elBuddyToggle.checked ? ` (Buddy: ${DOMPurify.sanitize(elBuddyName.value)})` : "";
+        const buddyInfo = (elBuddyToggle && elBuddyToggle.checked) ? ` (Buddy: ${sanitizer(elBuddyName.value)})` : "";
         const report: LMRAReport = {
-            report_id: crypto.randomUUID(),
+            report_id: (typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
             monteur_naam: userName + buddyInfo,
             locatie: location,
-            werkorder: DOMPurify.sanitize(elWorkOrder.value) || 'N.v.t.',
+            werkorder: elWorkOrder ? (sanitizer(elWorkOrder.value) || 'N.v.t.') : 'N.v.t.',
             is_veilig: isSafe,
-            opmerkingen: DOMPurify.sanitize(elComments.value),
+            opmerkingen: elComments ? sanitizer(elComments.value) : "",
             afkeurpunten: JSON.stringify(failedPoints),
             created_at: now.toISOString(),
             valid_until: validUntilDate.toISOString() // Nu dynamisch!
         };
 
-        await this.saveToHistory(report);
-        const result = await Database.submitReport(report);
+        try {
+            await this.saveToHistory(report);
+            const result = await Database.submitReport(report);
 
-        if (isSafe) {
-            // Geef de berekende tijd correct door aan sessie start
-            await SessionService.startSession(userName, location, report.werkorder, report.report_id, report.valid_until);
+            if (isSafe) {
+                // Geef de berekende tijd correct door aan sessie start
+                await SessionService.startSession(userName, location, report.werkorder, report.report_id, report.valid_until);
+            }
+
+            UI.setLoading('submitBtn', false, "Beoordeel Veiligheid");
+            this.showResult(isSafe, report, result.status);
+        } catch (error) {
+            console.error("Fout bij verzenden rapport:", error);
+            UI.setLoading('submitBtn', false, "Beoordeel Veiligheid");
+            UI.showToast("❌ Er ging iets mis bij het verzenden.");
         }
-
-        UI.setLoading('submitBtn', false, "Beoordeel Veiligheid");
-        this.showResult(isSafe, report, result.status);
     },
 
     async saveToHistory(report: LMRAReport): Promise<void> {
@@ -260,6 +267,7 @@ export const App = {
         await SecureStorage.set(HISTORY_KEY, history);
     },
 
+    // ... de rest van de functies blijft ongewijzigd ...
     // NIEUWE FUNCTIE: Deze zorgt dat de laatste LMRA als 'verlopen' wordt gemarkeerd in de historie
     async expireLastSessionInHistory(): Promise<void> {
         try {
@@ -408,6 +416,7 @@ export const App = {
 
         let statusText = "";
         if (syncStatus === 'cloud') statusText = "☁️ Opgeslagen in Cloud";
+        else if (syncStatus === 'cloud_duplicate') statusText = "☁️ Reeds opgeslagen in Cloud";
         else if (syncStatus === 'queued') statusText = "💾 Offline Opgeslagen (Wachtrij)";
         else statusText = "⚠️ Lokaal Opgeslagen (Fout)";
 
@@ -425,7 +434,8 @@ export const App = {
             msg.innerText = "Risico's! Pas eerst maatregelen toe.";
         }
 
-        log.innerHTML = `<strong>STATUS: ${statusText}</strong><br>---------------------------<br>Datum: ${new Date().toLocaleString()}<br>Monteur: ${report.monteur_naam}<br>Locatie: ${report.locatie}<br>WO: ${report.werkorder}<br>---------------------------<br>${isSafe ? '✅ Geen afkeurpunten' : '⚠️ <strong>AFKEURPUNTEN:</strong><br>' + JSON.parse(report.afkeurpunten).join('<br>')}`;
+        const afkeurPoints = JSON.parse(report.afkeurpunten || "[]");
+        log.innerHTML = `<strong>STATUS: ${statusText}</strong><br>---------------------------<br>Datum: ${new Date().toLocaleString()}<br>Monteur: ${report.monteur_naam}<br>Locatie: ${report.locatie}<br>WO: ${report.werkorder}<br>---------------------------<br>${isSafe ? '✅ Geen afkeurpunten' : '⚠️ <strong>AFKEURPUNTEN:</strong><br>' + afkeurPoints.join('<br>')}`;
     },
 
     resetForm(askConfirm: boolean): void {
@@ -433,17 +443,19 @@ export const App = {
         
         FormService.reset();
         
-        (document.getElementById('taskLocation') as HTMLInputElement).value = '';
-        (document.getElementById('workOrder') as HTMLInputElement).value = '';
-        (document.getElementById('comments') as HTMLInputElement).value = '';
+        const loc = document.getElementById('taskLocation') as HTMLInputElement;
+        const wo = document.getElementById('workOrder') as HTMLInputElement;
+        const comm = document.getElementById('comments') as HTMLInputElement;
+        
+        if(loc) loc.value = '';
+        if(wo) wo.value = '';
+        if(comm) comm.value = '';
         
         FormService.render('questions-container');
         SessionService.setDefaultTimes();
     },
 
-    // --- NIEUWE FUNCTIE OM HANDMATIG DE UPDATE MODAL TE VULLEN ---
     forceShowChangelog(): void {
-        // 1. Vul de gegevens in de UI
         const elVersion = document.getElementById('updateVersionDisplay');
         const elTitle = document.getElementById('updateTitleDisplay');
         const elList = document.getElementById('updateListDisplay');
@@ -452,7 +464,6 @@ export const App = {
         if (elTitle) elTitle.innerText = RELEASE_INFO.title;
         
         if (elList) {
-            // Maak de lijst leeg en vul opnieuw
             elList.innerHTML = '';
             RELEASE_INFO.features.forEach(feature => {
                 const li = document.createElement('li');
@@ -461,29 +472,21 @@ export const App = {
             });
         }
 
-        // 2. Toon de modal
         UI.toggleElement('updateModal', true);
     },
 
     checkChangelog(): void {
         const storedVersion = localStorage.getItem('lmra_version');
-        
-        // Check: Is de versie veranderd OF forceren we de melding?
         if (storedVersion !== APP_VERSION || RELEASE_INFO.forceShow) {
-            
             this.forceShowChangelog();
-
-            // 3. Koppel de sluit-knop
             const btn = document.getElementById('btnCloseUpdateModal');
             if(btn) {
                 btn.onclick = () => { 
-                    // Sla op dat de gebruiker deze versie gezien heeft
                     localStorage.setItem('lmra_version', APP_VERSION); 
                     UI.toggleElement('updateModal', false); 
                 };
             }
         } else {
-            // Zorg dat de sluit-knop ook werkt als de gebruiker het handmatig opent via het menu
             const btn = document.getElementById('btnCloseUpdateModal');
             if(btn) {
                 btn.onclick = () => UI.toggleElement('updateModal', false);
@@ -494,4 +497,4 @@ export const App = {
     toggleTheme(): void {
         document.documentElement.classList.toggle('dark');
     }
-};
+};;
