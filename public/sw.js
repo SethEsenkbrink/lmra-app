@@ -49,16 +49,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Voor HTML navigatie (index.html, app.html) behouden we Network-First zodat gebruikers altijd de laatste versie krijgen als ze online zijn
+  // Voor HTML navigatie (index.html, app.html) behouden we Network-First
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
           const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
           return response;
         })
-        .catch(() => caches.match(event.request))
+        .catch(async () => {
+          const cache = await caches.open(CACHE_NAME);
+          return await cache.match(event.request) || await cache.match('/index.html');
+        })
     );
     return;
   }

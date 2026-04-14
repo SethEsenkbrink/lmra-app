@@ -34,8 +34,17 @@ interface QueueResult {
 }
 
 // Veilige initialisatie van Supabase
-// AANGEPAST: We exporteren de client nu voor gebruik in Auth services
-export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// AANGEPAST: We checken of de URL aanwezig is voor we initialiseren
+const createSafeClient = (): SupabaseClient => {
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        console.error("❌ Supabase configuratie ontbreekt! App draait alleen in Offline modus.");
+        // Mock client om crashes te voorkomen (of we handelen het overal af met null checks)
+        return null as any; 
+    }
+    return createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+};
+
+export const supabase: SupabaseClient = createSafeClient();
 
 export const Database = {
     
@@ -51,10 +60,10 @@ export const Database = {
         // Gebruik gevalideerde data
         const validatedData = validation.data;
 
-        // Stap 1: Is er internet?
-        if (!navigator.onLine) {
-            console.warn("Geen internet. Opslaan in offline wachtrij.");
-            return await this.queueReport(validatedData, "Offline");
+        // Stap 1: Is er internet en een valide client?
+        if (!navigator.onLine || !supabase) {
+            console.warn("Offline of geen Supabase verbinding. Opslaan in offline wachtrij.");
+            return await this.queueReport(validatedData, "Offline/No-Client");
         }
 
         try {
