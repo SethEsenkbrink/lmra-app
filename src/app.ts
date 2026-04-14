@@ -28,16 +28,18 @@ export const App = {
         this.checkChangelog();
         this.updateConnectionStatus(); // <--- NIEUW: Check direct bij start
 
-        supabase.auth.onAuthStateChange(async (event) => {
-            this.updateConnectionStatus(); // <--- NIEUW: Update bij login/logout
-            
-            if (event === 'PASSWORD_RECOVERY') {
-                console.log("🔓 Wachtwoord herstel modus geactiveerd!");
-                UI.toggleElement('cloudLoginModal', false);
-                UI.toggleElement('pinModal', false);
-                CloudAuthService.handlePasswordReset();
-            }
-        });
+        if (supabase) {
+            supabase.auth.onAuthStateChange(async (event) => {
+                this.updateConnectionStatus(); // <--- NIEUW: Update bij login/logout
+                
+                if (event === 'PASSWORD_RECOVERY') {
+                    console.log("🔓 Wachtwoord herstel modus geactiveerd!");
+                    UI.toggleElement('cloudLoginModal', false);
+                    UI.toggleElement('pinModal', false);
+                    CloudAuthService.handlePasswordReset();
+                }
+            });
+        }
 
         const hash = window.location.hash;
         if (hash && hash.includes('type=recovery')) {
@@ -93,14 +95,26 @@ export const App = {
             return;
         }
 
-        // 2. Check Auth (Rechten)
-        const { data } = await supabase.auth.getSession();
-        if (data.session) {
-            el.className = "text-[10px] font-bold px-2 py-1 bg-green-500 text-white rounded flex items-center gap-1 shadow-sm";
-            el.innerHTML = '<i class="fa-solid fa-cloud"></i> Verbonden';
-        } else {
+        // 2. Check Client
+        if (!supabase) {
+            el.className = "text-[10px] font-bold px-2 py-1 bg-slate-500 text-white rounded flex items-center gap-1 shadow-sm";
+            el.innerHTML = '<i class="fa-solid fa-server"></i> Lokale Opslag';
+            return;
+        }
+
+        // 3. Check Auth (Rechten)
+        try {
+            const { data } = await supabase.auth.getSession();
+            if (data.session) {
+                el.className = "text-[10px] font-bold px-2 py-1 bg-green-500 text-white rounded flex items-center gap-1 shadow-sm";
+                el.innerHTML = '<i class="fa-solid fa-cloud"></i> Verbonden';
+            } else {
+                el.className = "text-[10px] font-bold px-2 py-1 bg-yellow-500 text-white rounded flex items-center gap-1 shadow-sm";
+                el.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Niet Ingelogd';
+            }
+        } catch (e) {
             el.className = "text-[10px] font-bold px-2 py-1 bg-yellow-500 text-white rounded flex items-center gap-1 shadow-sm";
-            el.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Niet Ingelogd';
+            el.innerHTML = '<i class="fa-solid fa-cloud-slash"></i> Cloud Fout';
         }
     },
 

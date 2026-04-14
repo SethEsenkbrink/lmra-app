@@ -6,25 +6,39 @@ import DOMPurify from 'dompurify';
 export const CloudAuthService = {
     
     async checkSession(): Promise<boolean> {
-        const { data } = await supabase.auth.getSession();
-        
-        if (!data.session) return false;
-
-        const isPersistent = localStorage.getItem('lmra_auth_persist') === 'true';
-        const isSession = sessionStorage.getItem('lmra_auth_session') === 'true';
-
-        if (!isPersistent && !isSession) {
-            console.log("Sessie verlopen (Browser gesloten en 'Onthoud mij' stond uit).");
-            await this.signOut();
-            return false;
+        if (!supabase) {
+            console.warn("CloudAuthService: Geen Supabase client. Gebruik Offline-only modus.");
+            return true; // Laat de gebruiker door naar de app in offline modus
         }
 
-        return true;
+        try {
+            const { data } = await supabase.auth.getSession();
+            if (!data.session) return false;
+
+            const isPersistent = localStorage.getItem('lmra_auth_persist') === 'true';
+            const isSession = sessionStorage.getItem('lmra_auth_session') === 'true';
+
+            if (!isPersistent && !isSession) {
+                console.log("Sessie verlopen (Browser gesloten en 'Onthoud mij' stond uit).");
+                await this.signOut();
+                return false;
+            }
+            return true;
+        } catch (e) {
+            console.error("Fout bij ophalen sessie:", e);
+            return true; // Fallback naar offline
+        }
     },
 
     showLogin(onSuccess: () => void): void {
+        if (!supabase) {
+            console.warn("CloudAuthService: Geen Supabase. Sla login over.");
+            onSuccess();
+            return;
+        }
+
         UI.toggleElement('cloudLoginModal', true);
-        
+        // ... rest van de code met supabase.auth aanroepen ...
         const btnLogin = document.getElementById('btnCloudLogin');
         const btnForgot = document.getElementById('btnForgotPass');
         const emailInput = document.getElementById('cloudEmail') as HTMLInputElement;
@@ -34,7 +48,8 @@ export const CloudAuthService = {
 
         if (btnForgot) {
             btnForgot.onclick = async () => {
-                const email = DOMPurify.sanitize(emailInput.value);
+                if (!supabase) return;
+                const email = (DOMPurify as any).sanitize(emailInput.value);
                 if (!email) {
                     if (errorMsg) errorMsg.innerText = "Vul eerst je e-mailadres in.";
                     return;
@@ -43,7 +58,6 @@ export const CloudAuthService = {
                 UI.setLoading('btnCloudLogin', true, "Verwerken..."); 
                 if (errorMsg) errorMsg.innerText = "";
 
-                // Productie check voor juiste URL
                 const redirectUrl = import.meta.env.PROD 
                     ? 'https://lmrapro.nl' 
                     : window.location.origin;
@@ -65,8 +79,9 @@ export const CloudAuthService = {
 
         if (btnLogin) {
             btnLogin.onclick = async () => {
-                const email = DOMPurify.sanitize(emailInput.value);
-                const password = DOMPurify.sanitize(passInput.value);
+                if (!supabase) return;
+                const email = (DOMPurify as any).sanitize(emailInput.value);
+                const password = (DOMPurify as any).sanitize(passInput.value);
                 const remember = rememberInput ? rememberInput.checked : true;
 
                 if (!email || !password) {
@@ -105,8 +120,9 @@ export const CloudAuthService = {
 
     // AANGEPAST: Forceer PIN modal dicht!
     async handlePasswordReset(): Promise<void> {
+        if (!supabase) return;
         // Sluit alle mogelijke andere schermen die in de weg kunnen zitten
-        UI.toggleElement('pinModal', false);        // <--- DEZE IS BELANGRIJK
+        UI.toggleElement('pinModal', false);        
         UI.toggleElement('cloudLoginModal', false);
         
         // Open het reset scherm
@@ -118,7 +134,8 @@ export const CloudAuthService = {
 
         if (btnSave) {
             btnSave.onclick = async () => {
-                const newPassword = DOMPurify.sanitize(passInput.value);
+                if (!supabase) return;
+                const newPassword = (DOMPurify as any).sanitize(passInput.value);
 
                 if (newPassword.length < 6) {
                     if (errorMsg) errorMsg.innerText = "Wachtwoord te kort (min 6 tekens).";
@@ -151,7 +168,9 @@ export const CloudAuthService = {
         localStorage.removeItem('lmra_auth_persist');
         sessionStorage.removeItem('lmra_auth_session');
         
-        await supabase.auth.signOut();
+        if (supabase) {
+            await supabase.auth.signOut();
+        }
         window.location.reload(); 
     }
-};
+};;

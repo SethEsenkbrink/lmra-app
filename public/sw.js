@@ -74,18 +74,21 @@ self.addEventListener('fetch', (event) => {
   // Stale-While-Revalidate voor alle andere bestanden (JS, CSS, images)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      // Haal in de achtergrond altijd een nieuwe op
-      const fetchPromise = fetch(event.request).then((networkResponse) => {
+      const networkFetch = fetch(event.request).then((networkResponse) => {
+        // Alleen cachen als het een valide response is
         if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse.clone()));
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
         return networkResponse;
       }).catch(() => {
-        // Negeer netwerkfouten tijdens background update
+        // Stille fout voor achtergrond fetch
       });
 
       // Geef direct cache terug als we die hebben, anders wacht op netwerk
-      return cachedResponse || fetchPromise;
+      return cachedResponse || networkFetch;
     })
   );
 });
