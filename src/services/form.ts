@@ -50,7 +50,7 @@ export const FormService = {
     },
 
     handleAction(id: number, text: string): void {
-        const sanitizer = (DOMPurify as any).default?.sanitize || DOMPurify.sanitize;
+        const sanitizer = (DOMPurify as any).default?.sanitize || (DOMPurify as any).sanitize;
         this.state.actions[id] = sanitizer(text);
     },
 

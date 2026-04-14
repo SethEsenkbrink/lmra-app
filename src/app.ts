@@ -172,7 +172,7 @@ export const App = {
     },
 
     async handleSubmit(): Promise<void> {
-        const sanitizer = (DOMPurify as any).default?.sanitize || DOMPurify.sanitize;
+        const sanitizer = (DOMPurify as any).default?.sanitize || (DOMPurify as any).sanitize;
         const honeypot = document.getElementById('contact_email') as HTMLInputElement;
         if (honeypot && honeypot.value !== "") return;
 

@@ -59,7 +59,7 @@ export const UI = {
             return;
         }
 
-        const sanitizer = (DOMPurify as any).default?.sanitize || DOMPurify.sanitize;
+        const sanitizer = (DOMPurify as any).default?.sanitize || (DOMPurify as any).sanitize;
 
         categories.forEach(cat => {
             const section = document.createElement('div');
