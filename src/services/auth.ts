@@ -79,23 +79,31 @@ export const AuthService = {
             errorMsg.className = "text-red-500 text-xs font-bold h-4 mb-4";
         }
 
+        // 1. Controleer DIRECT aan de poort of de gebruiker al geblokkeerd is
+        const currentAttempts = (await get(ATTEMPTS_KEY)) as number || 0;
+        if (currentAttempts >= 5) {
+            await this.triggerWipe();
+            if(errorMsg) errorMsg.innerText = "DATA GEWIST.";
+            alert("⚠️ Applicatie vergrendeld. Data is gewist.");
+            location.reload();
+            return;
+        }
+
         try {
             const storedSalt = localStorage.getItem('lmra_salt');
-            let attempts = (await get(ATTEMPTS_KEY)) as number || 0;
-            if (attempts >= 5) {
-                await this.triggerWipe();
-                throw new Error("SECURITY_LOCKOUT");
-            }
 
+            // Genereer de cryptografische sleutel op basis van de pincode
             const { key, salt } = await CryptoManager.deriveKey(pin, storedSalt);
             CryptoManager.key = key;
 
             if (!storedSalt) {
+                // Eerste keer instellen
                 localStorage.setItem('lmra_salt', salt);
                 await SecureStorage.set(SECURITY_CHECK_KEY, 'VALID_PIN');
                 await set(ATTEMPTS_KEY, 0);
                 onSuccess();
             } else {
+                // Bestaande pincode controleren via ontgrendeling van de kluis
                 const check = await SecureStorage.get(SECURITY_CHECK_KEY);
                 if (check === 'VALID_PIN') {
                     await set(ATTEMPTS_KEY, 0);
@@ -107,7 +115,9 @@ export const AuthService = {
         } catch (e) {
             console.error(e);
             CryptoManager.key = null;
+
             if (localStorage.getItem('lmra_salt')) {
+                // Haal de meest actuele stand op, verhoog deze direct
                 let attempts = (await get(ATTEMPTS_KEY)) as number || 0;
                 attempts++;
                 await set(ATTEMPTS_KEY, attempts);
@@ -116,12 +126,12 @@ export const AuthService = {
                     if (attempts >= 5) {
                         await this.triggerWipe();
                         errorMsg.innerText = "DATA GEWIST.";
-                        alert("⚠️ 5 Foute pogingen. Data gewist.");
+                        alert("⚠️ 5 Foute pogingen bereikt. Data is permanent gewist.");
                         location.reload();
                         return;
                     } else {
                         const left = 5 - attempts;
-                        errorMsg.innerText = `Foutieve code. Nog ${left} pogingen.`;
+                        errorMsg.innerText = `Foutieve code. Nog ${left} ${left === 1 ? 'poging' : 'pogingen'}.`;
                     }
                 }
             }
