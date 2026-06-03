@@ -31,8 +31,9 @@ export const SessionService = {
         const elStart = document.getElementById('timeStart') as HTMLInputElement;
         const elEnd = document.getElementById('timeEnd') as HTMLInputElement;
         
-        if(elStart) elStart.value = now.toTimeString().slice(0,5);
-        if(elEnd) elEnd.value = end.toTimeString().slice(0,5);
+        // FIX: Hard afgedwongen Nederlandse 24-uursnotatie (HH:MM) voor de tijdsvelden
+        if(elStart) elStart.value = now.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+        if(elEnd) elEnd.value = end.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
     },
 
     toggleFormLock(locked: boolean): void {
@@ -61,25 +62,26 @@ export const SessionService = {
                 if(wOrd) wOrd.value = session.wo || '';
                 
                 // NIEUW: Herstel het ID
-                if(session.reportId) this.currentReportId = session.reportId;
+                if(session.reportId) SessionService.currentReportId = session.reportId;
 
-                this.activateLockedSession(validUntil);
+                SessionService.activateLockedSession(validUntil);
             } else {
-                this.cancelResume(onReset);
+                SessionService.cancelResume(onReset);
             }
         } else {
             UI.toggleElement('resumeBar', false);
-            this.toggleFormLock(false);
-            this.setDefaultTimes();
+            SessionService.toggleFormLock(false);
+            SessionService.setDefaultTimes();
         }
     },
 
     activateLockedSession(validUntil: Date): void {
-        this.toggleFormLock(true); 
+        SessionService.toggleFormLock(true); 
         UI.toggleElement('resumeBar', true); 
         UI.toggleElement('submitBtn', false); 
         
-        if(this.timerInterval) clearInterval(this.timerInterval);
+        // Browser-safe opruimen van het oude interval
+        if(SessionService.timerInterval) window.clearInterval(SessionService.timerInterval);
         
         const updateTimer = () => {
             const now = new Date();
@@ -106,7 +108,10 @@ export const SessionService = {
                     displayEl.innerText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
                     displayEl.classList.remove('text-red-600');
                 }
-                if(infoEl) infoEl.innerText = `Geldig tot ${validUntil.toLocaleTimeString().slice(0,5)}`;
+                
+                // FIX: Hard afgedwongen Nederlandse 24-uursnotatie (HH:MM) voor de bar tekst
+                const formattedTime = validUntil.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+                if(infoEl) infoEl.innerText = `Geldig tot ${formattedTime}`;
                 
                 if(btnExtend) btnExtend.classList.add('hidden');
                 UI.toggleElement('pauseAlert', false);
@@ -114,8 +119,8 @@ export const SessionService = {
         };
 
         updateTimer();
-        // @ts-ignore
-        this.timerInterval = setInterval(updateTimer, 1000);
+        // FIX: window context expliciet meegegeven om @ts-ignore te verwijderen
+        SessionService.timerInterval = window.setInterval(updateTimer, 1000);
     },
 
     // NIEUW: Deze functie update nu ook de historie en verlengt met 2 uur ipv 4
@@ -126,10 +131,10 @@ export const SessionService = {
         await SecureStorage.set('lmra_valid_until', newEnd.toISOString());
 
         // 2. Update Historie (De Fix)
-        if (this.currentReportId) {
+        if (SessionService.currentReportId) {
             try {
                 const history = await SecureStorage.get(HISTORY_KEY) as LMRAReport[] || [];
-                const reportIndex = history.findIndex(r => r.report_id === this.currentReportId);
+                const reportIndex = history.findIndex(r => r.report_id === SessionService.currentReportId);
                 
                 if (reportIndex !== -1) {
                     // Update de tijd in de historie array
@@ -144,28 +149,28 @@ export const SessionService = {
         }
 
         UI.showToast("✅ Werkzaamheden verlengd (+2 uur)");
-        this.activateLockedSession(newEnd);
+        SessionService.activateLockedSession(newEnd);
     },
 
     cancelResume(onReset: () => void): void {
-        if(this.timerInterval) clearInterval(this.timerInterval);
+        if(SessionService.timerInterval) window.clearInterval(SessionService.timerInterval);
         SecureStorage.remove(ACTIVE_SESSION_KEY);
         SecureStorage.remove('lmra_valid_until');
         
-        this.currentReportId = null; // Reset ID
+        SessionService.currentReportId = null; // Reset ID
 
         UI.toggleElement('resumeBar', false);
         UI.toggleElement('pauseAlert', false);
         UI.toggleElement('submitBtn', true);
         
-        this.toggleFormLock(false);
+        SessionService.toggleFormLock(false);
         onReset();
     },
 
     // AANGEPAST: Accepteert nu ook de berekende validUntil string van de input
     async startSession(name: string, location: string, wo: string, reportId: string, validUntilStr: string): Promise<void> {
         const validUntil = new Date(validUntilStr);
-        this.currentReportId = reportId;
+        SessionService.currentReportId = reportId;
         
         await SecureStorage.set(ACTIVE_SESSION_KEY, { 
             // Datum hier is nu puur voor referentie, validatie loopt op de ISO string
@@ -177,6 +182,6 @@ export const SessionService = {
         });
         await SecureStorage.set('lmra_valid_until', validUntil.toISOString());
         
-        this.activateLockedSession(validUntil);
+        SessionService.activateLockedSession(validUntil);
     }
 };
