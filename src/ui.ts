@@ -1,6 +1,7 @@
 /* src/ui.ts */
 import DOMPurify from 'dompurify';
 import { Category } from './data';
+import { I18n } from './i18n';
 
 // Callbacks types
 type AnswerCallback = (id: number, value: string) => void;
@@ -65,10 +66,13 @@ export const UI = {
             const section = document.createElement('div');
             section.className = "bg-white dark:bg-cardbg rounded-xl shadow-sm overflow-hidden transition-colors mb-6";
             
+            const titleKey = `cat_${categories.indexOf(cat) + 1}`;
+            const catTitle = I18n.t(titleKey as keyof typeof import('./i18n').translations['nl']) || cat.title;
+            
             section.innerHTML = `
                 <div class="bg-slate-50 dark:bg-slate-800/50 p-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
                     <i class="fa-solid ${cat.icon || 'fa-question'} text-[#00447c] dark:text-blue-400"></i>
-                    <span class="font-bold text-sm text-slate-700 dark:text-slate-300 uppercase">${cat.title}</span>
+                    <span class="font-bold text-sm text-slate-700 dark:text-slate-300 uppercase" data-i18n="${titleKey}">${catTitle}</span>
                 </div>
             `;
 
@@ -79,9 +83,13 @@ export const UI = {
                 const item = document.createElement('div');
                 item.className = "question-card p-3 mb-2 last:mb-0 rounded-lg border border-transparent hover:border-slate-100 dark:hover:border-slate-700 transition-colors";
                 
+                const qKey = `q_${q.id}`;
+                const qText = I18n.t(qKey as keyof typeof import('./i18n').translations['nl']) || q.text;
+
                 const textDiv = document.createElement('div');
                 textDiv.className = "text-sm font-medium text-slate-800 dark:text-slate-200 mb-3";
-                textDiv.textContent = q.text;
+                textDiv.textContent = qText;
+                textDiv.setAttribute('data-i18n', qKey);
                 item.appendChild(textDiv);
 
                 const btnGrid = document.createElement('div');

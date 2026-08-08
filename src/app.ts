@@ -9,6 +9,13 @@ import { SessionService } from './services/session';
 import { FormService } from './services/form';
 import { RELEASE_INFO } from './release';
 import { initCookieAndPwaManager } from './cookie-pwa-manager';
+import { SignatureManager } from './signature-manager';
+import { ProfileManager } from './profile-manager';
+import { PhotoManager } from './photo-manager';
+import { VoiceDictation } from './voice-dictation';
+import { GPSWeather } from './gps-weather';
+import { QRScanner } from './qr-scanner';
+import { I18n } from './i18n';
 
 interface AppState {
     viewingReport: LMRAReport | null;
@@ -22,9 +29,19 @@ export const App = {
     async init(): Promise<void> {
         console.log(`LMRA Pro v${APP_VERSION} Open PWA Init...`);
         initCookieAndPwaManager(true);
+        SignatureManager.init('signatureCanvas', 'btnClearSignature');
+        PhotoManager.init();
+        VoiceDictation.init();
+        GPSWeather.init();
+        QRScanner.init();
+        I18n.init();
+        
         this.attachEventListeners();
         this.checkChangelog();
         this.updateConnectionStatus();
+
+        // Check for Profile & Disclaimer
+        await ProfileManager.checkAndShowDisclaimerIfNeeded();
 
         // Formulier direct starten & vragen renderen (Geen inlog-drempel!)
         FormService.init('questions-container'); 
@@ -60,6 +77,20 @@ export const App = {
         // Menu & Modals
         document.getElementById('btnOpenMenu')?.addEventListener('click', () => UI.toggleElement('menuModal', true));
         document.getElementById('btnCloseMenu')?.addEventListener('click', () => UI.toggleElement('menuModal', false));
+        
+        // Profile
+        document.getElementById('btnSaveProfile')?.addEventListener('click', () => ProfileManager.saveFromModal());
+        document.getElementById('btnCloseProfileModal')?.addEventListener('click', () => UI.toggleElement('profileModal', false));
+        document.getElementById('btnOpenProfile')?.addEventListener('click', () => {
+            UI.toggleElement('menuModal', false);
+            ProfileManager.showProfileModal(false);
+        });
+
+        // Dictation
+        document.getElementById('btnDictateComments')?.addEventListener('click', () => {
+            VoiceDictation.toggleDictation('comments', 'btnDictateComments');
+        });
+
         document.getElementById('btnShowUpdates')?.addEventListener('click', () => {
             UI.toggleElement('menuModal', false);
             this.forceShowChangelog();
@@ -89,6 +120,11 @@ export const App = {
             SessionService.checkResumeState(() => {});
         });
         document.getElementById('btnCloseDetail')?.addEventListener('click', () => UI.toggleElement('detailModal', false));
+        document.getElementById('btnDuplicateReport')?.addEventListener('click', () => {
+            if (state.viewingReport) {
+                this.duplicateReport(state.viewingReport);
+            }
+        });
         
         document.getElementById('btnTriggerResume')?.addEventListener('click', () => SessionService.confirmResume());
         
@@ -184,6 +220,9 @@ export const App = {
             is_veilig: isSafe,
             opmerkingen: elComments ? sanitizer(elComments.value.trim()) : "",
             afkeurpunten: JSON.stringify(failedPoints),
+            handtekening: SignatureManager.getBase64(),
+            foto_bewijs: PhotoManager.getPhotos(),
+            weer_info: GPSWeather.currentWeather,
             created_at: now.toISOString(),
             valid_until: validUntilDate.toISOString()
         };
@@ -304,31 +343,89 @@ export const App = {
             }
         }
 
-        const buddyBox = document.getElementById('detailBuddyBox');
-        if(buddyBox) {
-            if(report.monteur_naam.includes('(Buddy:')) {
-                buddyBox.classList.remove('hidden');
-                const parts = report.monteur_naam.split('Buddy: ');
-                if(parts.length > 1) setTxt('detailBuddy', parts[1].replace(')', ''));
+        
+        const dDate = document.getElementById('detailDate');
+        const dTimeRange = document.getElementById('detailTimeRange');
+        const dStatusBox = document.getElementById('detailStatusBox');
+        
+        const dCompany = document.getElementById('detailCompany');
+        const dName = document.getElementById('detailName');
+        const dLoc = document.getElementById('detailLoc');
+        const dWO = document.getElementById('detailWO');
+        const dBuddyBox = document.getElementById('detailBuddyBox');
+        const dBuddy = document.getElementById('detailBuddy');
+        
+        const dFailsContainer = document.getElementById('detailFailsContainer');
+        const dFails = document.getElementById('detailFails');
+        const dComments = document.getElementById('detailComments');
+        
+        if(dDate) dDate.innerText = new Date(report.created_at).toLocaleDateString('nl-NL');
+        if(dTimeRange) {
+            const start = new Date(report.created_at).toLocaleTimeString('nl-NL').slice(0,5);
+            const end = report.valid_until ? new Date(report.valid_until).toLocaleTimeString('nl-NL').slice(0,5) : '??:??';
+            dTimeRange.innerText = `${start} - ${end}`;
+        }
+        
+        if (dStatusBox) {
+            if (report.is_veilig) {
+                dStatusBox.className = "mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center gap-3";
+                dStatusBox.innerHTML = '<i class="fa-solid fa-shield-halved text-2xl text-emerald-600 dark:text-emerald-400"></i><div><h4 class="font-bold text-emerald-800 dark:text-emerald-400 uppercase text-sm tracking-wide">Goedgekeurd</h4><p class="text-xs text-emerald-600 dark:text-emerald-500">Veilig gewerkt</p></div>';
             } else {
-                buddyBox.classList.add('hidden');
+                dStatusBox.className = "mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3";
+                dStatusBox.innerHTML = '<i class="fa-solid fa-hand text-2xl text-red-600 dark:text-red-400"></i><div><h4 class="font-bold text-red-800 dark:text-red-400 uppercase text-sm tracking-wide">Afgekeurd</h4><p class="text-xs text-red-600 dark:text-red-500">Risico\'s gedetecteerd</p></div>';
             }
         }
-
-        const failsContainer = document.getElementById('detailFailsContainer');
-        const failsList = document.getElementById('detailFails');
-        if(failsContainer && failsList) {
-            const afkeur = JSON.parse(report.afkeurpunten || "[]");
-            if(afkeur.length > 0) {
-                failsContainer.classList.remove('hidden');
-                failsList.innerHTML = afkeur.map((p: string) => `<li>${p}</li>`).join('');
+        
+        if(dCompany) dCompany.innerText = report.bedrijf_naam || 'Niet opgegeven';
+        if(dName) {
+            const n = report.monteur_naam;
+            if (n.includes('(Buddy:')) {
+                const parts = n.split('(Buddy:');
+                dName.innerText = parts[0].trim();
+                if(dBuddyBox && dBuddy) {
+                    dBuddyBox.classList.remove('hidden');
+                    dBuddy.innerText = parts[1].replace(')', '').trim();
+                }
             } else {
-                failsContainer.classList.add('hidden');
-                failsList.innerHTML = '';
+                dName.innerText = n;
+                if(dBuddyBox) dBuddyBox.classList.add('hidden');
             }
         }
-        UI.toggleElement('archiveModal', false);
+        if(dLoc) dLoc.innerText = report.locatie;
+        if(dWO) dWO.innerText = report.werkorder;
+        
+        const afkeur = JSON.parse(report.afkeurpunten || "[]");
+        if(dFailsContainer && dFails) {
+            if (afkeur.length > 0) {
+                dFailsContainer.classList.remove('hidden');
+                dFails.innerHTML = afkeur.map((a: string) => `<li>${a}</li>`).join('');
+            } else {
+                dFailsContainer.classList.add('hidden');
+                dFails.innerHTML = '';
+            }
+        }
+        
+        if(dComments) {
+            dComments.innerText = report.opmerkingen || 'Geen opmerkingen';
+        }
+        
         UI.toggleElement('detailModal', true);
+    },
+
+    duplicateReport(report: LMRAReport): void {
+        UI.toggleElement('detailModal', false);
+        UI.toggleElement('archiveModal', false);
+        
+        const loc = document.getElementById('taskLocation') as HTMLInputElement;
+        const wo = document.getElementById('workOrder') as HTMLInputElement;
+        const comp = document.getElementById('companyName') as HTMLInputElement;
+        
+        if (loc) loc.value = report.locatie;
+        if (wo) wo.value = report.werkorder !== 'N.v.t.' ? report.werkorder : '';
+        if (comp) comp.value = report.bedrijf_naam;
+        
+        UI.showToast("📄 Rapportgegevens overgenomen. U kunt nu opnieuw keuren.");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
     showResult(isSafe: boolean, report: LMRAReport, _reason?: string): void {
@@ -377,6 +474,13 @@ export const App = {
         if(wo) wo.value = '';
         if(comm) comm.value = '';
         if(decl) decl.checked = false;
+        
+        SignatureManager.clear();
+        PhotoManager.clear();
+        GPSWeather.clear();
+
+        document.getElementById('buddyContainer')?.classList.add('hidden');
+        document.getElementById('declarationCheckContainer')?.classList.add('hidden');
         
         FormService.render('questions-container');
         SessionService.setDefaultTimes();

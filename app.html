@@ -20,13 +20,17 @@
                 </svg>
             </div>
             <div>
-                <h1 class="font-bold text-lg leading-tight tracking-wide text-white">LMRA <span class="text-blue-200">PRO</span></h1>
-                <p class="text-[10px] uppercase tracking-wider opacity-90 font-semibold text-blue-100">v10.0.0 - Offline PWA</p>
+                <h1 class="font-bold text-lg leading-tight tracking-wide text-white"><span data-i18n="app_title">LMRA Pro</span></h1>
+                <p class="text-[10px] uppercase tracking-wider opacity-90 font-semibold text-blue-100" data-i18n="app_subtitle">Laatste Minuut Risico Analyse</p>
             </div>
         </div>
         <div class="flex gap-2 items-center">
             <div id="cloudStatus" class="hidden text-[10px] font-bold px-2.5 py-1 bg-black/20 rounded-full">PWA Ready</div>
             
+            <button id="btnToggleLang" aria-label="Taal Wisselen" class="px-2 h-10 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center justify-center transition-all border border-white/20 text-white shadow-sm font-bold text-xs" title="Taal Wisselen">
+                🇳🇱 NL
+            </button>
+
             <button id="btnOpenArchive" aria-label="Open Historie" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center justify-center transition-all border border-white/20 text-white shadow-sm" title="Geschiedenis">
                 <i class="fa-solid fa-folder-open"></i>
             </button>
@@ -94,7 +98,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- BEDRIJFSNAAM / OPDRACHTGEVER -->
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Bedrijf / Opdrachtgever *</label>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1" data-i18n="comp_label">Bedrijf / Opdrachtgever *</label>
                     <input type="text" id="companyName" maxlength="60" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white font-medium" placeholder="Bijv. Brink Multimedia B.V. of Klant X" required>
                 </div>
                 <div>
@@ -102,11 +106,30 @@
                     <input type="text" id="userName" maxlength="50" autocorrect="off" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white font-medium" placeholder="Naam" required>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Locatie / Asset *</label>
-                    <input type="text" id="taskLocation" maxlength="50" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white font-medium" placeholder="Bijv. E-Motor 401" required>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1" data-i18n="loc_label">Locatie / Asset *</label>
+                    <div class="relative flex items-center">
+                        <input type="text" id="taskLocation" maxlength="50" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 pr-20 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white font-medium" placeholder="Bijv. E-Motor 401" required>
+                        <div class="absolute right-1.5 flex gap-1">
+                            <button type="button" id="btnScanQR" class="bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 w-8 h-8 rounded-lg flex items-center justify-center transition-colors shadow-sm" title="Scan QR Code">
+                                <i class="fa-solid fa-qrcode"></i>
+                            </button>
+                            <button type="button" id="btnUseGPS" class="bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-[#00447c] dark:text-blue-400 w-12 h-8 rounded-lg flex items-center justify-center transition-colors shadow-sm gap-1" title="Gebruik GPS & Weer">
+                                <i class="fa-solid fa-location-crosshairs"></i><i class="fa-solid fa-cloud-sun text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="weatherWarningContainer" class="hidden md:col-span-2 mt-0 p-4 rounded-xl transition-all">
+                    <div class="flex items-center gap-3">
+                        <div id="weatherWarningIcon"></div>
+                        <div>
+                            <h4 id="weatherWarningTitle"></h4>
+                            <p id="weatherWarningText" class="text-xs mt-0.5"></p>
+                        </div>
+                    </div>
                 </div>
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Werkorder Nr.</label>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1" data-i18n="wo_label">Werkorder Nr.</label>
                     <input type="text" id="workOrder" maxlength="20" inputmode="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white font-medium" placeholder="Bijv. WO-2026-A">
                 </div>
                 
@@ -146,10 +169,42 @@
         <!-- LMRA VRAGEN CONTAINER -->
         <div id="questions-container" class="space-y-6"></div>
         
+        <!-- FOTO BEWIJSMATERIAAL -->
+        <div class="mt-6 bg-white dark:bg-cardbg rounded-xl shadow-sm p-4 transition-colors">
+            <div class="flex justify-between items-center mb-3">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase" data-i18n="photo_label">Bewijsmateriaal (Foto's)</label>
+                <button type="button" id="btnTakePhoto" class="text-xs bg-[#00447c] hover:bg-[#003366] text-white px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors shadow-sm" data-i18n="btn_take_photo">
+                    <i class="fa-solid fa-camera"></i> Maak Foto
+                </button>
+            </div>
+            
+            <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
+            
+            <div id="photoPreviewContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-3 hidden mb-2">
+                <!-- Foto previews komen hier via JS -->
+            </div>
+            <p id="photoEmptyState" class="text-xs text-slate-400 italic text-center py-2">Geen foto's toegevoegd. Maximaal 3. (Optioneel)</p>
+        </div>
+
         <!-- OPMERKINGEN -->
         <div class="mt-6 bg-white dark:bg-cardbg rounded-xl shadow-sm p-4 transition-colors">
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-2">Opmerkingen</label>
+            <div class="flex justify-between items-center mb-2">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase" data-i18n="comments">Opmerkingen</label>
+                <button type="button" id="btnDictateComments" class="text-slate-400 hover:text-[#00447c] dark:hover:text-blue-400 transition-colors px-2 py-1" title="Spraak-naar-tekst">
+                    <i class="fa-solid fa-microphone text-lg"></i>
+                </button>
+            </div>
             <textarea id="comments" rows="2" maxlength="250" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white" placeholder="Bijv: Extra aardlekschakelaar geplaatst..."></textarea>
+        </div>
+
+        <!-- HANDTEKENING -->
+        <div class="mt-6 bg-white dark:bg-cardbg rounded-xl shadow-sm p-4 transition-colors">
+            <div class="flex justify-between items-center mb-2">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase" data-i18n="sign_label">Handtekening Monteur *</label>
+                <button type="button" id="btnClearSignature" class="text-xs text-red-500 hover:text-red-700 font-bold" data-i18n="btn_clear_sign">Wis</button>
+            </div>
+            <canvas id="signatureCanvas" class="w-full h-32 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg cursor-crosshair touch-none"></canvas>
+            <p class="text-[10px] text-slate-400 mt-1 text-center italic">Teken hierboven met je vinger of muis</p>
         </div>
 
         <!-- EIGEN VERKLARING -->
@@ -163,16 +218,14 @@
         <div class="text-center mt-8 mb-4 text-[10px] text-slate-400">
             <p>LMRA Pro v10.0.0 &bull; Offline-First Progressive Web App</p>
         </div>
-    </main>
 
-    <!-- FOOTER VERZEND-KNOP -->
-    <div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-100 via-slate-100 to-transparent dark:from-darkbg dark:via-darkbg z-30 pointer-events-none">
-        <div class="max-w-3xl mx-auto pointer-events-auto">
-            <button id="submitBtn" class="w-full bg-[#00447c] hover:bg-[#003366] text-white font-bold py-4 rounded-xl shadow-lg shadow-[#00447c]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-lg uppercase tracking-wide">
-                <i class="fa-solid fa-clipboard-check text-xl"></i> <span id="submitBtnText">Beoordeel Veiligheid</span>
+        <!-- VERZENDEN -->
+        <div class="mt-8 flex gap-4">
+            <button type="submit" id="submitBtn" class="flex-1 bg-[#00447c] hover:bg-[#003366] text-white p-4 rounded-xl font-bold shadow-lg transition-all active:scale-[0.98] text-lg flex items-center justify-center gap-2">
+                <i class="fa-solid fa-shield-check"></i> <span data-i18n="btn_submit">Beoordeel Veiligheid</span>
             </button>
         </div>
-    </div>
+    </main>
 
     <!-- HISTORIE MODAL -->
     <div id="archiveModal" class="fixed inset-0 bg-black/50 z-50 hidden backdrop-blur-sm">
@@ -251,8 +304,11 @@
                     </div>
                 </div>
 
-                <div class="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex justify-end">
-                    <button id="btnGeneratePDF" class="bg-[#00447c] hover:bg-[#003366] text-white px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-md">
+                <div class="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex justify-between">
+                    <button id="btnDuplicateReport" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm transition-colors">
+                        <i class="fa-solid fa-copy"></i> Dupliceer
+                    </button>
+                    <button id="btnGeneratePDF" class="bg-[#00447c] hover:bg-[#003366] text-white px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-md transition-colors">
                         <i class="fa-solid fa-file-pdf"></i> Download PDF
                     </button>
                 </div>
@@ -277,6 +333,47 @@
 
                 <button id="btnCloseUpdateModal" class="w-full bg-[#00447c] text-white font-bold py-3 rounded-lg shadow hover:bg-[#003366] transition-colors">
                  Ik begrijp het
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL -->
+    <div id="profileModal" class="fixed inset-0 z-[85] hidden bg-black/70 backdrop-blur-sm">
+        <div class="flex h-full w-full items-center justify-center p-4 sm:p-6">
+            <div class="bg-white dark:bg-cardbg rounded-2xl shadow-2xl max-w-md w-full p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 id="profileModalTitle" class="text-xl font-bold text-[#00447c] dark:text-blue-400">
+                        <i class="fa-solid fa-user-gear mr-2"></i>Mijn Profiel
+                    </h2>
+                    <button id="btnCloseProfileModal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+                
+                <div id="profileDisclaimerBlock" class="mb-5 p-4 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900 rounded-xl">
+                    <h3 class="font-bold text-orange-800 dark:text-orange-400 text-sm mb-1">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Belangrijke Privacy Waarschuwing
+                    </h3>
+                    <p class="text-xs text-orange-700 dark:text-orange-300 leading-relaxed">
+                        LMRA Pro is 100% offline-first. Wij slaan <strong>0% van jouw gegevens</strong> op een centrale server op. Alle rapporten, profielen en instellingen staan uitsluitend in de browser/cache van jouw eigen telefoon.<br><br>
+                        <strong>Let op:</strong> Het is jouw eigen verantwoordelijkheid om PDF's te downloaden. Als jij je browsergeschiedenis of cache wist, raak je al je LMRA-historie en profielen in deze app onherroepelijk kwijt!
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Naam Monteur</label>
+                        <input type="text" id="profileName" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:ring-2 focus:ring-[#00447c] outline-none dark:text-white" placeholder="Jouw volledige naam">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Bedrijfsnaam</label>
+                        <input type="text" id="profileCompany" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:ring-2 focus:ring-[#00447c] outline-none dark:text-white" placeholder="Optioneel">
+                    </div>
+                </div>
+
+                <button id="btnSaveProfile" class="w-full mt-6 bg-[#00447c] text-white font-bold py-3 rounded-lg shadow-lg hover:bg-[#003366] transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-check"></i> Ik ga akkoord & Opslaan
                 </button>
             </div>
         </div>
@@ -319,6 +416,9 @@
             </div>
             
             <div class="flex flex-col gap-3 flex-1">
+                <button id="btnOpenProfile" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
+                    <i class="fa-solid fa-user-gear w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> Mijn Profiel
+                </button>
                 <button id="btnToggleTheme" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
                     <i id="themeIcon" class="fa-solid fa-moon w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> Thema Wisselen
                 </button>
@@ -343,6 +443,19 @@
                     <i class="fa-solid fa-rotate-right w-6 text-center text-lg"></i> Formulier Wissen
                 </button>
             </div>
+        </div>
+    </div>
+    <!-- QR SCANNER MODAL -->
+    <div id="qrModal" class="fixed inset-0 bg-black/80 z-[80] hidden flex flex-col">
+        <div class="flex justify-between items-center p-4 bg-slate-900 text-white">
+            <h3 class="font-bold">Scan QR Code</h3>
+            <button id="btnCloseQR" class="text-slate-300 hover:text-white p-2">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        <div class="flex-1 flex flex-col justify-center bg-black">
+            <div id="qrReader" class="w-full max-w-md mx-auto overflow-hidden"></div>
+            <p class="text-center text-slate-400 text-sm mt-4 px-4">Richt de camera op een asset QR-code.</p>
         </div>
     </div>
 

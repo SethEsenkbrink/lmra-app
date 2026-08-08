@@ -93,6 +93,10 @@ export const PDFService = {
 
             const bedrijfStr = report.bedrijf_naam || 'Niet opgegeven';
 
+            const weerText = report.weer_info 
+                ? `\nWeer: ${report.weer_info.temperature}°C, ${report.weer_info.windspeed} km/h (${report.weer_info.description})`
+                : '';
+
             autoTable(doc, {
                 startY: yPos,
                 theme: 'grid',
@@ -100,7 +104,7 @@ export const PDFService = {
                 body: [
                     [
                         `Bedrijf / Opdrachtgever: ${bedrijfStr}\nMonteur: ${report.monteur_naam}\nLocatie / Asset: ${report.locatie}\nWerkorder: ${report.werkorder}`,
-                        `Aangemaakt: ${dateCreated.toLocaleDateString('nl-NL')} om ${dateCreated.toLocaleTimeString('nl-NL').slice(0,5)}\nGeldig tot: ${dateValid.toLocaleTimeString('nl-NL').slice(0,5)}`
+                        `Aangemaakt: ${dateCreated.toLocaleDateString('nl-NL')} om ${dateCreated.toLocaleTimeString('nl-NL').slice(0,5)}\nGeldig tot: ${dateValid.toLocaleTimeString('nl-NL').slice(0,5)}${weerText}`
                     ]
                 ],
                 styles: {
@@ -189,6 +193,7 @@ export const PDFService = {
             
             yPos += 8;
 
+            let finalY_Comments = yPos;
             const comments = report.opmerkingen || "Geen extra opmerkingen toegevoegd.";
             autoTable(doc, {
                 startY: yPos,
@@ -200,8 +205,61 @@ export const PDFService = {
                     fontStyle: 'italic',
                     cellPadding: 6,
                     minCellHeight: 12
-                }
+                },
+                didDrawPage: (data: any) => { finalY_Comments = data.cursor.y; }
             });
+
+            yPos = finalY_Comments + 12;
+
+            // --- HANDTEKENING ---
+            if (report.handtekening) {
+                if (yPos > 240) { doc.addPage(); yPos = 20; }
+                doc.setFontSize(11);
+                doc.setTextColor(BRAND_COLOR.r, BRAND_COLOR.g, BRAND_COLOR.b);
+                doc.setFont('helvetica', 'bold');
+                doc.text("HANDTEKENING MONTEUR", 10, yPos);
+                doc.line(10, yPos + 2, 60, yPos + 2);
+                yPos += 8;
+                doc.addImage(report.handtekening, 'PNG', 10, yPos, 80, 30);
+                yPos += 35;
+            }
+
+            // --- FOTO BEWIJSMATERIAAL ---
+            if (report.foto_bewijs && report.foto_bewijs.length > 0) {
+                doc.addPage();
+                yPos = 20;
+                doc.setFontSize(11);
+                doc.setTextColor(BRAND_COLOR.r, BRAND_COLOR.g, BRAND_COLOR.b);
+                doc.setFont('helvetica', 'bold');
+                doc.text("BEWIJSMATERIAAL (FOTO'S)", 10, yPos);
+                doc.line(10, yPos + 2, 65, yPos + 2);
+                yPos += 15;
+
+                const photoWidth = 85; // Twee naast elkaar met margin
+                const photoHeight = 85; 
+                let currentX = 10;
+
+                for (let i = 0; i < report.foto_bewijs.length; i++) {
+                    // Als we buiten de pagina vallen, nieuwe pagina
+                    if (yPos + photoHeight > 280) {
+                        doc.addPage();
+                        yPos = 20;
+                        currentX = 10;
+                    }
+
+                    try {
+                        doc.addImage(report.foto_bewijs[i], 'JPEG', currentX, yPos, photoWidth, photoHeight);
+                    } catch(e) {
+                        console.warn("Kon foto " + i + " niet toevoegen", e);
+                    }
+
+                    currentX += photoWidth + 10;
+                    if (currentX > 150) {
+                        currentX = 10;
+                        yPos += photoHeight + 10;
+                    }
+                }
+            }
 
             // --- FOOTER ---
             const pageCount = doc.getNumberOfPages();
@@ -218,6 +276,26 @@ export const PDFService = {
 
             const cleanWO = (report.werkorder || 'LMRA').replace(/[^a-zA-Z0-9]/g, '-');
             const filename = `LMRA_${cleanWO}_${dateCreated.toISOString().split('T')[0]}.pdf`;
+            const pdfBlob = doc.output('blob');
+
+            if (navigator.share) {
+                try {
+                    const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            title: `LMRA Rapport: ${report.locatie}`,
+                            text: `Hier is het LMRA rapport voor ${report.locatie} (${report.werkorder}).`,
+                            files: [file]
+                        });
+                        UI.showToast("✅ PDF Succesvol Gedeeld");
+                        return; // Stop verdere download als delen is gelukt
+                    }
+                } catch (shareErr) {
+                    console.log("Delen geannuleerd of mislukt, terugvallen op download.", shareErr);
+                }
+            }
+
+            // Fallback naar normale download
             doc.save(filename);
             UI.showToast("✅ PDF Succesvol Gedownload");
 

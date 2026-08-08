@@ -13,6 +13,9 @@ export const LMRAReportSchema = z.object({
     is_veilig: z.boolean(),
     opmerkingen: z.string(),
     afkeurpunten: z.string(), // JSON string van afgekeurde vragen + acties
+    handtekening: z.string().nullable().optional(),
+    foto_bewijs: z.array(z.string()).optional(),
+    weer_info: z.any().optional(),
     created_at: z.string().datetime(),
     valid_until: z.string().datetime()
 });
