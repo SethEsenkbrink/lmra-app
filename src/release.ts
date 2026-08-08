@@ -1,19 +1,13 @@
 // src/release.ts
-// DIT IS HET ENIGE BESTAND DAT JE AANPAST VOOR DE MELDING NA EEN UPDATE
 
 export const RELEASE_INFO = {
-    // Titel van de update
-    title: "UI Overhaul & Slimme Timer Update",
-    
-    // De bullet points die de gebruiker (de monteur) ziet in de pop-up
+    title: "v9.8.10 Open PWA & Bedrijfs-LMRA Update",
     features: [
-        "Nieuw overzichtelijk zijmenu toegevoegd voor snellere navigatie",
-        "Timer bug gefixt: berekening klopt nu altijd, ook bij nachtdiensten",
-        "Informatie & Roadmap pagina toegevoegd om onze visie te delen",
-        "Update-geschiedenis is vanaf nu altijd handmatig terug te lezen via het menu"
+        "Open Web App: Geen inlogschermen of wachtwoorden meer nodig!",
+        "Bedrijf / Opdrachtgever: Voeg direct de bedrijfsnaam toe aan de LMRA",
+        "Verbeterde PDF Export: Inclusief bedrijfsnaam, actiepunten en strakke opmaak",
+        "100% Offline-First PWA: Snelle werking op smartphone, tablet en laptop",
+        "Lokale Privacy Opslag: Alle rapporten en historie worden veilig in jouw eigen browser bewaard"
     ],
-
-    // Belangrijk: Omdat de knoppen zijn verplaatst naar een nieuw menu,
-    // dwingen we deze pop-up eenmalig af bij alle gebruikers zodat ze op de hoogte zijn.
     forceShow: true
 };

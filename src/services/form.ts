@@ -1,7 +1,7 @@
 /* src/services/form.ts */
 import { UI } from '../ui';
 import { categories } from '../data';
-import * as DOMPurify from 'dompurify';
+import DOMPurify from 'dompurify';
 
 interface FormState {
     answers: Record<number, string>;
@@ -50,8 +50,7 @@ export const FormService = {
     },
 
     handleAction(id: number, text: string): void {
-        const sanitizer = (DOMPurify as any).default?.sanitize || (DOMPurify as any).sanitize;
-        this.state.actions[id] = sanitizer(text);
+        this.state.actions[id] = DOMPurify.sanitize(text);
     },
 
     validate(): boolean {

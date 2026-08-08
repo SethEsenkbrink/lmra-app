@@ -1,31 +1,26 @@
-/* public/sw.js - LMRA Pro v9.8 Sentinel */
+/* public/sw.js - LMRA Pro PWA Service Worker */
 
-// Let op: De versie wordt automatisch geüpdatet door je build script, 
-// maar het is goed om hier vast de structuur correct te hebben.
-const CACHE_NAME = 'lmra-sentinel-v9.8.10';
+const CACHE_NAME = 'lmra-pwa-v9.8.10';
 
 const ASSETS_TO_CACHE = [
-  '/',                // De landingspagina (Voor marketing offline)
-  '/index.html',      // Expliciete verwijzing naar landing
-  '/app.html',        // <--- CRUCIAAL: DE APPLICATIE ZELF (Dit ontbrak!)
+  '/',
+  '/index.html',
+  '/app.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'
-  // Vite assets (JS/CSS) worden automatisch gecached door de 'fetch' handler hieronder
 ];
 
-// 1. Installatie: Cache de basis bestanden (Nu inclusief app.html!)
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // Forceer direct activeren
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[ServiceWorker] Caching core assets (Landing + App)');
+      console.log('[ServiceWorker] Caching core assets');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
 });
 
-// 2. Activatie: Ruim oude caches op
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keyList) => {
@@ -42,14 +37,11 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-// 3. Fetch: Stale-While-Revalidate voor assets, Network-First voor navigatie
 self.addEventListener('fetch', (event) => {
-  // Negeer API calls naar Supabase of browser extensies
-  if (event.request.url.includes('supabase.co') || event.request.url.startsWith('chrome-extension')) {
+  if (event.request.url.startsWith('chrome-extension')) {
     return;
   }
 
-  // Voor HTML navigatie (index.html, app.html) behouden we Network-First
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
@@ -65,17 +57,15 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(async () => {
           const cache = await caches.open(CACHE_NAME);
-          return await cache.match(event.request) || await cache.match('/index.html');
+          return await cache.match(event.request) || await cache.match('/app.html') || await cache.match('/index.html');
         })
     );
     return;
   }
 
-  // Stale-While-Revalidate voor alle andere bestanden (JS, CSS, images)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const networkFetch = fetch(event.request).then((networkResponse) => {
-        // Alleen cachen als het een valide response is
         if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -83,11 +73,8 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return networkResponse;
-      }).catch(() => {
-        // Stille fout voor achtergrond fetch
-      });
+      }).catch(() => {});
 
-      // Geef direct cache terug als we die hebben, anders wacht op netwerk
       return cachedResponse || networkFetch;
     })
   );

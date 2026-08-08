@@ -3,72 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Algemene Voorwaarden - LMRA Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Algemene Voorwaarden & Licentie - LMRA Pro</title>
+    <link rel="stylesheet" href="/src/style.css">
+    <script type="module" src="/src/landing.ts"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans">
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
     
-    <div class="max-w-4xl mx-auto py-12 px-6 bg-white shadow-xl my-12 rounded-xl border border-slate-200">
-        <div class="border-b pb-6 mb-8 flex justify-between items-center">
+    <div class="max-w-4xl mx-auto py-12 px-6 bg-white shadow-xl my-12 rounded-2xl border border-slate-200">
+        <!-- HEADER -->
+        <div class="border-b pb-6 mb-8 flex justify-between items-start">
             <div>
-                <h1 class="text-3xl font-bold text-slate-900">Algemene Voorwaarden</h1>
-                <p class="text-slate-500 mt-1">Brink Multimedia - LMRA Pro</p>
+                <h1 class="text-3xl font-bold text-slate-900">Algemene Voorwaarden & Licentie</h1>
+                <p class="text-slate-500 mt-1">Brink Multimedia - LMRA Pro v9.8.10</p>
             </div>
             <div class="text-right text-xs text-slate-400">
-                Versie: 2.2<br>Datum: 5 februari 2026
+                Laatst bijgewerkt: 8 augustus 2026<br>
+                Versie: 3.0 Open Source
             </div>
         </div>
 
         <div class="space-y-8 text-sm leading-relaxed">
             
+            <!-- ARTIKEL 1. IDENTITEIT -->
             <section>
-                <h2 class="text-lg font-bold text-slate-900 mb-2 uppercase tracking-wide">Artikel 1. Definities</h2>
-                <ul class="list-disc pl-5 space-y-1 text-slate-600">
-                    <li><strong>Leverancier:</strong> Brink Multimedia, ingeschreven bij de KvK onder nummer 71256385.</li>
-                    <li><strong>Afnemer:</strong> De zakelijke partij die een overeenkomst aangaat voor het gebruik van de Software.</li>
-                    <li><strong>Software:</strong> De applicatie 'LMRA Pro', gefaciliteerd via de cloud-omgeving van Leverancier.</li>
-                </ul>
+                <h2 class="text-base font-bold text-slate-900 mb-2 uppercase tracking-wide border-b pb-1">Artikel 1. Identiteit van de Ondernemer</h2>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-1 text-slate-700 font-mono">
+                    <p><strong>Handelsnaam:</strong> Brink Multimedia</p>
+                    <p><strong>Vestigingsadres:</strong> De Hoven 30, 9454 PS Ekehaar, Nederland</p>
+                    <p><strong>KvK-nummer:</strong> 71256385</p>
+                    <p><strong>BTW-identificatienummer:</strong> NL002397011B65</p>
+                    <p><strong>E-mailadres:</strong> info@brinkmultimedia.nl</p>
+                    <p><strong>Website:</strong> https://www.lmrapro.nl</p>
+                </div>
             </section>
 
+            <!-- ARTIKEL 2. TOEPASSELIJKHEID -->
             <section>
-                <h2 class="text-lg font-bold text-slate-900 mb-2 uppercase tracking-wide">Artikel 2. Licentie en Accounts</h2>
-                <p>2.1 Leverancier verleent Afnemer het recht om accounts aan te maken voor haar medewerkers (monteurs) tot het overeengekomen maximum.</p>
-                <p>2.2 Accounts zijn persoonsgebonden en mogen niet gedeeld worden met derden buiten de organisatie van Afnemer.</p>
+                <h2 class="text-base font-bold text-slate-900 mb-2 uppercase tracking-wide border-b pb-1">Artikel 2. Toepasselijkheid & Definities</h2>
+                <p class="text-slate-600 mb-2">
+                    2.1 Deze Algemene Voorwaarden zijn van toepassing op al het gebruik van de webapplicatie en Progressive Web App (PWA) <strong>LMRA Pro</strong>, alsmede alle gerelateerde informatie en documentatie geleverd door Brink Multimedia.
+                </p>
+                <p class="text-slate-600">
+                    2.2 Onder <strong>"Gebruiker"</strong> wordt verstaan iedere natuurlijke persoon of rechtspersoon (zoals monteurs, technici, werkgevers of opdrachtgevers) die gebruikmaakt van de applicatie LMRA Pro.
+                </p>
             </section>
 
-            <section class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                <h2 class="text-lg font-bold text-[#00447c] mb-2 uppercase tracking-wide"><i class="fa-solid fa-robot mr-2"></i>Artikel 3. AI Co-Engineering (Gemini 3.0)</h2>
-                <p class="mb-2">3.1 De Software is ontwikkeld in nauwe samenwerking met <strong>Google Gemini 3.0</strong>. Deze geavanceerde AI wordt ingezet voor:</p>
-                <ul class="list-disc pl-5 mb-2 space-y-1">
-                    <li>Geautomatiseerde security audits van de broncode.</li>
-                    <li>Optimalisatie van database-queries voor snellere prestaties.</li>
-                </ul>
-                <p>3.2 Ondanks deze geavanceerde technologie betreft de levering van de Software een inspanningsverplichting en geen resultaatsverplichting.</p>
+            <!-- ARTIKEL 3. OPEN SOURCE & LICENTIEVOORWAARDEN (MIT) -->
+            <section class="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                <h2 class="text-base font-bold text-[#00447c] mb-2 uppercase tracking-wide flex items-center gap-2">
+                    <i class="fa-brands fa-osi text-lg text-green-600"></i> Artikel 3. Open Source Licentie (MIT License)
+                </h2>
+                <p class="text-slate-700 mb-2">
+                    3.1 LMRA Pro is een open-source softwareproject. De broncode wordt ter beschikking gesteld onder de voorwaarden van de **MIT Licentie**.
+                </p>
+                <div class="bg-white p-3 rounded-lg border border-blue-200 font-mono text-xs text-slate-600 leading-normal">
+                    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.
+                </div>
             </section>
 
-            <section>
-                <h2 class="text-lg font-bold text-slate-900 mb-2 uppercase tracking-wide">Artikel 4. Aansprakelijkheid</h2>
-                <p>4.1 <strong>LMRA Pro is een hulpmiddel.</strong> Het gebruik ontslaat de monteur nimmer van zijn eigen verantwoordelijkheid om veiligheidsrisico's in te schatten.</p>
-                <p>4.2 Brink Multimedia is niet aansprakelijk voor bedrijfsschade, letselschade of dataverlies, tenzij er sprake is van opzet of grove nalatigheid aan de zijde van Brink Multimedia.</p>
-                <p>4.3 De aansprakelijkheid is te allen tijde beperkt tot het factuurbedrag van de afgelopen 6 maanden.</p>
+            <!-- ARTIKEL 4. HULPMIDDEL & EIGEN VERANTWOORDELIJKHEID VEILIGHEID -->
+            <section class="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                <h2 class="text-base font-bold text-amber-900 mb-2 uppercase tracking-wide flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-600 text-lg"></i> Artikel 4. Hulpmiddel & Eigen Verantwoordelijkheid Veiligheid
+                </h2>
+                <p class="text-amber-950 font-bold mb-2">
+                    4.1 BELANGRIJK: LMRA Pro is uitsluitend een digitaal administratief hulpmiddel voor het vastleggen van een Laatste Minuut Risico Analyse.
+                </p>
+                <p class="text-amber-900 mb-2">
+                    4.2 Het gebruik van LMRA Pro of het genereren van een PDF-rapport ontslaat de Gebruiker, monteur, werkgever of opdrachtgever <strong>nimmer van hun eigen wettelijke en professionele verantwoordelijkheid</strong> om risico's op de werkvloer ter plaatse reëel in te schatten en de geldende veiligheidsvoorschriften (zoals VCA, Arbowetgeving, werkvergunningen en bedrijfsprotocollen) strikt na te leven.
+                </p>
+                <p class="text-amber-900">
+                    4.3 Een "VEILIG" uitslag in de applicatie is een weergave van de door de gebruiker zelf ingevoerde antwoorden en vormt geen garantie of keuring door Brink Multimedia.
+                </p>
             </section>
 
+            <!-- ARTIKEL 5. AANSPRAKELIJKHEID EN DISCLAIMER -->
             <section>
-                <h2 class="text-lg font-bold text-slate-900 mb-2 uppercase tracking-wide">Artikel 5. Data en Hosting</h2>
-                <p>5.1 De Software maakt gebruik van derden voor hosting en data-opslag (o.a. Supabase). Brink Multimedia spant zich in voor maximale beschikbaarheid, maar kan geen 100% uptime garanderen.</p>
-                <p>5.2 Bij beëindiging van de overeenkomst wordt de toegang tot de database ontzegd. Afnemer is zelf verantwoordelijk voor het tijdig exporteren van data.</p>
+                <h2 class="text-base font-bold text-slate-900 mb-2 uppercase tracking-wide border-b pb-1">Artikel 5. Aansprakelijkheid & Uitsluiting</h2>
+                <p class="text-slate-600 mb-2">
+                    5.1 De software wordt geleverd "zoals deze is" ("AS IS"), zonder enige uitdrukkelijke of stilzwijgende garantie omtrent geschiktheid voor een bepaald doel, foutloosheid of ononderbroken werking.
+                </p>
+                <p class="text-slate-600 mb-2">
+                    5.2 Brink Multimedia is <strong>in geen geval aansprakelijk</strong> voor enige directe of indirecte schade, bedrijfsstagnatie, letselschade, boetes, gemiste winst of dataverlies voortvloeiend uit of verband houdend met het gebruik (of het niet kunnen gebruiken) van LMRA Pro of het vertrouwen op gegenereerde rapporten.
+                </p>
+                <p class="text-slate-600">
+                    5.3 Voor zover aansprakelijkheid niet rechtens kan worden uitgesloten, is de totale aansprakelijkheid van Brink Multimedia te allen tijde beperkt tot een bedrag van maximaal € 50,- (vijftig euro).
+                </p>
             </section>
 
+            <!-- ARTIKEL 6. INTELLECTUEEL EIGENDOM -->
             <section>
-                <h2 class="text-lg font-bold text-slate-900 mb-2 uppercase tracking-wide">Artikel 6. Toepasselijk Recht</h2>
-                <p>Op deze overeenkomst is Nederlands recht van toepassing.</p>
+                <h2 class="text-base font-bold text-slate-900 mb-2 uppercase tracking-wide border-b pb-1">Artikel 6. Intellectueel Eigendom & Handelsnamen</h2>
+                <p class="text-slate-600">
+                    Alle merkrechten, handelsnamen en merklogo's van "Brink Multimedia" en "LMRA Pro" blijven eigendom van Brink Multimedia. Het staat de gebruiker vrij de broncode te gebruiken conform de MIT licentie.
+                </p>
+            </section>
+
+            <!-- ARTIKEL 7. GESCHILLENBESLECHTING EN TOEPASSELIJK RECHT -->
+            <section>
+                <h2 class="text-base font-bold text-slate-900 mb-2 uppercase tracking-wide border-b pb-1">Artikel 7. Toepasselijk Recht & Bevoegde Rechter</h2>
+                <p class="text-slate-600 mb-2">
+                    7.1 Op alle rechtsbetrekkingen waarin Brink Multimedia partij is, is uitsluitend het **Nederlands recht** van toepassing.
+                </p>
+                <p class="text-slate-600">
+                    7.2 Geschillen worden bij uitsluiting voorgelegd aan de bevoegde rechter van de Rechtbank Noord-Nederland (locatie Assen/Groningen), tenzij de wet dwingend anders voorschrijft.
+                </p>
+            </section>
+
+            <!-- ARTIKEL 8. CONTACT -->
+            <section class="pt-4 border-t border-slate-200">
+                <h2 class="text-base font-bold text-slate-900 mb-2">Vragen over de Algemene Voorwaarden?</h2>
+                <p class="text-slate-600">
+                    Neem voor vragen contact op met Brink Multimedia via: <a href="mailto:info@brinkmultimedia.nl" class="text-blue-600 font-bold hover:underline">info@brinkmultimedia.nl</a>.
+                </p>
             </section>
         </div>
 
-        <div class="mt-12 pt-6 border-t flex justify-between items-center">
+        <div class="mt-12 pt-6 border-t flex justify-between items-center text-xs">
             <a href="/" class="text-blue-600 font-bold hover:underline">&larr; Terug naar Home</a>
-            <span class="text-slate-400 text-xs">© 2026 Brink Multimedia</span>
+            <span class="text-slate-400">&copy; 2026 Brink Multimedia</span>
         </div>
     </div>
 </body>

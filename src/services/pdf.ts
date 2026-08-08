@@ -1,4 +1,4 @@
-/* src/services/pdf.ts */
+/* src/services/pdf.ts - Clean Professional PDF Generator */
 import { LMRAReport } from '../database';
 import { UI } from '../ui';
 import { APP_VERSION } from '../config';
@@ -21,7 +21,7 @@ export const PDFService = {
                 format: 'a4'
             });
 
-            // --- MODERN KLEURENPALET ---
+            // --- KLEURENPALET ---
             const BRAND_COLOR = { r: 0, g: 68, b: 124 };    // #00447c
             const TEXT_COLOR = { r: 30, g: 41, b: 59 };     // Slate 800
             const LABEL_COLOR = { r: 100, g: 116, b: 139 }; // Slate 500
@@ -64,10 +64,10 @@ export const PDFService = {
             
             doc.setFontSize(8);
             doc.setTextColor(200, 200, 200);
-            doc.text(`v${APP_VERSION} Sentinel`, 200, 10, { align: 'right' });
-            doc.text(`Datum: ${new Date().toLocaleDateString()}`, 200, 30, { align: 'right' });
+            doc.text(`v${APP_VERSION} PWA`, 200, 10, { align: 'right' });
+            doc.text(`Datum: ${new Date().toLocaleDateString('nl-NL')}`, 200, 30, { align: 'right' });
 
-            let yPos = 45;
+            let yPos = 43;
 
             // --- STATUS INDICATOR ---
             const isSafe = report.is_veilig;
@@ -84,28 +84,30 @@ export const PDFService = {
             doc.setFont('helvetica', 'bold');
             doc.text(statusText, 105, yPos + 9, { align: 'center' });
 
-            yPos += 22;
+            yPos += 20;
 
-            // --- PROJECT GEGEVENS ---
+            // --- PROJECT & BEDRIJFSGEGEVENS ---
             const dateCreated = new Date(report.created_at);
             const dateValid = new Date(report.valid_until);
             let finalY_Project = yPos;
 
+            const bedrijfStr = report.bedrijf_naam || 'Niet opgegeven';
+
             autoTable(doc, {
                 startY: yPos,
                 theme: 'grid',
-                head: [['PROJECT & MONTEUR', 'TIJDSLIJN & GELDIGHEID']],
+                head: [['PROJECT & BEDRIJF', 'TIJDSLIJN & GELDIGHEID']],
                 body: [
                     [
-                        `Monteur: ${report.monteur_naam}\nWerkorder: ${report.werkorder}\nLocatie: ${report.locatie}`,
-                        `Aangemaakt: ${dateCreated.toLocaleDateString()} om ${dateCreated.toLocaleTimeString().slice(0,5)}\nGeldig tot: ${dateValid.toLocaleTimeString().slice(0,5)}`
+                        `Bedrijf / Opdrachtgever: ${bedrijfStr}\nMonteur: ${report.monteur_naam}\nLocatie / Asset: ${report.locatie}\nWerkorder: ${report.werkorder}`,
+                        `Aangemaakt: ${dateCreated.toLocaleDateString('nl-NL')} om ${dateCreated.toLocaleTimeString('nl-NL').slice(0,5)}\nGeldig tot: ${dateValid.toLocaleTimeString('nl-NL').slice(0,5)}`
                     ]
                 ],
                 styles: {
                     lineColor: [226, 232, 240],
                     lineWidth: 0.1,
-                    cellPadding: 6,
-                    fontSize: 10,
+                    cellPadding: 5,
+                    fontSize: 9.5,
                     textColor: [TEXT_COLOR.r, TEXT_COLOR.g, TEXT_COLOR.b],
                     valign: 'top'
                 },
@@ -123,10 +125,10 @@ export const PDFService = {
                 didDrawPage: (data: any) => { finalY_Project = data.cursor.y; }
             });
 
-            yPos = finalY_Project + 15;
+            yPos = finalY_Project + 12;
 
-            // --- VOLLEDIGE CHECKLIST (NIEUW) ---
-            doc.setFontSize(12);
+            // --- VOLLEDIGE CHECKLIST ---
+            doc.setFontSize(11);
             doc.setTextColor(BRAND_COLOR.r, BRAND_COLOR.g, BRAND_COLOR.b);
             doc.setFont('helvetica', 'bold');
             doc.text("VOLLEDIGE CHECKLIST", 10, yPos);
@@ -140,12 +142,13 @@ export const PDFService = {
             const checklistRows: any[] = [];
 
             categories.forEach(cat => {
-                // Categorie Header Rij
-                checklistRows.push([{ content: cat.title.toUpperCase(), colSpan: 2, styles: { fillColor: [241, 245, 249], fontStyle: 'bold', textColor: BRAND_COLOR } }]);
+                checklistRows.push([{ 
+                    content: cat.title.toUpperCase(), 
+                    colSpan: 2, 
+                    styles: { fillColor: [241, 245, 249], fontStyle: 'bold', textColor: BRAND_COLOR } 
+                }]);
                 
                 cat.questions.forEach(q => {
-                    // Check of deze vraag in de afkeurpunten staat
-                    // We checken of de tekst van de vraag voorkomt in de afkeurpunten string array
                     const isFail = afkeurpunten.some((p: string) => p.startsWith(q.text));
                     const answer = isFail ? "❌ NEE" : "✅ JA";
                     const actionMatch = afkeurpunten.find((p: string) => p.startsWith(q.text));
@@ -164,7 +167,7 @@ export const PDFService = {
                 head: [['CONTROLEPUNT', 'ANTWOORD']],
                 body: checklistRows,
                 theme: 'grid',
-                styles: { fontSize: 9, cellPadding: 3 },
+                styles: { fontSize: 8.5, cellPadding: 3 },
                 headStyles: { fillColor: BRAND_COLOR, textColor: [255, 255, 255] },
                 columnStyles: {
                     0: { cellWidth: 155 },
@@ -173,12 +176,12 @@ export const PDFService = {
                 didDrawPage: (data: any) => { finalY_Checklist = data.cursor.y; }
             });
 
-            yPos = finalY_Checklist + 15;
+            yPos = finalY_Checklist + 12;
 
             // --- OPMERKINGEN ---
             if (yPos > 240) { doc.addPage(); yPos = 20; }
 
-            doc.setFontSize(12);
+            doc.setFontSize(11);
             doc.setTextColor(BRAND_COLOR.r, BRAND_COLOR.g, BRAND_COLOR.b);
             doc.setFont('helvetica', 'bold');
             doc.text("EXTRA OPMERKINGEN", 10, yPos);
@@ -195,8 +198,8 @@ export const PDFService = {
                     fillColor: [248, 250, 252], 
                     textColor: [71, 85, 105],
                     fontStyle: 'italic',
-                    cellPadding: 8,
-                    minCellHeight: 15
+                    cellPadding: 6,
+                    minCellHeight: 12
                 }
             });
 
@@ -209,11 +212,12 @@ export const PDFService = {
                 doc.setFontSize(8);
                 doc.setTextColor(150);
                 doc.text(`Rapport ID: ${report.report_id}`, 10, 285);
-                doc.text(`LMRA Pro v${APP_VERSION} - Safety First`, 105, 285, { align: 'center' });
+                doc.text(`LMRA Pro v${APP_VERSION} - Offline PWA`, 105, 285, { align: 'center' });
                 doc.text(`Pagina ${i} van ${pageCount}`, 200, 285, { align: 'right' });
             }
 
-            const filename = `LMRA_${report.werkorder.replace(/[^a-zA-Z0-9]/g, '-')}_${dateCreated.toISOString().split('T')[0]}.pdf`;
+            const cleanWO = (report.werkorder || 'LMRA').replace(/[^a-zA-Z0-9]/g, '-');
+            const filename = `LMRA_${cleanWO}_${dateCreated.toISOString().split('T')[0]}.pdf`;
             doc.save(filename);
             UI.showToast("✅ PDF Succesvol Gedownload");
 

@@ -1,30 +1,15 @@
-# 🛡️ Security Protocol - LMRA Pro v9.8 Sentinel
+# 🛡️ Security & Privacy Protocol - LMRA Pro (v9.8.10)
 
-LMRA Pro "Sentinel Edition" is ontworpen volgens het **Privacy-First & Zero-Trust** principe. Alle gegevens worden lokaal versleuteld voordat ze worden opgeslagen.
+LMRA Pro is ontworpen volgens het **Client-Side Privacy-First** principe.
 
-## 🔒 1. Encryptie Architectuur
-* **Algoritme:** AES-GCM (Advanced Encryption Standard - Galois/Counter Mode) met 256-bit sleutels.
-* **Key Derivation:** PBKDF2 (Password-Based Key Derivation Function 2) met:
-    * SHA-256 hash
-    * 600.000 iteraties (beveiliging tegen brute-force)
-    * Unieke 16-byte salt per apparaat
-* **Vector:** Unieke 12-byte IV (Initialization Vector) per opgeslagen item.
+## 🔒 1. Privacy & Gegevensverwerking
+* **100% Client-Side:** Alle data (inclusief risico-analyses, werkorders, tijden en opmerkingen) worden uitsluitend lokaal verwerkt in de browser van het apparaat van de monteur.
+* **Geen Externe Server:** Geen verzending van persoonsgegevens of rapportages naar externe databases of servers.
+* **Lokale Opslag:** Gegevens worden bewaard via de asynchrone browser-database `IndexedDB`.
 
-## 💣 2. Self-Destruct Protocol
-Het systeem is uitgerust met een automatische data-vernietiging (crypto-shredding) mechanisme.
-* **Trigger:** 5 opeenvolgende foutieve PIN-pogingen.
-* **Actie:**
-    1.  De encryptiesleutel (afgeleid van de PIN) wordt uit het geheugen gewist.
-    2.  De unieke Salt wordt verwijderd.
-    3.  Alle IndexedDB data stores (Report Queue, History, Session) worden volledig gewist (`clear()`).
-    4.  Local Storage sleutels worden verwijderd.
-* **Gevolg:** Zonder de salt en de data is herstel onmogelijk, zelfs met forensische tools.
+## 📄 2. PDF Generatie
+* **Veilige Client-Side Generatie:** PDF-rapportages worden direct in het geheugen van de browser gegenereerd (`jsPDF`).
+* **HTML Sanitization:** Alle tekstinvoer wordt geschoond via `DOMPurify` tegen XSS (Cross-Site Scripting).
 
-## 💾 3. Data Opslag
-* **Lokaal:** Data wordt uitsluitend versleuteld opgeslagen in `IndexedDB`. Er staat nooit platte tekst (plaintext) op de harde schijf van het apparaat.
-* **Cloud (Supabase):**
-    * Verbinding verloopt uitsluitend via HTTPS (TLS 1.2+).
-    * Row Level Security (RLS) policies zorgen dat alleen geautoriseerde insert-acties zijn toegestaan.
-
-## ⚠️ 4. Disclaimer
-De gebruiker is zelf verantwoordelijk voor het onthouden van de 6-cijferige PIN. Er is **geen "Wachtwoord Vergeten"** optie. Bij verlies van de PIN is de lokale data onherroepelijk verloren (by design).
+## 🐛 3. Kwetsbaarheden Melden
+Mocht je een beveiligingsprobleem ontdekken in de broncode, dan kun je een issue aanmaken op de open-source GitHub repository: [https://github.com/SethEsenkbrink/lmra-app](https://github.com/SethEsenkbrink/lmra-app).

@@ -1,34 +1,64 @@
-# 🛡️ LMRA Pro - v9.8 Sentinel Safe
+# 🛡️ LMRA Pro - Open Source PWA (v9.8.10)
 
-**Status:** Production Stable  
-**Architecture:** Vite / Vanilla JS / PWA  
-**Security:** Client-Side AES-GCM & Self-Destruct Protocol
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()
+[![PWA Ready](https://img.shields.io/badge/PWA-100%25%20Offline-blue.svg)]()
 
-LMRA Pro is een geavanceerde Progressive Web App (PWA) voor technici in de proces- en elektrotechniek. Deze "Sentinel Safe" editie is volledig herbouwd om maximale databeveiliging en offline-stabiliteit te garanderen zonder afhankelijk te zijn van externe CDN's.
+**LMRA Pro** is een open source, zero-friction Progressive Web App (PWA) voor het uitvoeren van **Laatste Minuut Risico Analyses (LMRA)** in de techniek, bouw en procesindustrie. 
 
-## 🚀 Nieuw in v9.8 (Sentinel Architecture)
-* **Zero-Build Dependency:** Volledig lokaal gebouwd met Vite. Geen externe CDN-links meer voor CSS of JS.
-* **Self-Destruct Protocol:** Lokale data wordt permanent gewist (crypto-shredding) na 5 foutieve PIN-pogingen.
-* **Encrypted Storage:** Migratie van LocalStorage naar IndexedDB (via `idb-keyval`) voor veilige, asynchrone opslag van grote datasets.
-* **Offline-First:** Verbeterde Service Worker en Sync Queue die automatisch synchroniseert zodra verbinding hersteld is.
+Ontworpen om direct en mobiel-vriendelijk te werken op smartphones, tablets en laptops, zonder verplichte inlogschermen of externe servers.
+
+---
+
+## 🚀 Kenmerken & Functionaliteiten
+
+* **🔓 Zero Friction / Geen Inlogdrempels**: Direct openen en invullen op de werkvloer.
+* **🏢 Bedrijf & Opdrachtgever**: Vul eenvoudig de bedrijfsnaam in die op het rapport en de PDF verschijnt.
+* **⚡ 100% Offline-First PWA**: Geïnstalleerd via de browser (iOS/Android/Desktop), werkt volledig zonder internet.
+* **📄 Professionele PDF Export**: Inclusief kleurencoderingen (VEILIG / ONVEILIG - STOP), checklist, actiepunten en tijdsstempels.
+* **🔒 100% Privacy & AVG Veilig**: Geen externe databases of tracking van persoonsgegevens. Data blijft op het toestel van de gebruiker (IndexedDB).
+* **👥 Buddy Check & Eigen Verklaring**: Mede-beoordeling door toezichthouder of buddy voor verhoogde veiligheid.
+
+---
 
 ## 🛠️ Tech Stack
-* **Core:** Vanilla JavaScript (ES Modules)
-* **Build Tool:** Vite 5.x
-* **Styling:** TailwindCSS 3.4 (PostCSS)
-* **Database:** Supabase (PostgreSQL + RLS)
-* **Security:** Web Crypto API (SubtleCrypto)
-* **Local DB:** IndexedDB (Encrypted wrapper)
 
-## 💻 Installatie & Gebruik
+* **Core Language:** TypeScript / JavaScript (ES Modules)
+* **Build Tool:** Vite 7.x
+* **Styling:** TailwindCSS 3.4 + FontAwesome Icons
+* **Local Storage:** IndexedDB (via `idb-keyval`)
+* **PDF Generator:** `jsPDF` + `jspdf-autotable`
+* **Validation:** Zod Schema Validation
+
+---
+
+## 💻 Installatie & Lokaal Draaien
 
 ### Vereisten
 * Node.js (v18 of hoger)
 * NPM
 
-### Setup
-1. Clone de repository:
-   ```bash
-   git clone [https://github.com/jouw-repo/lmra-app.git](https://github.com/jouw-repo/lmra-app.git)
-   cd lmra-app
-   npm install
+### Ontwikkeling & Server
+```bash
+# 1. Clone de repository
+git clone https://github.com/SethEsenkbrink/lmra-app.git
+cd lmra-app
+
+# 2. Installeer dependencies
+npm install
+
+# 3. Start lokale ontwikkelserver
+npm run dev
+
+# 4. Bouw voor productie
+npm run build
+```
+
+---
+
+## 📜 Licentie
+
+Gepubliceerd onder de **MIT Licentie**. Zie het [`LICENSE`](LICENSE) bestand voor details.
+Vrij te gebruiken, aan te passen en te distribueren.
+
+Developed with ❤️ by **Brink Multimedia**.

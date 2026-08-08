@@ -11,13 +11,13 @@
   to = "/app.html"
   status = 200
 
-# 2. PWA/SPA Fallback voor de App: Als iemand /app/iets typt, blijf in de software
+# 2. PWA/SPA Fallback voor de App
 [[redirects]]
   from = "/app/*"
   to = "/app.html"
   status = 200
 
-# 3. Default: Alle andere verzoeken gaan naar de landingspagina (nieuwe index.html)
+# 3. Default: Alle andere verzoeken naar landingspagina (index.html)
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -26,18 +26,12 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    # Beveiliging tegen clickjacking
     X-Frame-Options = "DENY"
-    # Bescherming tegen MIME-type sniffing
     X-Content-Type-Options = "nosniff"
-    # Forceer HTTPS (HSTS)
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    # Referrer Policy voor privacy
     Referrer-Policy = "strict-origin-when-cross-origin"
     
-    # Content Security Policy (CSP) - DE KRITIEKE AUDIT EIS
-    # EXACT OVERGENOMEN UIT JOUW ORIGINEEL (Geen wijzigingen in script-src)
-    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.nsvcs.net;"
+    # Content Security Policy (CSP) geoptimaliseerd voor PWA & Google Analytics
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://www.google-analytics.com https://*.google-analytics.com; font-src 'self' data:; connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com;"
     
-    # Browser features uitschakelen die we niet gebruiken (Privacy)
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"

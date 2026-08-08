@@ -28,15 +28,6 @@ LMRA Pro maakt gebruik van de volgende open-source softwarecomponenten. Het gebr
 
 ---
 
-## Cloud & Database
-
-### Supabase JS Client
-- **Copyright:** (c) 2020 Supabase
-- **License:** MIT
-- **Source:** https://github.com/supabase/supabase-js
-
----
-
 ## User Interface (UI) & Styling
 
 ### Tailwind CSS

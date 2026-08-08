@@ -1,5 +1,5 @@
 /* src/ui.ts */
-import * as DOMPurify from 'dompurify';
+import DOMPurify from 'dompurify';
 import { Category } from './data';
 
 // Callbacks types
@@ -59,7 +59,7 @@ export const UI = {
             return;
         }
 
-        const sanitizer = (DOMPurify as any).default?.sanitize || (DOMPurify as any).sanitize;
+        const sanitizer = (val: string) => DOMPurify.sanitize(val);
 
         categories.forEach(cat => {
             const section = document.createElement('div');

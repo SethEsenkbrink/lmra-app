@@ -3,75 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacyverklaring - LMRA Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Privacyverklaring (AVG/GDPR) - LMRA Pro</title>
+    <link rel="stylesheet" href="/src/style.css">
+    <script type="module" src="/src/landing.ts"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans">
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
     
-    <div class="max-w-4xl mx-auto py-12 px-6 bg-white shadow-xl my-12 rounded-xl border border-slate-200">
-        <div class="border-b pb-6 mb-8">
-            <h1 class="text-3xl font-bold text-slate-900">Privacyverklaring</h1>
-            <p class="text-slate-500 mt-1">Conform Algemene Verordening Gegevensbescherming (AVG)</p>
+    <div class="max-w-4xl mx-auto py-12 px-6 bg-white shadow-xl my-12 rounded-2xl border border-slate-200">
+        <!-- HEADER -->
+        <div class="border-b pb-6 mb-8 flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900">Privacyverklaring (AVG / GDPR)</h1>
+                <p class="text-slate-500 mt-1">Conform de Algemene Verordening Gegevensbescherming (AVG)</p>
+            </div>
+            <div class="text-right text-xs text-slate-400">
+                Laatst bijgewerkt: 8 augustus 2026<br>
+                Versie: 3.0 Open PWA
+            </div>
         </div>
 
         <div class="space-y-8 text-sm leading-relaxed">
             
+            <!-- HIGHLIGHT BOX -->
+            <section class="bg-emerald-50 p-5 rounded-xl border border-emerald-200">
+                <h2 class="text-base font-bold text-emerald-800 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-xl"></i> 1. Kernbelofte: 100% Client-Side Privacy
+                </h2>
+                <p class="text-emerald-900 leading-relaxed">
+                    LMRA Pro is ontworpen volgens het <strong>Privacy-by-Design</strong> principe. Alle gegevens die u invoert bij het uitvoeren van een Laatste Minuut Risico Analyse (zoals uw naam, bedrijfsnaam, werkorder, locatie en antwoorden) worden <strong>uitsluitend lokaal in het geheugen en de browser-database (IndexedDB) van uw eigen apparaat verwerkt</strong>.
+                </p>
+                <p class="text-emerald-900 mt-2 font-bold">
+                    Er worden GEEN persoonsgegevens of rapportages verzonden naar externe servers of cloud-databases van Brink Multimedia of derden.
+                </p>
+            </section>
+
+            <!-- ARTIKEL 2: IDENTITEIT VERWERKINGSVERANTWOORDELIJKE -->
             <section>
-                <h2 class="text-lg font-bold text-slate-900 mb-2">1. Rollen en Verantwoordelijkheden</h2>
-                <p>Bij het gebruik van LMRA Pro in een zakelijke omgeving gelden de volgende rollen conform de AVG:</p>
-                <ul class="list-disc pl-5 mt-2 space-y-1 text-slate-600">
-                    <li><strong>Verwerkingsverantwoordelijke:</strong> De Klant (het bedrijf dat de software afneemt). U bepaalt waarom en hoe data wordt verzameld.</li>
-                    <li><strong>Verwerker:</strong> Brink Multimedia. Wij leveren de technische infrastructuur en software om deze data te verwerken.</li>
+                <h2 class="text-base font-bold text-slate-900 mb-2 uppercase tracking-wide border-b pb-1">2. Identiteit van de Verwerkingsverantwoordelijke</h2>
+                <p class="text-slate-600 mb-3">
+                    Aangezien alle verwerking lokaal op uw toestel plaatsvindt, is Brink Multimedia formeel geen ontvanger van uw persoonsgegevens. Voor zover de wet dit vereist, zijn de contactgegevens van de ontwikkelaar:
+                </p>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-1 text-slate-700 font-mono">
+                    <p><strong>Handelsnaam:</strong> Brink Multimedia</p>
+                    <p><strong>Adres:</strong> De Hoven 30, 9454 PS Ekehaar, Nederland</p>
+                    <p><strong>KvK-nummer:</strong> 71256385</p>
+                    <p><strong>BTW-identificatienummer:</strong> NL002397011B65</p>
+                    <p><strong>E-mailadres:</strong> info@brinkmultimedia.nl</p>
+                    <p><strong>Website:</strong> https://www.lmrapro.nl</p>
+                </div>
+            </section>
+
+            <!-- ARTIKEL 3: WELKE GEGEVENS WORDEN VERWERKT -->
+            <section>
+                <h2 class="text-base font-bold text-slate-900 mb-2 uppercase tracking-wide border-b pb-1">3. Welke persoonsgegevens worden lokaal verwerkt?</h2>
+                <p class="text-slate-600 mb-2">Wanneer u de LMRA applicatie gebruikt, worden de volgende gegevens door u ingevoerd en lokaal op uw apparaat opgeslagen:</p>
+                <ul class="list-disc pl-5 space-y-1 text-slate-600">
+                    <li><strong>Monteursgegevens:</strong> Naam van de monteur/technicus en optioneel naam van de buddy/toezichthouder.</li>
+                    <li><strong>Bedrijfs- & Werkgegevens:</strong> Bedrijfsnaam / Opdrachtgever, Locatie / Asset, Werkordernummer.</li>
+                    <li><strong>Analysegegevens:</strong> Antwoorden op veiligheidsvragen (JA / NEE), eventuele acties bij afkeur, opmerkingen.</li>
+                    <li><strong>Tijdstempels:</strong> Datum en tijdstip van aanmaak en berekende geldigheid van de LMRA.</li>
                 </ul>
             </section>
 
-            <section class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                <h2 class="text-lg font-bold text-[#00447c] mb-2"><i class="fa-solid fa-database mr-2"></i>2. Technische Infrastructuur (Supabase)</h2>
-                <p class="mb-2">LMRA Pro maakt gebruik van <strong>Supabase</strong> als backend database provider. Dit is een moderne, enterprise-grade database-oplossing.</p>
-                <p><strong>Toegang tot data:</strong></p>
-                <ul class="list-disc pl-5 mt-1 space-y-1 text-slate-700">
-                    <li>Alle data wordt opgeslagen op beveiligde servers binnen de EU (indien geconfigureerd) of conform strikte internationale standaarden.</li>
-                    <li>Brink Multimedia heeft als technisch beheerder toegang tot de database voor onderhoud, back-ups en het oplossen van storingen.</li>
-                    <li><strong>Strikte Policy:</strong> Brink Multimedia zal nimmer inhoudelijke bedrijfsrapporten inzien, analyseren of delen met derden, tenzij dit strikt noodzakelijk is voor een technisch support-verzoek van de klant zelf.</li>
+            <!-- ARTIKEL 4: DOELEN EN RECHTSGROND -->
+            <section>
+                <h2 class="text-base font-bold text-slate-900 mb-2 uppercase tracking-wide border-b pb-1">4. Doel van de verwerking en Rechtsgrond</h2>
+                <p class="text-slate-600 mb-2">
+                    De verwerking vindt plaats voor de volgende doeleinden:
+                </p>
+                <ul class="list-disc pl-5 space-y-1 text-slate-600 mb-3">
+                    <li>Het opmaken en genereren van een officieel PDF-veiligheidsrapport ten behoeve van VCA- en werkvergunningverplichtingen op de werkvloer.</li>
+                    <li>Het bewaren van een lokaal geschiedenisoverzicht in uw eigen browser voor uw eigen administratie.</li>
+                </ul>
+                <p class="text-slate-600">
+                    <strong>Rechtsgrond (Art. 6 lid 1 sub b en f AVG):</strong> De verwerking is noodzakelijk voor de uitvoering van de door u gestarte dienst (het maken van een LMRA) en het gerechtvaardigd belang van de werkgever/monteur om aantoonbaar aan veiligheidsnormen op de werkvloer te voldoen.
+                </p>
+            </section>
+
+            <!-- ARTIKEL 5: BEWAARTERMIJN -->
+            <section>
+                <h2 class="text-base font-bold text-slate-900 mb-2 uppercase tracking-wide border-b pb-1">5. Bewaartermijn van uw gegevens</h2>
+                <p class="text-slate-600">
+                    Omdat uw gegevens uitsluitend lokaal op uw eigen apparaat (in de browser via IndexedDB) worden bewaard, bepaalt u zelf hoe lang de gegevens bewaard blijven. U kunt uw lokale historie op ieder gewenst moment permanent wissen via de knop <strong>"Wissen"</strong> in het geschiedenisscherm van de applicatie of via de browserinstellingen (browsergeschiedenis/cookies wissen).
+                </p>
+            </section>
+
+            <!-- ARTIKEL 6: RECHTEN VAN BETROKKENEN -->
+            <section>
+                <h2 class="text-base font-bold text-slate-900 mb-2 uppercase tracking-wide border-b pb-1">6. Uw Rechten conform de AVG</h2>
+                <p class="text-slate-600 mb-2">Conform de AVG heeft u de volgende rechten omtrent uw persoonsgegevens:</p>
+                <ul class="list-disc pl-5 space-y-1.5 text-slate-600">
+                    <li><strong>Recht op Inzage & Dataportabiliteit:</strong> U kunt al uw opgeslagen rapporten direct inzien in het geschiedenisscherm en exporteren als PDF.</li>
+                    <li><strong>Recht op Rectificatie & Verwijdering (Vergeetbaarheid):</strong> U kunt het formulier aanpassen of uw gehele geschiedenis per direct wissen uit uw browser.</li>
+                    <li><strong>Klacht indienen bij de Autoriteit Persoonsgegevens:</strong> Mocht u van mening zijn dat uw privacyrechten geschonden worden, dan heeft u het recht om een klacht in te dienen bij de Nederlandse toezichthouder: <a href="https://www.autoriteitpersoonsgegevens.nl" target="_blank" rel="noopener noreferrer" class="text-blue-600 font-bold hover:underline">Autoriteit Persoonsgegevens (AP)</a>.</li>
                 </ul>
             </section>
 
+            <!-- ARTIKEL 7: DELEN MET DERDEN EN GEEN PROFILING -->
             <section>
-                <h2 class="text-lg font-bold text-slate-900 mb-2">3. Welke gegevens verwerken wij?</h2>
-                <ul class="list-disc pl-5 mt-2 space-y-1 text-slate-600">
-                    <li><strong>Accountgegevens:</strong> E-mailadressen en versleutelde wachtwoorden van uw monteurs om in te loggen.</li>
-                    <li><strong>LMRA Data:</strong> De inhoud van de risico-analyses (locatie, tijdstip, checklist, foto's).</li>
-                </ul>
+                <h2 class="text-base font-bold text-slate-900 mb-2 uppercase tracking-wide border-b pb-1">7. Delen met derden & Geen Profiling</h2>
+                <p class="text-slate-600 mb-2">
+                    Uw gegevens worden <strong>nooit verkocht, verhuurd of gedeeld met derden</strong>. 
+                </p>
+                <p class="text-slate-600">
+                    LMRA Pro maakt geen gebruik van geautomatiseerde besluitvorming of profiling (Art. 22 AVG).
+                </p>
             </section>
 
+            <!-- ARTIKEL 8: BEVEILIGING -->
             <section>
-                <h2 class="text-lg font-bold text-slate-900 mb-2">4. Beveiliging en AI</h2>
-                <p>Wij nemen de bescherming van uw gegevens serieus. De code van de applicatie is mede ontwikkeld en geauditeerd door <strong>Google Gemini 3.0</strong> AI. Dit zorgt voor:</p>
-                <ul class="list-disc pl-5 mt-1 text-slate-600">
-                    <li>Minimalisatie van kwetsbaarheden in de code (Zero-Bug Policy).</li>
-                    <li>Toepassing van moderne encryptie-standaarden.</li>
-                </ul>
+                <h2 class="text-base font-bold text-slate-900 mb-2 uppercase tracking-wide border-b pb-1">8. Beveiliging van uw Gegevens</h2>
+                <p class="text-slate-600">
+                    Hoewel alle verwerking lokaal op uw eigen toestel plaatsvindt, is de broncode van LMRA Pro beveiligd met strikte invoer-sanitization (`DOMPurify`) om Cross-Site Scripting (XSS) te voorkomen. Wij raden u aan uw eigen toestel (smartphone/laptop) te beveiligen met een pincode, vingerafdruk of FaceID.
+                </p>
             </section>
 
-            <section>
-                <h2 class="text-lg font-bold text-slate-900 mb-2">5. Uw Rechten</h2>
-                <p>Als klant heeft u altijd recht op data-export. Bij beëindiging van de licentie zal Brink Multimedia uw data op verzoek exporteren (CSV/PDF) en vervolgens permanent verwijderen uit de Supabase omgeving.</p>
-            </section>
-
-            <section>
-                <h2 class="text-lg font-bold text-slate-900 mb-2">6. Contact</h2>
-                <p class="mt-2 text-slate-600">
-                    <strong>Brink Multimedia</strong><br>
-                    KVK: 71256385<br>
-                    E-mail: info@brinkmultimedia.nl
+            <!-- ARTIKEL 9: CONTACT -->
+            <section class="pt-4 border-t border-slate-200">
+                <h2 class="text-base font-bold text-slate-900 mb-2">Vragen over deze Privacyverklaring?</h2>
+                <p class="text-slate-600">
+                    Neem voor vragen of opmerkingen contact op via: <a href="mailto:info@brinkmultimedia.nl" class="text-blue-600 font-bold hover:underline">info@brinkmultimedia.nl</a>.
                 </p>
             </section>
         </div>
 
-        <div class="mt-12 pt-6 border-t flex justify-between items-center">
+        <div class="mt-12 pt-6 border-t flex justify-between items-center text-xs">
             <a href="/" class="text-blue-600 font-bold hover:underline">&larr; Terug naar Home</a>
-            <span class="text-slate-400 text-xs">© 2026 Brink Multimedia</span>
+            <span class="text-slate-400">&copy; 2026 Brink Multimedia</span>
         </div>
     </div>
 </body>
