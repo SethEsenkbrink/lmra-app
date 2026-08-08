@@ -41,7 +41,8 @@
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
     Referrer-Policy = "strict-origin-when-cross-origin"
     
-    # Content Security Policy (CSP) geoptimaliseerd voor PWA & Google Analytics
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com; font-src 'self' data:; connect-src 'self' https://www.googletagmanager.com https://*.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com;"
+    # Content Security Policy (CSP) geoptimaliseerd voor PWA, GPS, Weer, Camera & Google Analytics
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com; font-src 'self' data:; media-src 'self' blob:; worker-src 'self'; connect-src 'self' https://nominatim.openstreetmap.org https://api.open-meteo.com https://www.googletagmanager.com https://*.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com;"
     
+    # Permissions-Policy: Sta camera, microfoon en GPS toe voor deze app
     Permissions-Policy = "camera=(self), microphone=(self), geolocation=(self), payment=()"
