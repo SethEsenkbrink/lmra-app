@@ -1,4 +1,4 @@
-# 🛡️ LMRA Pro - Open Source PWA (v9.8.10)
+# 🛡️ LMRA Pro - Open Source PWA (v10.0.0)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()

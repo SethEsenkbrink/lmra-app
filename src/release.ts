@@ -1,7 +1,7 @@
 // src/release.ts
 
 export const RELEASE_INFO = {
-    title: "v9.8.10 Open PWA & Bedrijfs-LMRA Update",
+    title: "v10.0.0 Open PWA & Bedrijfs-LMRA Update",
     features: [
         "Open Web App: Geen inlogschermen of wachtwoorden meer nodig!",
         "Bedrijf / Opdrachtgever: Voeg direct de bedrijfsnaam toe aan de LMRA",
