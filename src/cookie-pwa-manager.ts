@@ -25,13 +25,34 @@ export function initCookieAndPwaManager(isAppPage: boolean = false) {
 function initCookieConsent() {
   const consentChoice = localStorage.getItem('lmra_cookie_consent');
 
-  if (consentChoice === 'declined') {
-    // Disable Google Analytics
+  if (consentChoice === 'accepted') {
+    // User already accepted: load Google Analytics dynamically
+    loadGoogleAnalytics();
+  } else if (consentChoice === 'declined') {
+    // User declined: disable Google Analytics
     (window as any)[`ga-disable-${GA_MEASUREMENT_ID}`] = true;
-  } else if (!consentChoice) {
-    // Render Cookie Banner
+  } else {
+    // No consent choice made yet: show banner, do NOT load Analytics until accepted
     renderCookieBanner();
   }
+}
+
+function loadGoogleAnalytics() {
+  if (document.getElementById('ga-script')) return;
+
+  const script = document.createElement('script');
+  script.id = 'ga-script';
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+  document.head.appendChild(script);
+
+  (window as any).dataLayer = (window as any).dataLayer || [];
+  function gtag(...args: any[]) {
+    (window as any).dataLayer.push(args);
+  }
+  (window as any).gtag = gtag;
+  gtag('js', new Date());
+  gtag('config', GA_MEASUREMENT_ID);
 }
 
 function renderCookieBanner() {
@@ -52,10 +73,10 @@ function renderCookieBanner() {
           LMRA Pro gebruikt noodzakelijke lokale opslag (IndexedDB) om rapporten op je toestel te bewaren. Optioneel gebruiken we geanonimiseerde Google Analytics voor webstatistieken.
         </p>
         <div class="pt-2 flex flex-wrap items-center gap-2">
-          <button id="btnAcceptCookies" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition shadow-lg shadow-blue-600/30">
+          <button id="btnAcceptCookies" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition shadow-lg shadow-blue-600/30 cursor-pointer">
             Accepteren
           </button>
-          <button id="btnRefuseCookies" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-2 rounded-xl text-xs transition border border-slate-700">
+          <button id="btnRefuseCookies" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-2 rounded-xl text-xs transition border border-slate-700 cursor-pointer">
             Alleen Functioneel
           </button>
           <a href="/privacy.html" class="text-blue-400 hover:underline text-xs ml-auto font-medium">
@@ -70,6 +91,7 @@ function renderCookieBanner() {
 
   document.getElementById('btnAcceptCookies')?.addEventListener('click', () => {
     localStorage.setItem('lmra_cookie_consent', 'accepted');
+    loadGoogleAnalytics();
     banner.remove();
   });
 
@@ -87,7 +109,6 @@ function initPwaInstallPrompt() {
     e.preventDefault();
     deferredPrompt = e;
 
-    // Show custom PWA install button/banner if container exists
     const pwaInstallContainers = document.querySelectorAll('.pwa-install-trigger');
     pwaInstallContainers.forEach(container => {
       (container as HTMLElement).style.display = 'flex';
@@ -103,7 +124,6 @@ function initPwaInstallPrompt() {
     });
   });
 
-  // Register ServiceWorker if supported
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js').then((reg) => {
