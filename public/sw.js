@@ -40,7 +40,8 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.url.startsWith('chrome-extension')) {
+  // Only handle GET requests from the SAME origin (ignore Google Analytics, extensions, external APIs)
+  if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin)) {
     return;
   }
 
