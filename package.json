@@ -1,7 +1,7 @@
 {
   "name": "lmra-sentinel",
   "private": true,
-  "version": "9.8.10",
+  "version": "9.8.11",
   "type": "module",
   "scripts": {
     "dev": "vite",
