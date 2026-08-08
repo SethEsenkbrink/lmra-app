@@ -1,7 +1,7 @@
 {
   "name": "LMRA Pro v9.8.10 PWA",
   "short_name": "LMRA Pro",
-  "start_url": "/",
+  "start_url": "/app.html",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#00447c",

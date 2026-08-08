@@ -15,8 +15,10 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'), // De nieuwe Landingspagina
-        app: resolve(__dirname, 'app.html')     // De bestaande LMRA App
+        main: resolve(__dirname, 'index.html'),
+        app: resolve(__dirname, 'app.html'),
+        privacy: resolve(__dirname, 'privacy.html'),
+        voorwaarden: resolve(__dirname, 'voorwaarden.html')
       }
     }
   }

@@ -11,10 +11,20 @@
   to = "/app.html"
   status = 200
 
-# 2. PWA/SPA Fallback voor de App
 [[redirects]]
   from = "/app/*"
   to = "/app.html"
+  status = 200
+
+# 2. Juridische pagina's
+[[redirects]]
+  from = "/privacy"
+  to = "/privacy.html"
+  status = 200
+
+[[redirects]]
+  from = "/voorwaarden"
+  to = "/voorwaarden.html"
   status = 200
 
 # 3. Default: Alle andere verzoeken naar landingspagina (index.html)

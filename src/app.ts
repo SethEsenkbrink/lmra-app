@@ -8,6 +8,7 @@ import { PDFService } from './services/pdf';
 import { SessionService } from './services/session';
 import { FormService } from './services/form';
 import { RELEASE_INFO } from './release';
+import { initCookieAndPwaManager } from './cookie-pwa-manager';
 
 interface AppState {
     viewingReport: LMRAReport | null;
@@ -20,6 +21,7 @@ const state: AppState = {
 export const App = {
     async init(): Promise<void> {
         console.log(`LMRA Pro v${APP_VERSION} Open PWA Init...`);
+        initCookieAndPwaManager(true);
         this.attachEventListeners();
         this.checkChangelog();
         this.updateConnectionStatus();
