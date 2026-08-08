@@ -6,7 +6,7 @@ export const PhotoManager = {
     maxPhotos: 3,
 
     init() {
-        const btnAdd = document.getElementById('btnAddPhoto');
+        const btnAdd = document.getElementById('btnTakePhoto');
         const fileInput = document.getElementById('photoInput') as HTMLInputElement;
 
         if (btnAdd && fileInput) {
