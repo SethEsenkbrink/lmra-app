@@ -1,0 +1,13 @@
+# Voorkomt dat Windows (CRLF) en Linux/CI (LF) elk bestand als "gewijzigd" tonen.
+# Alles wordt in de repo als LF opgeslagen; Git checkout mag lokaal CRLF gebruiken.
+* text=auto eol=lf
+
+# Binaire bestanden nooit converteren
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
