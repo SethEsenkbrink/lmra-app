@@ -60,7 +60,10 @@ updateFile(
 
 // 3. Update index.html
 const indexPath = path.join(rootDir, 'index.html');
-updateFile(indexPath, /<title>LMRA Pro.*?<\/title>/, `<title>LMRA Pro v${newVersion} - Laatste Minuut Risico Analyse (PWA)</title>`, 'Index Title');
+// Titel van de landingspagina is SEO-gevoelig en bevat GEEN versienummer meer.
+// Alleen de app-titel krijgt de versie mee.
+console.log('ℹ️  Index Title blijft ongewijzigd (SEO-titel).');
+void indexPath;
 
 // 4. Update app.html
 const appPath = path.join(rootDir, 'app.html');
