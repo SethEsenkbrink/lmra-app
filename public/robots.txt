@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.lmrapro.nl/sitemap.xml
+Sitemap: https://lmrapro.nl/sitemap.xml

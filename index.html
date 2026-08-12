@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>LMRA Pro v10.0.0 - Laatste Minuut Risico Analyse (PWA)</title>
-    <meta name="description" content="Gratis, open source online LMRA tool voor monteurs en technici. Voer direct een Laatste Minuut Risico Analyse uit op je smartphone of laptop en download direct een professioneel PDF rapport. Geen inloggen nodig!">
+    <title>LMRA Pro - Gratis LMRA App voor Monteurs (Laatste Minuut Risico Analyse)</title>
+    <meta name="description" content="Gratis open source LMRA app voor monteurs en technici. Doe je Laatste Minuut Risico Analyse op je telefoon, ook offline, en download direct een PDF-rapport.">
     <meta name="keywords" content="LMRA app, LMRA maken, Laatste Minuut Risico Analyse, Open Source LMRA, VCA veiligheid, Werkvergunning, Gratis LMRA tool, PDF LMRA export, Brink Multimedia, PWA">
     <meta name="author" content="Brink Multimedia">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://www.lmrapro.nl/">
+    <meta name="theme-color" content="#00447c">
+    <link rel="canonical" href="https://lmrapro.nl/">
     <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300447c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E">
@@ -18,11 +19,18 @@
     <meta name="google-site-verification" content="VBAm_Xw5h60286xMpXDZy7wOQMC0_kg9gWPFgp8hI5g" />
 
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.lmrapro.nl/">
+    <meta property="og:site_name" content="LMRA Pro">
+    <meta property="og:url" content="https://lmrapro.nl/">
     <meta property="og:title" content="LMRA Pro - Gratis & Open Source LMRA Uitvoeren">
     <meta property="og:description" content="Professionele open source PWA voor Last Minute Risico Analyses. Direct gratis te gebruiken op smartphone en laptop zonder inloggen. Inclusief strakke PDF export.">
-    <meta property="og:image" content="https://www.lmrapro.nl/icon-512.png">
+    <meta property="og:image" content="https://lmrapro.nl/screenshot-app.png">
+    <meta property="og:image:alt" content="LMRA Pro app op een smartphone met het ingevulde LMRA-formulier">
     <meta property="og:locale" content="nl_NL">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LMRA Pro - Gratis & Open Source LMRA App">
+    <meta name="twitter:description" content="Doe je Laatste Minuut Risico Analyse op je telefoon en download direct een PDF-rapport. Gratis, offline en zonder inloggen.">
+    <meta name="twitter:image" content="https://lmrapro.nl/screenshot-app.png">
 
     <script type="application/ld+json">
     {
@@ -42,15 +50,74 @@
       "author": {
         "@type": "Organization",
         "name": "Brink Multimedia",
-        "url": "https://www.lmrapro.nl"
+        "url": "https://lmrapro.nl"
       },
+      "url": "https://lmrapro.nl/",
       "featureList": "Geen inloggen nodig, Open Source (MIT), Direct te gebruiken, Offline PWA, PDF Export, Bedrijfsnaam toevoegen, Buddy check, 100% AVG Veilig",
       "softwareVersion": "10.0.0 Open Source PWA",
-      "screenshot": "https://www.lmrapro.nl/icon-512.png"
+      "screenshot": "https://lmrapro.nl/screenshot-app.png",
+      "isAccessibleForFree": true
     }
     </script>
 
-    <link rel="icon" type="image/svg+xml" href="/icon-192.png">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Wat is een LMRA?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Een LMRA (Laatste Minuut Risico Analyse) is de korte veiligheidscheck die je als monteur of technicus uitvoert op de plek van het werk, vlak voordat je begint. Je loopt de risico's van de werkplek, het gereedschap en de omgeving na en stelt vast of je veilig kunt starten. Een LMRA duurt meestal 1 tot 3 minuten en is een vast onderdeel van VCA en de Arbowet."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is LMRA Pro echt gratis?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ja. LMRA Pro is volledig gratis en open source onder de MIT-licentie. Er zijn geen accounts, abonnementen of verborgen kosten. Je kunt de broncode op GitHub bekijken, zelf hosten of aanpassen voor je eigen bedrijf."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Werkt de LMRA app ook zonder internet?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ja. LMRA Pro is een Progressive Web App die offline werkt. Zodra je de app een keer hebt geopend, kun je in een kelder, tunnel of fabriekshal zonder bereik gewoon een LMRA invullen en een PDF-rapport genereren. Alleen het ophalen van adres- en weerdata heeft internet nodig."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Waar worden mijn gegevens opgeslagen?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Alle ingevulde gegevens, foto's en handtekeningen blijven lokaal in de database van je eigen browser (IndexedDB) op je telefoon of laptop. Er gaat geen rapport naar een server van Brink Multimedia of derden. Je bepaalt zelf wanneer je de geschiedenis wist."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Moet ik de LMRA app installeren?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Nee, je kunt direct in de browser starten. Wil je de app als icoon op je startscherm, dan kun je LMRA Pro in twee tikken installeren als PWA. Er is geen app store, geen download van honderden megabytes en geen account nodig."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is een digitale LMRA rechtsgeldig?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Een LMRA is een verplichte laatste check, geen formeel gekeurd document. Het PDF-rapport van LMRA Pro dient als vastlegging met datum, tijd, locatie, antwoorden en digitale handtekening, wat in de praktijk gebruikt wordt als bewijs dat de check is uitgevoerd. De verantwoordelijkheid voor de inschatting en het naleven van VCA-, Arbo- en bedrijfsvoorschriften blijft altijd bij de uitvoerder en werkgever."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <link rel="icon" type="image/png" href="/icon-192.png">
     <link rel="apple-touch-icon" href="/icon-192.png">
     
     <script type="module" src="/src/landing.ts"></script>
@@ -71,9 +138,10 @@
                     </div>
                 </div>
                 <div class="hidden md:flex items-center space-x-8 text-sm font-medium">
+                    <a href="#wat-is-lmra" class="hover:text-blue-200 transition-colors">Wat is een LMRA?</a>
                     <a href="#features" class="hover:text-blue-200 transition-colors">Features</a>
                     <a href="#opensource" class="hover:text-blue-200 transition-colors">Open Source</a>
-                    <a href="#tech" class="hover:text-blue-200 transition-colors">Techniek</a>
+                    <a href="#faq" class="hover:text-blue-200 transition-colors">FAQ</a>
                     <a href="/app" class="bg-white text-[#00447c] px-5 py-2 rounded-full font-bold hover:bg-blue-50 transition-all shadow-md transform hover:scale-105">
                         <i class="fa-solid fa-rocket mr-2"></i> Start App Direct
                     </a>
@@ -92,10 +160,10 @@
             </div>
             <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
                 Veiligheid eerst. <br class="hidden md:block" />
-                <span class="text-blue-400">Ontworpen voor de monteur.</span>
+                <span class="text-blue-400">De digitale LMRA voor de monteur.</span>
             </h1>
             <p class="mt-4 text-xl text-slate-300 max-w-3xl mx-auto mb-10 leading-relaxed">
-                LMRA Pro is dé no-nonsense webapplicatie voor de techniek en industrie. Voer je Laatste Minuut Risico Analyse direct uit op je smartphone of laptop. Geen inlogdrempels, 100% offline-first en met directe PDF export.
+                LMRA Pro is de no-nonsense webapplicatie voor techniek en industrie. Je voert je Laatste Minuut Risico Analyse digitaal uit op je smartphone of laptop: geen inlogdrempels, volledig offline te gebruiken en met directe PDF-export. Veiligheid eerst, ontworpen voor de monteur die met handschoenen aan op de werkvloer staat.
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <a href="/app" class="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition-all transform hover:scale-105 flex items-center justify-center gap-3 text-lg">
@@ -108,8 +176,79 @@
                     <i class="fa-brands fa-github"></i> Open Source Details
                 </a>
             </div>
+
+            <figure class="mt-16 max-w-xs mx-auto">
+                <img src="/screenshot-app.png"
+                     alt="LMRA Pro app op een smartphone: digitaal LMRA-formulier met veiligheidsvragen, GPS-locatie en handtekening"
+                     width="390" height="844" loading="lazy" decoding="async"
+                     class="w-full rounded-3xl border border-slate-700 shadow-2xl">
+                <figcaption class="text-xs text-slate-400 mt-3">De LMRA app in gebruik op een werktelefoon: vragen afvinken, locatie ophalen en ondertekenen.</figcaption>
+            </figure>
         </div>
     </header>
+
+    <!-- WAT IS EEN LMRA -->
+    <section id="wat-is-lmra" class="py-20 bg-white border-b border-slate-200">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-slate-900 mb-6">Wat is een LMRA?</h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                Een <strong>LMRA</strong> staat voor <strong>Laatste Minuut Risico Analyse</strong>: de korte veiligheidscheck
+                die je als monteur of technicus uitvoert op de plek van het werk, vlak voordat je begint. Je kijkt met je eigen
+                ogen naar de werkplek, het gereedschap, de omgeving en je collega's, en bepaalt of je veilig kunt starten. Een
+                LMRA kost meestal één tot drie minuten en is binnen VCA en de Arbowet een vast onderdeel van veilig werken.
+            </p>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                Waar een RI&amp;E of werkvergunning vooraf op kantoor wordt opgesteld, is de LMRA juist het laatste moment van
+                bezinning ter plaatse. De situatie op de werkvloer verandert namelijk continu: een andere ploeg heeft materiaal
+                laten staan, het weer slaat om, een machine staat niet spanningsloos of de vluchtroute is versperd. Precies die
+                afwijkingen haal je met een LMRA naar boven, zodat je kunt ingrijpen vóórdat er iets gebeurt.
+            </p>
+            <p class="text-slate-600 leading-relaxed">
+                In de praktijk gebeurt zo'n analyse nog vaak met een papieren kaartje in de gereedschapskist. Dat kaartje raakt
+                nat, verdwijnt of wordt achteraf ingevuld. Met een digitale LMRA leg je de check vast op het moment dat je hem
+                uitvoert, inclusief datum, tijd, locatie en handtekening, en heb je direct een leesbaar PDF-rapport voor je
+                werkgever of opdrachtgever.
+            </p>
+        </div>
+    </section>
+
+    <!-- STAPPENPLAN -->
+    <section id="stappenplan" class="py-20 bg-slate-50 border-b border-slate-200">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-slate-900 mb-3">Zo doe je een LMRA in 4 stappen</h2>
+            <p class="text-slate-600 mb-8">Van openen tot PDF-rapport, zonder inloggen en zonder installatie.</p>
+            <ol class="space-y-6">
+                <li class="flex gap-4">
+                    <span class="shrink-0 w-9 h-9 rounded-full bg-[#00447c] text-white font-bold flex items-center justify-center">1</span>
+                    <div>
+                        <h3 class="font-bold text-slate-900 mb-1">Open de app op de werkplek</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">Start de LMRA app direct in je browser of tik op het icoon op je startscherm. Vul je naam, de opdrachtgever, het werkordernummer en eventueel je buddy in. Je profiel wordt lokaal onthouden, dus dit hoef je maar één keer te doen.</p>
+                    </div>
+                </li>
+                <li class="flex gap-4">
+                    <span class="shrink-0 w-9 h-9 rounded-full bg-[#00447c] text-white font-bold flex items-center justify-center">2</span>
+                    <div>
+                        <h3 class="font-bold text-slate-900 mb-1">Bepaal locatie en omstandigheden</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">Haal met één druk op de knop je GPS-locatie op of scan de QR-code van de machine. De app controleert daarnaast het actuele weer en waarschuwt bij onweer, storm, hitte of vorst. Geen bereik? Dan vul je de locatie gewoon handmatig in en gaat de LMRA door.</p>
+                    </div>
+                </li>
+                <li class="flex gap-4">
+                    <span class="shrink-0 w-9 h-9 rounded-full bg-[#00447c] text-white font-bold flex items-center justify-center">3</span>
+                    <div>
+                        <h3 class="font-bold text-slate-900 mb-1">Loop de veiligheidsvragen door</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">Vink per categorie de vragen af over werkplek, gereedschap, PBM's, energie en omgeving. Antwoord je met "nee", dan vraagt de app om de beheersmaatregel die je neemt. Opmerkingen kun je inspreken met de microfoon en foto's voeg je toe als bewijslast.</p>
+                    </div>
+                </li>
+                <li class="flex gap-4">
+                    <span class="shrink-0 w-9 h-9 rounded-full bg-[#00447c] text-white font-bold flex items-center justify-center">4</span>
+                    <div>
+                        <h3 class="font-bold text-slate-900 mb-1">Onderteken en exporteer het rapport</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">Zet je digitale handtekening, bevestig de eigen verklaring en genereer het PDF-rapport. Dat rapport deel je meteen via WhatsApp of mail, of je bewaart het in het lokale archief om later te dupliceren voor een vergelijkbare klus.</p>
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </section>
 
     <!-- FEATURES -->
     <section id="features" class="py-20 bg-slate-50">
@@ -311,14 +450,130 @@
         </div>
     </section>
 
+    <!-- FAQ -->
+    <section id="faq" class="py-20 bg-white border-t border-slate-200">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-slate-900 mb-3">Veelgestelde vragen over de LMRA app</h2>
+            <p class="text-slate-600 mb-10">De vragen die monteurs, KAM-coördinatoren en werkgevers ons het meest stellen.</p>
+
+            <div class="space-y-4">
+                <details class="group bg-slate-50 border border-slate-200 rounded-2xl p-5" open>
+                    <summary class="font-bold text-slate-900 cursor-pointer list-none flex justify-between items-center gap-4">
+                        Is LMRA Pro echt gratis?
+                        <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <p class="text-slate-600 text-sm mt-3 leading-relaxed">
+                        Ja. LMRA Pro is volledig gratis en open source onder de MIT-licentie. Er zijn geen accounts,
+                        abonnementen of verborgen kosten. Je kunt de broncode op GitHub bekijken, zelf hosten of aanpassen
+                        voor je eigen bedrijf, ook commercieel.
+                    </p>
+                </details>
+
+                <details class="group bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                    <summary class="font-bold text-slate-900 cursor-pointer list-none flex justify-between items-center gap-4">
+                        Werkt de LMRA app ook zonder internet?
+                        <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <p class="text-slate-600 text-sm mt-3 leading-relaxed">
+                        Ja. LMRA Pro is een Progressive Web App die offline werkt. Heb je de app één keer geopend, dan kun je
+                        in een kelder, tunnel of fabriekshal zonder bereik gewoon een LMRA invullen, ondertekenen en een
+                        PDF-rapport genereren. Alleen het ophalen van adres- en weerdata heeft internet nodig; zonder
+                        verbinding vult de app coördinaten in en gaat de analyse verder.
+                    </p>
+                </details>
+
+                <details class="group bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                    <summary class="font-bold text-slate-900 cursor-pointer list-none flex justify-between items-center gap-4">
+                        Waar worden mijn gegevens opgeslagen?
+                        <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <p class="text-slate-600 text-sm mt-3 leading-relaxed">
+                        Alle ingevulde gegevens, foto's en handtekeningen blijven lokaal in de database van je eigen browser
+                        (IndexedDB) op je telefoon of laptop. Er gaat geen rapport naar een server van Brink Multimedia of
+                        derden. Je bepaalt zelf wanneer je de geschiedenis wist. Lees de details in onze
+                        <a href="/privacy.html" class="text-[#00447c] font-medium hover:underline">privacyverklaring</a>.
+                    </p>
+                </details>
+
+                <details class="group bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                    <summary class="font-bold text-slate-900 cursor-pointer list-none flex justify-between items-center gap-4">
+                        Moet ik de app installeren of iets downloaden?
+                        <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <p class="text-slate-600 text-sm mt-3 leading-relaxed">
+                        Nee, je kunt direct in de browser starten. Wil je de LMRA app als icoon op je startscherm, dan
+                        installeer je hem in twee tikken als PWA. Geen app store, geen zware download en geen account.
+                    </p>
+                </details>
+
+                <details class="group bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                    <summary class="font-bold text-slate-900 cursor-pointer list-none flex justify-between items-center gap-4">
+                        Is een digitale LMRA rechtsgeldig?
+                        <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <p class="text-slate-600 text-sm mt-3 leading-relaxed">
+                        Een LMRA is een verplichte laatste check, geen formeel gekeurd document. Het PDF-rapport dient als
+                        vastlegging met datum, tijd, locatie, antwoorden en digitale handtekening, wat in de praktijk gebruikt
+                        wordt als bewijs dat de check is uitgevoerd. De verantwoordelijkheid voor de inschatting en het naleven
+                        van VCA-, Arbo- en bedrijfsvoorschriften blijft altijd bij de uitvoerder en de werkgever.
+                    </p>
+                </details>
+
+                <details class="group bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                    <summary class="font-bold text-slate-900 cursor-pointer list-none flex justify-between items-center gap-4">
+                        Kan ik de vragenlijst aanpassen aan mijn eigen bedrijf?
+                        <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <p class="text-slate-600 text-sm mt-3 leading-relaxed">
+                        Omdat het project open source is, kun je de categorieën en vragen in de broncode aanpassen en je eigen
+                        versie hosten. Heb je een wens die voor iedere monteur nuttig is? Open dan een issue of pull request
+                        op GitHub, dan bekijken we of het in de standaardversie past.
+                    </p>
+                </details>
+            </div>
+
+            <!-- DELEN -->
+            <div class="mt-12 bg-slate-900 text-white rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <h3 class="font-bold text-lg">Ken je een collega die dit kan gebruiken?</h3>
+                    <p class="text-slate-400 text-sm">Deel LMRA Pro met je ploeg, KAM-afdeling of opdrachtgever.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="https://wa.me/?text=Gratis%20digitale%20LMRA%20app%20voor%20monteurs%3A%20https%3A%2F%2Flmrapro.nl%2F"
+                       target="_blank" rel="noopener noreferrer" aria-label="Deel LMRA Pro via WhatsApp"
+                       class="w-11 h-11 rounded-full bg-emerald-600 hover:bg-emerald-500 flex items-center justify-center transition-colors">
+                        <i class="fa-brands fa-whatsapp text-xl"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Flmrapro.nl%2F"
+                       target="_blank" rel="noopener noreferrer" aria-label="Deel LMRA Pro op LinkedIn"
+                       class="w-11 h-11 rounded-full bg-[#0a66c2] hover:bg-[#0b76e0] flex items-center justify-center transition-colors">
+                        <i class="fa-brands fa-linkedin-in text-xl"></i>
+                    </a>
+                    <a href="mailto:?subject=Gratis%20LMRA%20app&amp;body=Handige%20gratis%20LMRA%20app%20voor%20de%20werkvloer%3A%20https%3A%2F%2Flmrapro.nl%2F"
+                       aria-label="Deel LMRA Pro via e-mail"
+                       class="w-11 h-11 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-envelope text-lg"></i>
+                    </a>
+                    <a href="https://github.com/SethEsenkbrink/lmra-app" target="_blank" rel="noopener noreferrer"
+                       aria-label="Geef LMRA Pro een ster op GitHub"
+                       class="w-11 h-11 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors">
+                        <i class="fa-brands fa-github text-xl"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- FOOTER -->
     <footer id="contact" class="bg-slate-950 text-slate-400 py-12 border-t border-slate-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid md:grid-cols-4 gap-8 mb-8">
                 <div class="col-span-1 md:col-span-2">
+                    <img src="/icon-192.png" alt="Logo van LMRA Pro, de open source app voor de Laatste Minuut Risico Analyse"
+                         width="56" height="56" loading="lazy" decoding="async" class="w-14 h-14 rounded-xl mb-4">
                     <h4 class="text-white font-bold text-lg mb-4">LMRA Pro - Open Source</h4>
                     <p class="text-sm mb-4 max-w-md">De open standaard voor Laatste Minuut Risico Analyses. Ontwikkeld voor technici en monteurs door Brink Multimedia.</p>
-                    
+
                     <div class="space-y-3 text-sm text-slate-500">
                         <p class="flex items-center gap-3">
                             <i class="fa-solid fa-location-dot w-5 text-center"></i> 
@@ -337,8 +592,10 @@
                 <div>
                     <h4 class="text-white font-bold text-lg mb-4">Navigatie</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="#features" class="hover:text-white transition-colors">Features</a></li>
-                        <li><a href="#opensource" class="hover:text-white transition-colors">Open Source</a></li>
+                        <li><a href="#wat-is-lmra" class="hover:text-white transition-colors">Uitleg: wat is een LMRA?</a></li>
+                        <li><a href="#stappenplan" class="hover:text-white transition-colors">LMRA in 4 stappen</a></li>
+                        <li><a href="#tech" class="hover:text-white transition-colors">Techniek achter de app</a></li>
+                        <li><a href="#faq" class="hover:text-white transition-colors">Veelgestelde vragen</a></li>
                         <li><a href="/app" class="hover:text-white transition-colors">Start LMRA App</a></li>
                     </ul>
                 </div>
@@ -347,6 +604,7 @@
                     <ul class="space-y-2 text-sm">
                         <li><a href="/voorwaarden.html" class="hover:text-white transition-colors">Algemene Voorwaarden</a></li>
                         <li><a href="/privacy.html" class="hover:text-white transition-colors">Privacyverklaring</a></li>
+                        <li><button type="button" id="btnCookieSettingsLanding" class="hover:text-white transition-colors cursor-pointer">Cookievoorkeuren wijzigen</button></li>
                     </ul>
                 </div>
             </div>

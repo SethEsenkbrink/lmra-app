@@ -17,5 +17,21 @@
       "sizes": "512x512",
       "type": "image/png"
     }
+  ],
+  "description": "Gratis open source app voor de Laatste Minuut Risico Analyse (LMRA). Werkt offline en exporteert direct een PDF-rapport.",
+  "lang": "nl",
+  "categories": [
+    "productivity",
+    "business",
+    "utilities"
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-app.png",
+      "sizes": "780x1688",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "LMRA-formulier met werkgegevens, veiligheidsvragen en handtekening"
+    }
   ]
 }
