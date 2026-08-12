@@ -1,6 +1,9 @@
 /* src/app.ts - LMRA Pro Open PWA Engine */
 import { UI } from './ui';
 import { Database, LMRAReport } from './database';
+import { Settings } from './settings';
+import { Backup } from './backup';
+import { TASK_TEMPLATES, getTemplate } from './data';
 import { APP_VERSION } from './config';
 import DOMPurify from 'dompurify';
 
@@ -41,6 +44,8 @@ export const App = {
         // Diagnostics als eerste: vangt fouten uit alle modules die hierna starten.
         Diagnostics.init();
         console.log(`LMRA Pro v${APP_VERSION} Open PWA Init...`);
+        // Voorkeuren (thema, handschoenmodus) vóór de eerste weergave toepassen.
+        Settings.init();
         initCookieAndPwaManager(true);
         SignatureManager.init('signatureCanvas', 'btnClearSignature', 'btnUndoSignature');
         PhotoManager.init();
@@ -56,8 +61,31 @@ export const App = {
         // Check for Profile & Disclaimer
         await ProfileManager.checkAndShowDisclaimerIfNeeded();
 
+        // Taal wijzigen betekent de vragenlijst opnieuw opbouwen.
+        I18n.onChange = () => FormService.render();
+
+        // Soort werk: uit de URL (QR-sticker of landingspagina) of de laatste keuze.
+        const params = new URLSearchParams(window.location.search);
+        const urlTemplate = params.get('template');
+        const startTemplate = getTemplate(urlTemplate ?? Settings.current.lastTemplate).id;
+
         // Formulier direct starten & vragen renderen (Geen inlog-drempel!)
-        FormService.init('questions-container'); 
+        FormService.init('questions-container', startTemplate);
+        this.renderTemplateChips(startTemplate);
+        GPSWeather.taskTemplateId = startTemplate;
+
+        // Locatie uit een gescande QR-sticker: /app?loc=E-Motor%20401
+        const urlLoc = params.get('loc');
+        if (urlLoc) {
+            const locInput = document.getElementById('taskLocation') as HTMLInputElement | null;
+            if (locInput) {
+                locInput.value = urlLoc.slice(0, 50);
+                locInput.classList.add('bg-emerald-100', 'dark:bg-emerald-900');
+                setTimeout(() => locInput.classList.remove('bg-emerald-100', 'dark:bg-emerald-900'), 1500);
+            }
+            UI.showToast(`📍 Locatie uit QR-code: ${urlLoc.slice(0, 30)}`);
+            Diagnostics.log('info', 'qr', `Locatie via URL ingevuld: ${urlLoc}`);
+        } 
         SessionService.checkResumeState(() => this.resetForm(false));
 
         // Zware modules op de achtergrond binnenhalen zodat ze in de service
@@ -160,6 +188,46 @@ export const App = {
         
         document.getElementById('btnBackToInfo')?.addEventListener('click', () => {
             window.location.href = '/?info=true';
+        });
+
+        // Soort werk kiezen
+        document.getElementById('templateChips')?.addEventListener('click', (e) => {
+            const chip = (e.target as HTMLElement).closest('[data-template]') as HTMLElement | null;
+            if (chip?.dataset.template) this.setTemplate(chip.dataset.template);
+        });
+
+        // Handschoenmodus
+        document.getElementById('btnGloveMode')?.addEventListener('click', () => {
+            const on = Settings.toggleGloveMode();
+            UI.showToast(on ? '🧤 Handschoenmodus aan: grotere knoppen' : 'Handschoenmodus uit');
+        });
+
+        // Back-up & herstel
+        document.getElementById('btnBackupExport')?.addEventListener('click', () => {
+            UI.toggleElement('menuModal', false);
+            void Backup.exportAll();
+        });
+        document.getElementById('btnBackupImport')?.addEventListener('click', () => {
+            UI.toggleElement('menuModal', false);
+            Backup.openImportDialog();
+        });
+        document.getElementById('backupFileInput')?.addEventListener('change', (e) => {
+            const input = e.target as HTMLInputElement;
+            const file = input.files?.[0];
+            if (file) void Backup.importFromFile(file).then(() => this.openArchive());
+        });
+
+        // QR-stickers maken (module wordt pas geladen bij gebruik)
+        document.getElementById('btnOpenQrGen')?.addEventListener('click', async () => {
+            UI.toggleElement('menuModal', false);
+            try {
+                const { QRGenerator } = await import('./qr-generator');
+                QRGenerator.bind();
+                QRGenerator.open();
+            } catch (err) {
+                Diagnostics.log('error', 'qr', `Sticker-module laden mislukt: ${String(err)}`);
+                UI.showToast('❌ Onderdeel niet beschikbaar. Ga even online en probeer opnieuw.');
+            }
         });
 
         document.getElementById('btnCookieSettings')?.addEventListener('click', () => {
@@ -289,6 +357,8 @@ export const App = {
             bedrijf_naam: companyName,
             locatie: location,
             werkorder: elWorkOrder ? (sanitizer(elWorkOrder.value.trim()) || 'N.v.t.') : 'N.v.t.',
+            template: FormService.templateId,
+            template_label: getTemplate(FormService.templateId).label,
             is_veilig: isSafe,
             opmerkingen: elComments ? sanitizer(elComments.value.trim()) : "",
             afkeurpunten: JSON.stringify(failedPoints),
@@ -598,8 +668,46 @@ export const App = {
     },
 
     toggleTheme(): void {
-        document.documentElement.classList.toggle('dark');
+        const theme = Settings.toggleTheme();
         // Handtekening opnieuw tekenen zodat de inktkleur bij het thema past.
         SignatureManager.updateThemeColor();
+        UI.showToast(theme === 'dark' ? '🌙 Donker thema' : '☀️ Licht thema');
+    },
+
+    /** Chips bovenaan het formulier om het soort werk te kiezen. */
+    renderTemplateChips(activeId: string): void {
+        const container = document.getElementById('templateChips');
+        if (!container) return;
+        container.innerHTML = '';
+
+        TASK_TEMPLATES.forEach((tpl) => {
+            const active = tpl.id === activeId;
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.dataset.template = tpl.id;
+            chip.className =
+                'shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border transition-all ' +
+                (active
+                    ? 'bg-[#00447c] text-white border-[#00447c] shadow-md'
+                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700');
+            chip.innerHTML = `<i class="fa-solid ${tpl.icon}"></i><span data-i18n="${tpl.key}">${I18n.t(tpl.key)}</span>`;
+            container.appendChild(chip);
+        });
+    },
+
+    setTemplate(id: string): void {
+        const tpl = getTemplate(id);
+        FormService.setTemplate(tpl.id);
+        Settings.setLastTemplate(tpl.id);
+        GPSWeather.taskTemplateId = tpl.id;
+        this.renderTemplateChips(tpl.id);
+
+        // Weeradvies opnieuw beoordelen voor de nieuwe vragenlijst.
+        const weather = GPSWeather.currentWeather;
+        if (weather) GPSWeather.applyWeatherWatch(weather.temperature, weather.windspeed);
+
+        const extra = tpl.extra.reduce((acc, cat) => acc + cat.questions.length, 0);
+        UI.showToast(extra > 0 ? `${I18n.t(tpl.key)}: ${extra} extra vragen` : I18n.t(tpl.key));
+        Diagnostics.log('info', 'form', `Template gewisseld naar ${tpl.id} (+${extra} vragen)`);
     }
 };

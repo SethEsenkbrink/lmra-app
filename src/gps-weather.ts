@@ -14,6 +14,7 @@
 import { UI } from './ui';
 import { Diagnostics } from './diagnostics';
 import { fetchJsonWithRetry, getConnectionInfo } from './net';
+import { getTemplate } from './data';
 
 export interface WeatherData {
     temperature: number;
@@ -21,6 +22,8 @@ export interface WeatherData {
     weathercode: number;
     description: string;
     isHazardous: boolean;
+    /** Concrete adviezen op basis van temperatuur, wind en weertype. */
+    adviezen?: string[];
     stale?: boolean;
     measuredAt?: number;
 }
@@ -45,6 +48,8 @@ export const GPSWeather = {
     currentWeather: null as WeatherData | null,
     currentLocation: null as string | null,
     isBusy: false,
+    /** Actieve taak-template, zodat weeradvies bij de juiste vraag komt te staan. */
+    taskTemplateId: 'algemeen',
 
     init(): void {
         const btnGPS = document.getElementById('btnUseGPS');
@@ -241,17 +246,105 @@ export const GPSWeather = {
             weathercode: cw.weathercode,
             description: this.getWMODescription(cw.weathercode),
             isHazardous: this.isHazardous(cw.temperature, cw.windspeed, cw.weathercode),
+            adviezen: this.buildAdvice(cw.temperature, cw.windspeed, cw.weathercode),
             measuredAt: Date.now(),
         };
 
         this.currentWeather = weather;
         this.cacheWeather(weather);
         this.showWeatherWarning(weather);
+        this.applyWeatherWatch(cw.temperature, cw.windspeed);
         Diagnostics.log(
             'info',
             'weer',
             `Weer in ${ms}ms: ${weather.temperature}°C, ${weather.windspeed}km/h, ${weather.description}`
         );
+    },
+
+
+    /**
+     * Zet meetwaarden om in concrete instructies. Hitte is niet alleen
+     * "warm": vanaf 27 graden loopt het risico op uitdroging en concentratie-
+     * verlies snel op, en dat veroorzaakt ongevallen. De adviezen komen ook in
+     * het PDF-rapport, zodat de werkgever ziet welke maatregelen golden.
+     */
+    buildAdvice(temp: number, wind: number, code: number): string[] {
+        const advies: string[] = [];
+
+        if (temp >= 35) {
+            advies.push(
+                'Extreme hitte: werk zo veel mogelijk stil te leggen of te verschuiven naar de vroege ochtend. ' +
+                'Minimaal elk half uur pauze in de schaduw.'
+            );
+        } else if (temp >= 30) {
+            advies.push(
+                'Hittestress: neem elk uur 10 tot 15 minuten pauze in de schaduw en drink 200 tot 250 ml water ' +
+                'per kwartier, ook als je geen dorst hebt. Plan zwaar werk buiten de middaguren.'
+            );
+        } else if (temp >= 27) {
+            advies.push(
+                'Warm: drink elk kwartier water, houd elkaar in de gaten op hoofdpijn, duizeligheid of misselijkheid ' +
+                'en verplaats zwaar werk naar de ochtend.'
+            );
+        }
+
+        if (temp >= 25) {
+            advies.push('Draag lichte, dekkende kleding en gebruik zonbescherming bij werk in de buitenlucht.');
+        }
+
+        if (temp <= -5) {
+            advies.push(
+                'Strenge vorst: risico op onderkoeling en gladheid. Beperk de blootstelling, las korte opwarmpauzes ' +
+                'in en controleer looppaden op ijs.'
+            );
+        } else if (temp <= 4) {
+            advies.push(
+                'Koud: je handfunctie en fijne motoriek nemen af. Gebruik handschoenen met grip en let op gladheid ' +
+                'op ladders, trappen en bordessen.'
+            );
+        }
+
+        if (wind > 50) {
+            advies.push('Zware wind: werken op hoogte, hijsen en werk met plaatmateriaal staken.');
+        } else if (wind > 40) {
+            advies.push('Windkracht 6 of meer: hoogwerkers, steigers en hijswerk beperken of stilleggen.');
+        } else if (wind > 30) {
+            advies.push('Stevige wind: let op vallende voorwerpen, zeilwerking van platen en vonkverspreiding.');
+        }
+
+        if (code >= 95) {
+            advies.push('Onweer: staak direct het werk op hoogte, in open veld en aan installaties.');
+        }
+        if (code >= 56 && code <= 67) {
+            advies.push('IJzel of ijzelregen: extreem glad. Betreed geen daken, ladders of bordessen.');
+        }
+        if (code >= 71 && code <= 86) {
+            advies.push('Sneeuw of hagel: slecht zicht en glad. Verlaag de werksnelheid en zet looppaden vrij.');
+        }
+        if (code === 45 || code === 48) {
+            advies.push('Mist: beperkt zicht voor hijswerk en intern transport. Werk met een extra begeleider.');
+        }
+
+        return advies;
+    },
+
+    /**
+     * Koppelt het weer aan de vragen waar het over gaat. Bij windkracht 6 hoort
+     * de vraag over de hoogwerker een rode melding te krijgen, niet alleen het
+     * weerbericht bovenaan het formulier.
+     */
+    applyWeatherWatch(temp: number, wind: number): void {
+        UI.clearQuestionHighlights();
+        const watches = getTemplate(this.taskTemplateId).weatherWatch ?? [];
+        for (const watch of watches) {
+            const windHit = typeof watch.windAboveKmh === 'number' && wind > watch.windAboveKmh;
+            const hotHit = typeof watch.tempAboveC === 'number' && temp > watch.tempAboveC;
+            const coldHit = typeof watch.tempBelowC === 'number' && temp < watch.tempBelowC;
+            if (windHit || hotHit || coldHit) {
+                UI.highlightQuestions(watch.questionIds, watch.message);
+                Diagnostics.log('info', 'weer', `Waarschuwing bij vragen ${watch.questionIds.join(', ')}: ${watch.message}`);
+            }
+        }
     },
 
     isHazardous(temp: number, wind: number, code: number): boolean {
@@ -329,14 +422,22 @@ export const GPSWeather = {
                   }</span>`
                 : '';
 
+        const adviesList =
+            weather.adviezen && weather.adviezen.length > 0
+                ? '<ul class="mt-2 space-y-1 list-disc list-inside text-xs">' +
+                  weather.adviezen.map((a) => `<li>${a.replace(/[<>]/g, '')}</li>`).join('') +
+                  '</ul>'
+                : '';
+
         text.innerHTML =
             `<strong>${weather.temperature}°C</strong> | Wind: <strong>${weather.windspeed} km/h</strong><br>` +
-            `${weather.description}${staleNote}`;
+            `${weather.description}${staleNote}${adviesList}`;
     },
 
     clear(): void {
         this.currentWeather = null;
         this.currentLocation = null;
+        UI.clearQuestionHighlights();
         const container = document.getElementById('weatherWarningContainer');
         if (container) container.classList.add('hidden');
     },

@@ -1,15 +1,16 @@
 {
   "name": "lmra-sentinel",
   "private": true,
-  "version": "10.1.1",
+  "version": "10.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/sync-version.js",
+    "prebuild": "node scripts/sync-version.js && node scripts/build-pages.mjs",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "init:tailwind": "tailwindcss init -p",
-    "version": "node scripts/sync-version.js && git add public/manifest.json public/sw.js index.html"
+    "version": "node scripts/sync-version.js && git add public/manifest.json public/sw.js index.html",
+    "pages": "node scripts/build-pages.mjs"
   },
   "devDependencies": {
     "@types/dompurify": "^3.0.5",
@@ -27,6 +28,7 @@
     "idb-keyval": "^6.2.2",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
+    "qrcode-generator": "^2.0.4",
     "zod": "^4.3.6"
   }
 }

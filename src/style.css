@@ -51,3 +51,57 @@ input:focus, textarea:focus {
     border-color: #60a5fa;
     box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
 }
+/* --- HANDSCHOENMODUS -----------------------------------------------------
+   Met werkhandschoenen aan mis je een knop van 40 px. In deze modus worden alle
+   raakvlakken flink groter en de tekst zwaarder. Alleen actief als de gebruiker
+   het zelf aanzet (Menu > Handschoenmodus). */
+
+.glove-mode body { font-size: 1.05rem; }
+
+.glove-mode #btnMainSubmit,
+.glove-mode #submitBtn {
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
+    font-size: 1.15rem;
+}
+
+.glove-mode .question-card [id^="btn-yes-"],
+.glove-mode .question-card [id^="btn-no-"] {
+    min-height: 64px;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+}
+
+.glove-mode .question-card {
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.glove-mode input[type="text"],
+.glove-mode input[type="time"],
+.glove-mode select,
+.glove-mode textarea {
+    min-height: 56px;
+    font-size: 1.05rem;
+}
+
+.glove-mode #templateChips button {
+    min-height: 52px;
+    font-size: 0.9rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.glove-mode header button,
+.glove-mode #menuModal button,
+.glove-mode #menuModal a {
+    min-height: 56px;
+}
+
+.glove-mode #signatureCanvas { height: 11rem; }
+
+/* Grotere schakelaars (buddy check, verklaring) */
+.glove-mode input[type="checkbox"] {
+    width: 1.75rem;
+    height: 1.75rem;
+}

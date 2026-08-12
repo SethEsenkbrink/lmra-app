@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LMRA Pro v10.1.1 - Offline PWA</title>
+    <title>LMRA Pro v10.2.0 - Offline PWA</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300447c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00447c">
@@ -82,6 +82,15 @@
                     <p class="text-xs text-red-700 dark:text-red-400 mt-1">Start een nieuwe check of verleng de huidige.</p>
                 </div>
             </div>
+        </div>
+
+        <!-- SOORT WERK (TAAK-TEMPLATE) -->
+        <div class="bg-white dark:bg-cardbg rounded-xl shadow-sm p-4 mb-5 transition-colors">
+            <div class="flex items-center justify-between mb-2">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase" data-i18n="task_label">Soort werk</label>
+                <span class="text-[10px] text-slate-400">Extra vragen per klus</span>
+            </div>
+            <div id="templateChips" class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1"></div>
         </div>
 
         <!-- WERKGEGEVENS CARD -->
@@ -444,6 +453,25 @@
                     <i class="fa-solid fa-user-shield w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> Privacyverklaring
                 </a>
 
+                <button id="btnGloveMode" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
+                    <i class="fa-solid fa-mitten w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i>
+                    <span data-i18n="menu_glove">Handschoenmodus</span>
+                    <span id="gloveModeState" class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700">UIT</span>
+                </button>
+
+                <button id="btnOpenQrGen" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
+                    <i class="fa-solid fa-qrcode w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i>
+                    <span data-i18n="menu_qr">QR-stickers maken</span>
+                </button>
+
+                <button id="btnBackupExport" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
+                    <i class="fa-solid fa-cloud-arrow-down w-6 text-center text-emerald-600 text-lg"></i> Back-up maken
+                </button>
+
+                <button id="btnBackupImport" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
+                    <i class="fa-solid fa-cloud-arrow-up w-6 text-center text-emerald-600 text-lg"></i> Back-up terugzetten
+                </button>
+
                 <button id="btnCookieSettings" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
                     <i class="fa-solid fa-cookie-bite w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> Cookievoorkeuren
                 </button>
@@ -469,6 +497,59 @@
         <div class="flex-1 flex flex-col justify-center bg-black">
             <div id="qrReader" class="w-full max-w-md mx-auto overflow-hidden"></div>
             <p class="text-center text-slate-400 text-sm mt-4 px-4">Richt de camera op een asset QR-code.</p>
+        </div>
+    </div>
+
+    <input type="file" id="backupFileInput" accept="application/json,.json" class="hidden">
+
+    <!-- QR-STICKER GENERATOR -->
+    <div id="qrGenModal" class="fixed inset-0 bg-black/70 z-[90] hidden backdrop-blur-sm overflow-y-auto">
+        <div class="min-h-full flex items-start sm:items-center justify-center p-4">
+            <div class="bg-white dark:bg-cardbg rounded-2xl shadow-2xl w-full max-w-lg p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-[#00447c] dark:text-blue-400 flex items-center gap-2">
+                        <i class="fa-solid fa-qrcode"></i> <span data-i18n="menu_qr">QR-stickers maken</span>
+                    </h2>
+                    <button type="button" id="btnCloseQrGen" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                    Plak een sticker op een motor, kast, pomp of deur. Scan je die met de app of met de camera van je
+                    telefoon, dan staat de locatie meteen in het formulier.
+                </p>
+
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Namen (één per regel)</label>
+                <textarea id="qrGenLabels" rows="5" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm dark:text-white font-mono" placeholder="E-Motor 401&#10;Pomp P-12&#10;Schakelkast MCC-3&#10;Ketelhuis"></textarea>
+
+                <div class="grid grid-cols-2 gap-3 mt-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Formaat</label>
+                        <select id="qrGenSize" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 text-sm dark:text-white">
+                            <option value="20">20 mm - heel klein</option>
+                            <option value="25" selected>25 mm - klein (motor)</option>
+                            <option value="35">35 mm - normaal</option>
+                            <option value="50">50 mm - ruimte / deur</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-2">
+                        <canvas id="qrGenPreview" width="160" height="160" class="w-[110px] h-[110px]"></canvas>
+                        <span class="text-[10px] text-slate-400 mt-1">Voorbeeld</span>
+                    </div>
+                </div>
+
+                <label class="flex items-center gap-2 mt-3 text-xs text-slate-600 dark:text-slate-300">
+                    <input type="checkbox" id="qrGenAsLink" checked class="w-4 h-4 rounded border-slate-300">
+                    Sticker opent de app met de locatie erin (aanbevolen)
+                </label>
+
+                <p id="qrGenInfo" class="text-[11px] text-slate-500 dark:text-slate-400 mt-3"></p>
+
+                <button type="button" id="btnQrGenPdf" class="w-full mt-4 bg-[#00447c] text-white font-bold py-3 rounded-lg shadow-lg hover:bg-[#003366] transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-file-pdf"></i> Stickerblad downloaden
+                </button>
+            </div>
         </div>
     </div>
 

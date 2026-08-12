@@ -10,6 +10,9 @@ export const LMRAReportSchema = z.object({
     bedrijf_naam: z.string().optional().default(""), // Bedrijfsnaam / Opdrachtgever
     locatie: z.string().min(1, "Locatie / Asset is verplicht"),
     werkorder: z.string(),
+    /** Gekozen taak-template (algemeen, hoogte, besloten, heet, elektro, hijsen). */
+    template: z.string().optional().default('algemeen'),
+    template_label: z.string().optional().default('Algemeen'),
     is_veilig: z.boolean(),
     opmerkingen: z.string(),
     afkeurpunten: z.string(), // JSON string van afgekeurde vragen + acties

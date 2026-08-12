@@ -13,7 +13,7 @@
 import { LMRAReport } from '../database';
 import { UI } from '../ui';
 import { APP_VERSION } from '../config';
-import { categories } from '../data';
+import { getCategoriesFor } from '../data';
 import { Diagnostics } from '../diagnostics';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -175,7 +175,8 @@ export const PDFService = {
                             `Bedrijf / Opdrachtgever: ${report.bedrijf_naam || 'Niet opgegeven'}\n` +
                                 `Monteur: ${report.monteur_naam}\n` +
                                 `Locatie / Asset: ${report.locatie}\n` +
-                                `Werkorder: ${report.werkorder}`
+                                `Werkorder: ${report.werkorder}\n` +
+                                `Soort werk: ${report.template_label || 'Algemeen'}`
                         ),
                         toPdfText(
                             `Aangemaakt: ${dateCreated.toLocaleDateString('nl-NL')} om ${dateCreated
@@ -215,7 +216,8 @@ export const PDFService = {
             const afkeurpunten: string[] = JSON.parse(report.afkeurpunten || '[]');
             const checklistRows: any[] = [];
 
-            categories.forEach((cat) => {
+            // De vragen van de template die bij dit rapport hoort, niet alleen de basis.
+            getCategoriesFor(report.template).forEach((cat) => {
                 checklistRows.push([
                     {
                         content: toPdfText(cat.title).toUpperCase(),
@@ -260,6 +262,29 @@ export const PDFService = {
             });
 
             yPos = this.tableEndY(doc, yPos) + 12;
+
+            /* ------------------------------------------------- weeradviezen */
+
+            const adviezen: string[] = Array.isArray(report.weer_info?.adviezen) ? report.weer_info.adviezen : [];
+            if (adviezen.length > 0) {
+                yPos = this.ensureSpace(doc, yPos, 20 + adviezen.length * 8);
+                yPos = this.sectionTitle(doc, 'MAATREGELEN BIJ DIT WEER', yPos, BRAND_COLOR, 70);
+
+                autoTable(doc, {
+                    startY: yPos,
+                    body: adviezen.map((a) => [toPdfText(`- ${a}`)]),
+                    theme: 'plain',
+                    styles: {
+                        fillColor: [255, 251, 235],
+                        textColor: [146, 64, 14],
+                        fontSize: 9,
+                        cellPadding: 3,
+                    },
+                    margin: { bottom: 20 },
+                });
+
+                yPos = this.tableEndY(doc, yPos) + 12;
+            }
 
             /* --------------------------------------------------- opmerkingen */
 
