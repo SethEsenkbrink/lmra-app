@@ -4,7 +4,6 @@ import { Database, LMRAReport } from './database';
 import { APP_VERSION } from './config';
 import DOMPurify from 'dompurify';
 
-import { PDFService } from './services/pdf';
 import { SessionService } from './services/session';
 import { FormService } from './services/form';
 import { RELEASE_INFO } from './release';
@@ -25,6 +24,17 @@ interface AppState {
 const state: AppState = {
     viewingReport: null
 };
+
+/**
+ * jsPDF is met afstand de zwaarste afhankelijkheid. Die wordt daarom pas geladen
+ * wanneer er echt een PDF gemaakt wordt (dynamische import = eigen chunk).
+ * Zie prefetchHeavyModules(): de chunk wordt na het opstarten alvast opgehaald,
+ * zodat de service worker hem cachet en offline genereren blijft werken.
+ */
+async function loadPdfService() {
+    const module = await import('./services/pdf');
+    return module.PDFService;
+}
 
 export const App = {
     async init(): Promise<void> {
@@ -50,15 +60,54 @@ export const App = {
         FormService.init('questions-container'); 
         SessionService.checkResumeState(() => this.resetForm(false));
 
+        // Zware modules op de achtergrond binnenhalen zodat ze in de service
+        // worker cache staan voordat iemand zonder bereik op PDF drukt.
+        this.prefetchHeavyModules();
+
         window.addEventListener('online', () => {
             this.updateConnectionStatus();
             UI.showToast("Verbinding hersteld.");
+            // Toestel startte mogelijk offline: nu alsnog voorladen.
+            this.prefetchHeavyModules();
         });
 
         window.addEventListener('offline', () => {
             this.updateConnectionStatus();
             UI.showToast("⚠️ Geen internetverbinding. Werkt offline.");
         });
+    },
+
+    prefetchDone: false,
+
+    /**
+     * Haalt de losse chunks (PDF-generator en QR-scanner) op zodra de browser
+     * even niets te doen heeft. Dat houdt de eerste pagina-load licht, terwijl
+     * de service worker de chunks alsnog cachet: cruciaal, want een monteur kan
+     * later zonder bereik in een kelder op "Download PDF" drukken.
+     */
+    prefetchHeavyModules(): void {
+        if (this.prefetchDone) return;
+        if (!navigator.onLine) {
+            Diagnostics.log('debug', 'prefetch', 'Offline: voorladen uitgesteld tot er verbinding is');
+            return;
+        }
+        this.prefetchDone = true;
+
+        const run = (): void => {
+            void import('./services/pdf')
+                .then(() => Diagnostics.log('debug', 'prefetch', 'PDF-module voorgeladen en gecached'))
+                .catch((err) => {
+                    this.prefetchDone = false;
+                    Diagnostics.log('warn', 'prefetch', `PDF-module voorladen mislukt: ${String(err)}`);
+                });
+            void import('html5-qrcode')
+                .then(() => Diagnostics.log('debug', 'prefetch', 'QR-scanner voorgeladen en gecached'))
+                .catch((err) => Diagnostics.log('warn', 'prefetch', `QR-scanner voorladen mislukt: ${String(err)}`));
+        };
+
+        const idle = (window as any).requestIdleCallback;
+        if (typeof idle === 'function') idle(run, { timeout: 5000 });
+        else setTimeout(run, 2500);
     },
 
     updateConnectionStatus(): void {
@@ -126,7 +175,17 @@ export const App = {
         document.getElementById('btnOpenArchive')?.addEventListener('click', () => this.openArchive());
         document.getElementById('btnCloseArchive')?.addEventListener('click', () => UI.toggleElement('archiveModal', false));
         document.getElementById('btnClearArchive')?.addEventListener('click', () => this.clearArchive());
-        document.getElementById('btnGeneratePDF')?.addEventListener('click', () => PDFService.generate(state.viewingReport));
+        document.getElementById('btnGeneratePDF')?.addEventListener('click', async () => {
+            UI.setLoading('btnGeneratePDF', true, 'Genereren...');
+            try {
+                const service = await loadPdfService();
+                await service.generate(state.viewingReport);
+            } catch (err) {
+                Diagnostics.log('error', 'pdf', `PDF-module kon niet worden geladen: ${String(err)}`);
+                UI.showToast('❌ PDF-onderdeel niet beschikbaar. Ga even online en probeer opnieuw.');
+                UI.setLoading('btnGeneratePDF', false, 'Download PDF');
+            }
+        });
 
         document.getElementById('btnCloseModal')?.addEventListener('click', () => {
             UI.toggleElement('resultModal', false);

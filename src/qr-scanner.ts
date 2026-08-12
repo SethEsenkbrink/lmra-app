@@ -1,6 +1,10 @@
 /* src/qr-scanner.ts - Handles QR Scanning for Assets/Locations */
-import { Html5Qrcode } from "html5-qrcode";
+// Alleen het TYPE statisch importeren: dat verdwijnt bij het compileren, zodat
+// de bibliotheek zelf (ruim 200 kB) niet in de hoofdbundle belandt. De echte
+// import gebeurt dynamisch in startScanner().
+import type { Html5Qrcode } from "html5-qrcode";
 import { UI } from "./ui";
+import { Diagnostics } from "./diagnostics";
 
 export const QRScanner = {
     scanner: null as Html5Qrcode | null,
@@ -29,10 +33,21 @@ export const QRScanner = {
     async startScanner() {
         const modal = document.getElementById('qrModal');
         if (modal) modal.classList.remove('hidden');
-        
-        this.scanner = new Html5Qrcode("qrReader");
+
+        let Html5QrcodeCtor: typeof Html5Qrcode;
+        try {
+            const module = await import('html5-qrcode');
+            Html5QrcodeCtor = module.Html5Qrcode;
+        } catch (err) {
+            Diagnostics.log('error', 'qr', `Scanner-module kon niet worden geladen: ${String(err)}`);
+            UI.showToast('❌ Scanner niet beschikbaar. Ga even online en probeer opnieuw.');
+            if (modal) modal.classList.add('hidden');
+            return;
+        }
+
+        this.scanner = new Html5QrcodeCtor("qrReader");
         this.isScanning = true;
-        
+
         try {
             await this.scanner.start(
                 { facingMode: "environment" },
