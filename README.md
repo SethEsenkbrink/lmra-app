@@ -21,6 +21,40 @@ Ontworpen om direct en mobiel-vriendelijk te werken op smartphones, tablets en l
 
 ---
 
+## 🐞 Ingebouwde Diagnose Console (live debuggen op de werkvloer)
+
+Bugs die alleen op een werktelefoon in een fabriekshal optreden, zijn niet te
+debuggen met een laptop. Daarom bevat de app een eigen diagnosepaneel dat lokaal
+alle fouten, netwerkcalls en device-status vastlegt.
+
+**Openen:**
+
+| Methode | Actie |
+|---|---|
+| Menu | **Menu → Diagnose & Logs** |
+| URL | `/app.html?debug=1` (uitzetten met `?debug=0`) |
+| Gebaar | 5× snel tikken op de titel in de header |
+| Desktop | `Ctrl + Shift + D` |
+
+**Wat het paneel biedt:**
+
+* **Log**: alle JS-fouten, unhandled promise rejections, `console.error/warn` en
+  elke `fetch` met statuscode en duur. De laatste 150 regels blijven na een
+  herstart bewaard, zodat een crash terug te lezen is.
+* **Systeem**: versie, PWA- of browsermodus, user agent, scherm en DPR,
+  verbindingstype (`effectiveType`, downlink, rtt), permissies voor GPS,
+  microfoon en camera, opslagverbruik, service worker en cache-inhoud.
+* **Tests**: 10 zelftests op het toestel zelf — netwerk, eigen server,
+  adres-API (Nominatim), weer-API (Open-Meteo), GPS-fix met nauwkeurigheid,
+  microfoon en spraakherkenning, IndexedDB, localStorage, offline cache en de
+  afmetingen/schaal van het handtekening-canvas.
+* **Export**: het volledige rapport naar het klembord of als
+  `lmra-diagnose-<datum>.txt`, zodat je het in een issue kunt plakken.
+
+Alles blijft op het toestel; er wordt niets verstuurd.
+
+---
+
 ## 🛠️ Tech Stack
 
 * **Core Language:** TypeScript / JavaScript (ES Modules)

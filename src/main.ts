@@ -1,19 +1,19 @@
-/* src/main.ts */
+/* src/main.ts - Entrypoint van de app (app.html) */
 import './style.css';
 import '@fortawesome/fontawesome-free/css/all.css';
 import { App } from './app';
 
-// Start de applicatie
-document.addEventListener('DOMContentLoaded', () => {
-    App.init();
-});
-
-// Service Worker Registratie (voor offline gebruik)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            // AANGEPAST: 'reg' vervangen door '()' omdat we de variabele niet gebruiken
-            .then(() => console.log('✅ Service Worker Geregistreerd'))
-            .catch(err => console.log('❌ Service Worker Fout', err));
-    });
+// Start de applicatie. Module scripts zijn deferred, maar de readyState-check
+// voorkomt dat init nooit draait wanneer het event al is geweest.
+function boot(): void {
+    void App.init();
 }
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot, { once: true });
+} else {
+    boot();
+}
+
+// Service worker wordt geregistreerd in cookie-pwa-manager.ts (initPwaInstallPrompt).
+// Dubbele registratie hier is verwijderd: dat leverde twee registraties per load op.
