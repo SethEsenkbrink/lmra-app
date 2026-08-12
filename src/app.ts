@@ -62,7 +62,10 @@ export const App = {
         await ProfileManager.checkAndShowDisclaimerIfNeeded();
 
         // Taal wijzigen betekent de vragenlijst opnieuw opbouwen.
-        I18n.onChange = () => FormService.render();
+        I18n.onChange = () => {
+            FormService.render();
+            Settings.updateIcons();
+        };
 
         // Soort werk: uit de URL (QR-sticker of landingspagina) of de laatste keuze.
         const params = new URLSearchParams(window.location.search);

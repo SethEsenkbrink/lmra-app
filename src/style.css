@@ -9,11 +9,38 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Custom Scrollbar */
-.custom-scrollbar::-webkit-scrollbar { width: 6px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
+/* --- SCROLLBALKEN IN LMRA PRO-STIJL --------------------------------------
+   Overal dezelfde smalle balk in het merkblauw, in plaats van de standaard
+   grijze systeembalk. Werkt in Chrome/Edge/Safari (::-webkit-scrollbar) en in
+   Firefox (scrollbar-color). */
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 68, 124, 0.45) transparent;
+}
+.dark * {
+    scrollbar-color: rgba(96, 165, 250, 0.5) transparent;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-corner { background: transparent; }
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 68, 124, 0.45);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: rgba(0, 68, 124, 0.75); }
+::-webkit-scrollbar-thumb:active { background-color: #00447c; }
+
+.dark ::-webkit-scrollbar-thumb { background-color: rgba(96, 165, 250, 0.45); }
+.dark ::-webkit-scrollbar-thumb:hover { background-color: rgba(96, 165, 250, 0.8); }
+
+/* Smallere variant voor kleine blokken zoals de chips-rij en het menu */
+.lmra-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+.custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
 
 /* Animaties */
 @keyframes fadeIn {
@@ -51,57 +78,104 @@ input:focus, textarea:focus {
     border-color: #60a5fa;
     box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
 }
+
 /* --- HANDSCHOENMODUS -----------------------------------------------------
-   Met werkhandschoenen aan mis je een knop van 40 px. In deze modus worden alle
-   raakvlakken flink groter en de tekst zwaarder. Alleen actief als de gebruiker
-   het zelf aanzet (Menu > Handschoenmodus). */
+   Met werkhandschoenen aan mis je een knop van 40 px. Alles wordt groter, maar
+   binnen de breedte van het scherm: geen horizontale scroll, header blijft
+   compact en de tekstgrootte groeit gecontroleerd mee. */
 
-.glove-mode body { font-size: 1.05rem; }
-
-.glove-mode #btnMainSubmit,
-.glove-mode #submitBtn {
-    padding-top: 1.25rem;
-    padding-bottom: 1.25rem;
-    font-size: 1.15rem;
+.glove-mode {
+    /* Voorkomt dat grotere elementen het scherm breder maken */
+    overflow-x: hidden;
 }
 
+/* Vragen: het belangrijkste raakvlak */
+.glove-mode .question-card {
+    padding: 0.875rem;
+    margin-bottom: 0.625rem;
+}
+.glove-mode .question-card > div:first-child {
+    font-size: 1.05rem;
+    line-height: 1.45;
+}
 .glove-mode .question-card [id^="btn-yes-"],
 .glove-mode .question-card [id^="btn-no-"] {
     min-height: 64px;
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     letter-spacing: 0.02em;
 }
 
-.glove-mode .question-card {
-    padding: 1rem;
-    margin-bottom: 0.75rem;
-}
-
+/* Invoervelden en keuzelijsten */
 .glove-mode input[type="text"],
-.glove-mode input[type="time"],
 .glove-mode select,
 .glove-mode textarea {
     min-height: 56px;
-    font-size: 1.05rem;
+    font-size: 1rem;
+}
+.glove-mode input[type="time"] {
+    min-height: 56px;
+    font-size: 0.95rem; /* kleiner gehouden: twee tijdvelden naast elkaar */
+}
+.glove-mode input[type="checkbox"] {
+    width: 1.6rem;
+    height: 1.6rem;
 }
 
+/* Hoofdknop */
+.glove-mode #submitBtn {
+    padding-top: 1.15rem;
+    padding-bottom: 1.15rem;
+    font-size: 1.15rem;
+}
+
+/* Soort werk-chips */
 .glove-mode #templateChips button {
     min-height: 52px;
     font-size: 0.9rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
 }
 
-.glove-mode header button,
+/* Header: knoppen groter maar op EEN regel, anders groeit de sticky balk naar
+   twee rijen en verlies je een kwart van het scherm. */
+.glove-mode header {
+    flex-wrap: nowrap;
+}
+.glove-mode header > div:last-child {
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+}
+.glove-mode header button {
+    min-height: 44px;
+    min-width: 44px;
+}
+.glove-mode #btnToggleLang {
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
+    font-size: 0.7rem;
+}
+.glove-mode #cloudStatus {
+    font-size: 9px;
+    padding: 0.2rem 0.45rem;
+}
+/* Op smalle telefoons het statusbadge weglaten: de offline-status staat ook in
+   de toast en in het diagnosepaneel. */
+@media (max-width: 420px) {
+    .glove-mode #cloudStatus { display: none; }
+}
+
+/* Menu-items: groter, en het menu scrollt (zie app.html) */
 .glove-mode #menuModal button,
 .glove-mode #menuModal a {
     min-height: 56px;
+    font-size: 0.95rem;
 }
 
-.glove-mode #signatureCanvas { height: 11rem; }
+/* Meer tekenruimte voor de handtekening */
+.glove-mode #signatureCanvas { height: 10rem; }
 
-/* Grotere schakelaars (buddy check, verklaring) */
-.glove-mode input[type="checkbox"] {
-    width: 1.75rem;
-    height: 1.75rem;
+/* Kleine icoonknoppen in velden (QR, GPS) blijven binnen het veld */
+.glove-mode #btnScanQR,
+.glove-mode #btnUseGPS {
+    min-height: 42px;
 }

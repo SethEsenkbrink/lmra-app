@@ -8,6 +8,7 @@
 
 import { SETTINGS_KEY } from './config';
 import { DEFAULT_TEMPLATE_ID } from './data';
+import { I18n } from './i18n';
 
 export interface AppSettings {
     theme: 'light' | 'dark';
@@ -96,6 +97,6 @@ export const Settings = {
         }
 
         const gloveState = document.getElementById('gloveModeState');
-        if (gloveState) gloveState.textContent = this.current.gloveMode ? 'AAN' : 'UIT';
+        if (gloveState) gloveState.textContent = I18n.t(this.current.gloveMode ? 'state_on' : 'state_off');
     },
 };

@@ -22,6 +22,14 @@ const rootDir = path.join(__dirname, '..');
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const today = new Date().toISOString().slice(0, 10);
 
+const MONTHS = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+
+/** 2026-03-18 -> 18 maart 2026 */
+function dutchDate(iso) {
+    const [y, m, d] = String(iso).split('-').map(Number);
+    return `${d} ${MONTHS[m - 1]} ${y}`;
+}
+
 /* ------------------------------------------------------------------- layout */
 
 function navigation() {
@@ -104,8 +112,8 @@ function articleSchema(page) {
         headline: page.h1,
         description: page.description,
         inLanguage: 'nl-NL',
-        datePublished: today,
-        dateModified: today,
+        datePublished: page.published || today,
+        dateModified: page.modified || page.published || today,
         author: { '@type': 'Organization', name: 'Brink Multimedia', url: SITE.baseUrl },
         publisher: { '@type': 'Organization', name: 'Brink Multimedia', url: SITE.baseUrl },
         mainEntityOfPage: `${SITE.baseUrl}/${page.slug}`,
@@ -244,6 +252,17 @@ ${navigation()}
             </nav>
             <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-4">${esc(pageData.h1)}</h1>
             <p class="text-lg text-slate-300 leading-relaxed">${pageData.intro}</p>
+            ${
+                pageData.published
+                    ? `<p class="text-xs text-slate-400 mt-5">
+                <time datetime="${pageData.published}">Gepubliceerd op ${dutchDate(pageData.published)}</time>${
+                          pageData.modified && pageData.modified !== pageData.published
+                              ? ` &middot; <time datetime="${pageData.modified}">bijgewerkt op ${dutchDate(pageData.modified)}</time>`
+                              : ''
+                      }
+            </p>`
+                    : ''
+            }
         </div>
     </header>
 
@@ -267,6 +286,7 @@ function kennisbankPage() {
                     <span class="text-[10px] font-bold uppercase tracking-wider text-[#00447c]">${tag}</span>
                     <h3 class="font-bold text-slate-900 mt-1 mb-1">${esc(p.h1)}</h3>
                     <p class="text-sm text-slate-600">${esc(p.description)}</p>
+                    ${p.published ? `<p class="text-[11px] text-slate-400 mt-2">${dutchDate(p.published)}</p>` : ''}
                 </a>`;
 
     return `<!DOCTYPE html>
@@ -472,16 +492,17 @@ function buildBlankForm() {
 
 /* -------------------------------------------------------------- sitemap */
 
-function buildSitemap(slugs) {
+function buildSitemap(pages) {
     const staticPages = [
         { loc: `${SITE.baseUrl}/`, priority: '1.0', freq: 'weekly' },
         { loc: `${SITE.baseUrl}/app`, priority: '0.9', freq: 'weekly' },
         { loc: `${SITE.baseUrl}/kennisbank`, priority: '0.8', freq: 'monthly' },
     ];
-    const generated = slugs.map((slug) => ({
-        loc: `${SITE.baseUrl}/${slug}`,
+    const generated = pages.map((page) => ({
+        loc: `${SITE.baseUrl}/${page.slug}`,
         priority: '0.7',
         freq: 'monthly',
+        lastmod: page.modified || page.published || today,
     }));
     const legal = [
         { loc: `${SITE.baseUrl}/privacy`, priority: '0.4', freq: 'monthly' },
@@ -492,7 +513,7 @@ function buildSitemap(slugs) {
         .map(
             (u) => `  <url>
     <loc>${u.loc}</loc>
-    <lastmod>${today}</lastmod>
+    <lastmod>${u.lastmod || today}</lastmod>
     <changefreq>${u.freq}</changefreq>
     <priority>${u.priority}</priority>
   </url>`
@@ -513,7 +534,7 @@ const written = [];
 
 for (const tpl of TEMPLATE_PAGES) {
     fs.writeFileSync(path.join(rootDir, `${tpl.slug}.html`), page(tpl, { parentName: 'Kennisbank', parentUrl: '/kennisbank' }));
-    written.push(tpl.slug);
+    written.push(tpl);
 }
 
 for (const article of ARTICLE_PAGES) {
@@ -521,7 +542,7 @@ for (const article of ARTICLE_PAGES) {
         path.join(rootDir, `${article.slug}.html`),
         page(article, { isArticle: true, parentName: 'Kennisbank', parentUrl: '/kennisbank' })
     );
-    written.push(article.slug);
+    written.push(article);
 }
 
 const downloadBlock = `            <section class="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 mb-8">
@@ -536,7 +557,7 @@ fs.writeFileSync(
     path.join(rootDir, `${FORM_PAGE.slug}.html`),
     page(FORM_PAGE, { parentName: 'Kennisbank', parentUrl: '/kennisbank', extraTop: downloadBlock })
 );
-written.push(FORM_PAGE.slug);
+written.push(FORM_PAGE);
 
 fs.writeFileSync(path.join(rootDir, 'kennisbank.html'), kennisbankPage());
 fs.writeFileSync(path.join(rootDir, '404.html'), notFoundPage());
@@ -545,6 +566,6 @@ const formPath = buildBlankForm();
 buildSitemap(written);
 
 console.log(`\x1b[36m%s\x1b[0m`, `📄 ${written.length + 2} pagina's gegenereerd:`);
-console.log(`   ${written.join(', ')}, kennisbank, 404`);
+console.log(`   ${written.map((w) => w.slug).join(', ')}, kennisbank, 404`);
 console.log(`   Blanco formulier: ${path.relative(rootDir, formPath)}`);
 console.log(`   Sitemap bijgewerkt met ${written.length + 5} URL's`);

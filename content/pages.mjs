@@ -18,6 +18,8 @@ export const SITE = {
 export const TEMPLATE_PAGES = [
     {
         slug: 'lmra-werken-op-hoogte',
+        published: '2026-04-08',
+        modified: '2026-07-14',
         template: 'hoogte',
         title: 'LMRA Werken op Hoogte - Gratis Checklist App',
         description:
@@ -69,6 +71,8 @@ export const TEMPLATE_PAGES = [
     },
     {
         slug: 'lmra-besloten-ruimte',
+        published: '2026-04-22',
+        modified: '2026-06-30',
         template: 'besloten',
         title: 'LMRA Besloten Ruimte - Checklist voor Tank, Put en Silo',
         description:
@@ -109,6 +113,8 @@ export const TEMPLATE_PAGES = [
     },
     {
         slug: 'lmra-heet-werk',
+        published: '2026-05-20',
+        modified: '2026-07-02',
         template: 'heet',
         title: 'LMRA Heet Werk - Checklist voor Lassen, Slijpen en Snijden',
         description:
@@ -148,6 +154,8 @@ export const TEMPLATE_PAGES = [
     },
     {
         slug: 'lmra-elektrotechniek',
+        published: '2026-06-03',
+        modified: '2026-07-09',
         template: 'elektro',
         title: 'LMRA Elektrotechniek - Checklist NEN 3140 op je Telefoon',
         description:
@@ -187,6 +195,8 @@ export const TEMPLATE_PAGES = [
     },
     {
         slug: 'lmra-hijsen',
+        published: '2026-07-01',
+        modified: '2026-07-28',
         template: 'hijsen',
         title: 'LMRA Hijsen en Takelen - Checklist voor Kraan en Hijsmiddelen',
         description:
@@ -230,6 +240,8 @@ export const TEMPLATE_PAGES = [
 export const ARTICLE_PAGES = [
     {
         slug: 'verschil-rie-tra-lmra',
+        published: '2026-03-18',
+        modified: '2026-06-02',
         title: 'Verschil tussen RI&E, TRA en LMRA - Simpel Uitgelegd',
         description:
             'RI&E, TRA en LMRA worden vaak door elkaar gehaald. Dit is het verschil in wie het maakt, wanneer het gebeurt en hoe lang het duurt, met een voorbeeld uit de praktijk.',
@@ -293,6 +305,8 @@ export const ARTICLE_PAGES = [
     },
     {
         slug: 'wat-controleer-je-bij-een-lmra',
+        published: '2026-05-06',
+        modified: '2026-07-21',
         title: 'Wat Controleer je bij een LMRA? 7 Vragen met Voorbeelden',
         description:
             'De zeven basisvragen van een LMRA, met per vraag een voorbeeld van wat er in de praktijk misgaat. Plus wat je doet als het antwoord NEE is.',
@@ -372,6 +386,8 @@ export const ARTICLE_PAGES = [
     },
     {
         slug: 'werken-bij-hitte',
+        published: '2026-06-24',
+        modified: '2026-08-04',
         title: 'Werken bij Hitte: Wat Zegt de Arbowet en Wat Doe Je?',
         description:
             'Werken bij hitte op de werkvloer: welke temperatuur is te warm, wat zegt de Arbowet, hoeveel water moet je drinken en hoe herken je hittestress bij een collega.',
@@ -443,6 +459,8 @@ export const ARTICLE_PAGES = [
 /** Losse pagina met het gratis printbare formulier. */
 export const FORM_PAGE = {
     slug: 'lmra-formulier-pdf',
+        published: '2026-02-11',
+        modified: '2026-06-18',
     title: 'Gratis LMRA Formulier (PDF) - Downloaden en Printen',
     description:
         'Download gratis een blanco LMRA-formulier als PDF om te printen. Inclusief de zeven basisvragen, ruimte voor maatregelen en een handtekening. Of doe het digitaal.',

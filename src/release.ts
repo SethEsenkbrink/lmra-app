@@ -8,8 +8,9 @@
 // anders verschijnt de popup bij iedere start van de app.
 
 export const RELEASE_INFO = {
-    title: "v10.2.0 Soort werk, QR-stickers & hitte-advies",
+    title: "v10.2.1 Soort werk, QR-stickers & hitte-advies",
     features: [
+        "Menu scrollt nu door op kleine schermen, scrollbalken in de LMRA Pro-stijl en alle teksten vertaald in vier talen",
         "Soort werk kiezen: naast de basisvragen krijg je extra vragen voor werken op hoogte, besloten ruimte, heet werk, elektrotechniek of hijsen",
         "Weer denkt mee: bij hitte krijg je advies over pauzes en drinken, bij wind een waarschuwing bij de vraag waar het over gaat. Alles komt ook in het PDF-rapport",
         "QR-stickers maken: print kleine stickers (vanaf 20 mm) voor motoren, kasten en ruimtes. Scannen vult de locatie direct in",

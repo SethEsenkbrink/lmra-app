@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LMRA Pro v10.2.0 - Offline PWA</title>
+    <title>LMRA Pro v10.2.1 - Offline PWA</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300447c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00447c">
@@ -57,7 +57,7 @@
                     <p class="text-sm text-[#00447c] dark:text-blue-300 font-bold uppercase tracking-wider flex items-center gap-2">
                         <i class="fa-solid fa-stopwatch"></i> Actieve Sessie
                     </p>
-                    <p id="sessionInfoText" class="text-xs text-slate-600 dark:text-slate-400">Geldig tot --:--</p>
+                    <p id="sessionInfoText" class="text-xs text-slate-600 dark:text-slate-400" data-i18n="session_valid">Geldig tot --:--</p>
                 </div>
                 <div class="text-right">
                     <div id="timerDisplay" class="text-2xl font-black text-[#00447c] dark:text-white font-mono tracking-tight">00:00:00</div>
@@ -78,8 +78,8 @@
             <div class="flex">
                 <div class="flex-shrink-0"><i class="fa-solid fa-clock text-red-500"></i></div>
                 <div class="ml-3">
-                    <p class="text-sm text-red-800 dark:text-red-300 font-bold">LMRA Verlopen</p>
-                    <p class="text-xs text-red-700 dark:text-red-400 mt-1">Start een nieuwe check of verleng de huidige.</p>
+                    <p class="text-sm text-red-800 dark:text-red-300 font-bold" data-i18n="session_expired">LMRA Verlopen</p>
+                    <p class="text-xs text-red-700 dark:text-red-400 mt-1" data-i18n="session_expired_sub">Start een nieuwe check of verleng de huidige.</p>
                 </div>
             </div>
         </div>
@@ -88,15 +88,15 @@
         <div class="bg-white dark:bg-cardbg rounded-xl shadow-sm p-4 mb-5 transition-colors">
             <div class="flex items-center justify-between mb-2">
                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase" data-i18n="task_label">Soort werk</label>
-                <span class="text-[10px] text-slate-400">Extra vragen per klus</span>
+                <span class="text-[10px] text-slate-400" data-i18n="hint_extra">Extra vragen per klus</span>
             </div>
-            <div id="templateChips" class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1"></div>
+            <div id="templateChips" class="flex gap-2 overflow-x-auto lmra-scroll pb-2 -mx-1 px-1"></div>
         </div>
 
         <!-- WERKGEGEVENS CARD -->
         <div class="bg-white dark:bg-cardbg rounded-xl shadow-sm p-5 mb-5 border-l-4 border-[#00447c] transition-colors">
             <h2 class="font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center text-sm uppercase tracking-wider">
-                <i class="fa-solid fa-id-card mr-2 text-[#00447c] dark:text-blue-400"></i>Werk- & Bedrijfsgegevens
+                <i class="fa-solid fa-id-card mr-2 text-[#00447c] dark:text-blue-400"></i><span data-i18n="hdr_work">Werk- &amp; Bedrijfsgegevens</span>
             </h2>
             
             <div class="hidden" aria-hidden="true">
@@ -108,16 +108,16 @@
                 <!-- BEDRIJFSNAAM / OPDRACHTGEVER -->
                 <div class="md:col-span-2">
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1" data-i18n="comp_label">Bedrijf / Opdrachtgever *</label>
-                    <input type="text" id="companyName" maxlength="60" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white font-medium" placeholder="Bijv. Brink Multimedia B.V. of Klant X" required>
+                    <input type="text" id="companyName" maxlength="60" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white font-medium" placeholder="Bijv. Brink Multimedia B.V. of Klant X" data-i18n="ph_company" required>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Monteur *</label>
-                    <input type="text" id="userName" maxlength="50" autocorrect="off" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white font-medium" placeholder="Naam" required>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1"><span data-i18n="user_label">Monteur</span> *</label>
+                    <input type="text" id="userName" maxlength="50" autocorrect="off" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white font-medium" placeholder="Naam" data-i18n="ph_user" required>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1" data-i18n="loc_label">Locatie / Asset *</label>
                     <div class="relative flex items-center">
-                        <input type="text" id="taskLocation" maxlength="50" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 pr-20 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white font-medium" placeholder="Bijv. E-Motor 401" required>
+                        <input type="text" id="taskLocation" maxlength="50" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 pr-20 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white font-medium" placeholder="Bijv. E-Motor 401" data-i18n="ph_loc" required>
                         <div class="absolute right-1.5 flex gap-1">
                             <button type="button" id="btnScanQR" class="bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 w-8 h-8 rounded-lg flex items-center justify-center transition-colors shadow-sm" title="Scan QR Code">
                                 <i class="fa-solid fa-qrcode"></i>
@@ -139,23 +139,23 @@
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1" data-i18n="wo_label">Werkorder Nr.</label>
-                    <input type="text" id="workOrder" maxlength="20" inputmode="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white font-medium" placeholder="Bijv. WO-2026-A">
+                    <input type="text" id="workOrder" maxlength="20" inputmode="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white font-medium" placeholder="Bijv. WO-2026-A" data-i18n="ph_wo">
                 </div>
                 
                 <div class="md:col-span-2 grid grid-cols-2 gap-4 pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Starttijd *</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1"><span data-i18n="time_start">Starttijd</span> *</label>
                         <input type="time" id="timeStart" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm outline-none dark:text-white font-medium" required>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Geldig tot *</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1"><span data-i18n="time_valid">Geldig tot</span> *</label>
                         <input type="time" id="timeEnd" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm outline-none dark:text-white font-medium" required>
                     </div>
                 </div>
 
                 <div class="md:col-span-2 pt-3 border-t border-slate-200 dark:border-slate-700 mt-2 space-y-3">
                     <div class="flex items-center justify-between">
-                        <label class="text-xs font-bold text-slate-700 dark:text-slate-400 uppercase">Buddy Check</label>
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-400 uppercase" data-i18n="buddy_check">Buddy Check</label>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="buddyToggle" class="sr-only peer">
                             <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00447c]"></div>
@@ -192,7 +192,7 @@
             <div id="photoPreviewContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-3 hidden mb-2">
                 <!-- Foto previews komen hier via JS -->
             </div>
-            <p id="photoEmptyState" class="text-xs text-slate-400 italic text-center py-2">Geen foto's toegevoegd. Maximaal 3. (Optioneel)</p>
+            <p id="photoEmptyState" class="text-xs text-slate-400 italic text-center py-2" data-i18n="photo_empty">Geen foto's toegevoegd. Maximaal 3. (Optioneel)</p>
         </div>
 
         <!-- OPMERKINGEN -->
@@ -203,7 +203,7 @@
                     <i class="fa-solid fa-microphone text-lg"></i>
                 </button>
             </div>
-            <textarea id="comments" rows="2" maxlength="250" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white" placeholder="Bijv: Extra aardlekschakelaar geplaatst..."></textarea>
+            <textarea id="comments" rows="2" maxlength="250" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm focus:border-[#00447c] focus:ring-2 focus:ring-[#00447c]/20 outline-none transition-all dark:text-white" placeholder="Bijv: Extra aardlekschakelaar geplaatst..." data-i18n="ph_comments"></textarea>
         </div>
 
         <!-- HANDTEKENING -->
@@ -218,14 +218,14 @@
                 </div>
             </div>
             <canvas id="signatureCanvas" class="w-full h-32 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg cursor-crosshair touch-none"></canvas>
-            <p class="text-[10px] text-slate-400 mt-1 text-center italic">Teken hierboven met je vinger of muis</p>
+            <p class="text-[10px] text-slate-400 mt-1 text-center italic" data-i18n="sign_hint">Teken hierboven met je vinger of muis</p>
         </div>
 
         <!-- EIGEN VERKLARING -->
         <div class="mt-4 flex items-center gap-3 p-4 bg-blue-50 dark:bg-slate-800 border border-blue-100 dark:border-slate-700 rounded-xl">
             <input type="checkbox" id="declarationCheck" class="w-5 h-5 text-[#00447c] border-gray-300 rounded focus:ring-[#00447c]">
             <label for="declarationCheck" class="text-xs text-slate-700 dark:text-slate-300 font-medium select-none cursor-pointer">
-                Ik verklaar dat ik deze LMRA naar waarheid heb ingevuld en de risico's begrijp.
+                <span data-i18n="declaration">Ik verklaar dat ik deze LMRA naar waarheid heb ingevuld en de risico's begrijp.</span>
             </label>
         </div>
         
@@ -247,7 +247,7 @@
             <div class="bg-white dark:bg-cardbg w-full sm:max-w-lg h-[85vh] sm:h-[80vh] sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col transform transition-transform">
                 <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 sm:rounded-t-2xl">
                     <h3 class="font-bold text-slate-700 dark:text-white flex items-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left text-[#00447c] dark:text-blue-400"></i> Geschiedenis
+                        <i class="fa-solid fa-clock-rotate-left text-[#00447c] dark:text-blue-400"></i> <span data-i18n="history">Geschiedenis</span>
                     </h3>
                     <div class="flex gap-2">
                         <button id="btnClearArchive" class="text-xs text-red-500 hover:text-red-700 px-2 py-1 border border-red-100 dark:border-slate-600 rounded">Wissen</button>
@@ -266,7 +266,7 @@
         <div class="flex h-full w-full items-center justify-center p-4">
             <div class="bg-white dark:bg-cardbg w-full max-w-2xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
                 <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800">
-                    <h3 class="font-bold text-slate-800 dark:text-white">Rapport Details</h3>
+                    <h3 class="font-bold text-slate-800 dark:text-white" data-i18n="report_details">Rapport Details</h3>
                     <button id="btnCloseDetail" class="text-slate-500 hover:text-slate-800 dark:text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
                 
@@ -358,7 +358,7 @@
             <div class="bg-white dark:bg-cardbg rounded-2xl shadow-2xl max-w-md w-full p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h2 id="profileModalTitle" class="text-xl font-bold text-[#00447c] dark:text-blue-400">
-                        <i class="fa-solid fa-user-gear mr-2"></i>Mijn Profiel
+                        <i class="fa-solid fa-user-gear mr-2"></i><span data-i18n="profile_title">Mijn Profiel</span>
                     </h2>
                     <button id="btnCloseProfileModal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                         <i class="fa-solid fa-xmark text-xl"></i>
@@ -377,17 +377,17 @@
 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Naam Monteur</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1" data-i18n="profile_name">Naam Monteur</label>
                         <input type="text" id="profileName" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:ring-2 focus:ring-[#00447c] outline-none dark:text-white" placeholder="Jouw volledige naam">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Bedrijfsnaam</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1" data-i18n="profile_company">Bedrijfsnaam</label>
                         <input type="text" id="profileCompany" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:ring-2 focus:ring-[#00447c] outline-none dark:text-white" placeholder="Optioneel">
                     </div>
                 </div>
 
                 <button id="btnSaveProfile" class="w-full mt-6 bg-[#00447c] text-white font-bold py-3 rounded-lg shadow-lg hover:bg-[#003366] transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-check"></i> Ik ga akkoord & Opslaan
+                    <i class="fa-solid fa-check"></i> <span data-i18n="profile_save">Ik ga akkoord &amp; Opslaan</span>
                 </button>
             </div>
         </div>
@@ -423,34 +423,40 @@
 
     <!-- MENU MODAL -->
     <div id="menuModal" class="fixed inset-0 bg-black/60 z-[100] hidden backdrop-blur-sm">
-        <div class="absolute right-0 top-0 bottom-0 w-72 bg-slate-50 dark:bg-[#0f172a] shadow-2xl transform transition-transform p-4 flex flex-col">
+        <div class="absolute right-0 top-0 bottom-0 w-72 max-w-[85vw] bg-slate-50 dark:bg-[#0f172a] shadow-2xl transform transition-transform p-4 flex flex-col overflow-hidden">
             <div class="flex justify-between items-center mb-6 border-b border-slate-200 dark:border-slate-700 pb-4">
-                <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-sm"><i class="fa-solid fa-bars mr-2 text-[#00447c] dark:text-blue-400"></i> Menu</h3>
+                <h3 class="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-sm"><i class="fa-solid fa-bars mr-2 text-[#00447c] dark:text-blue-400"></i> <span data-i18n="menu_title">Menu</span></h3>
                 <button id="btnCloseMenu" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-300"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
-            <div class="flex flex-col gap-3 flex-1">
+            <!-- Scrollbaar: met handschoenmodus aan passen 13 items niet op een telefoonscherm -->
+            <div class="flex flex-col gap-3 flex-1 min-h-0 overflow-y-auto lmra-scroll pr-1 pb-4">
                 <button id="btnOpenProfile" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
-                    <i class="fa-solid fa-user-gear w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> Mijn Profiel
+                    <i class="fa-solid fa-user-gear w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> <span data-i18n="profile_title">Mijn Profiel</span>
                 </button>
                 <button id="btnToggleTheme" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
-                    <i id="themeIcon" class="fa-solid fa-moon w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> Thema Wisselen
+                    <i id="themeIcon" class="fa-solid fa-moon w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> <span data-i18n="menu_theme">Thema Wisselen</span>
                 </button>
                 
                 <button id="btnBackToInfo" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
-                    <i class="fa-solid fa-circle-info w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> Info & Landingspagina
+                    <i class="fa-solid fa-circle-info w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> <span data-i18n="menu_info">Info &amp; Landingspagina</span>
                 </button>
 
+                <a href="/kennisbank" target="_blank" rel="noopener" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
+                    <i class="fa-solid fa-book-open w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i>
+                    <span data-i18n="menu_knowledge">Kennisbank</span>
+                </a>
+
                 <button id="btnShowUpdates" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
-                    <i class="fa-solid fa-rocket w-6 text-center text-green-600 dark:text-green-400 text-lg"></i> Release Notes
+                    <i class="fa-solid fa-rocket w-6 text-center text-green-600 dark:text-green-400 text-lg"></i> <span data-i18n="menu_release">Release Notes</span>
                 </button>
 
                 <a href="/voorwaarden.html" target="_blank" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
-                    <i class="fa-solid fa-file-contract w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> Algemene Voorwaarden
+                    <i class="fa-solid fa-file-contract w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> <span data-i18n="menu_terms">Algemene Voorwaarden</span>
                 </a>
 
                 <a href="/privacy.html" target="_blank" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
-                    <i class="fa-solid fa-user-shield w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> Privacyverklaring
+                    <i class="fa-solid fa-user-shield w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> <span data-i18n="menu_privacy">Privacyverklaring</span>
                 </a>
 
                 <button id="btnGloveMode" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
@@ -465,23 +471,23 @@
                 </button>
 
                 <button id="btnBackupExport" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
-                    <i class="fa-solid fa-cloud-arrow-down w-6 text-center text-emerald-600 text-lg"></i> Back-up maken
+                    <i class="fa-solid fa-cloud-arrow-down w-6 text-center text-emerald-600 text-lg"></i> <span data-i18n="menu_backup_export">Back-up maken</span>
                 </button>
 
                 <button id="btnBackupImport" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
-                    <i class="fa-solid fa-cloud-arrow-up w-6 text-center text-emerald-600 text-lg"></i> Back-up terugzetten
+                    <i class="fa-solid fa-cloud-arrow-up w-6 text-center text-emerald-600 text-lg"></i> <span data-i18n="menu_backup_import">Back-up terugzetten</span>
                 </button>
 
                 <button id="btnCookieSettings" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
-                    <i class="fa-solid fa-cookie-bite w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> Cookievoorkeuren
+                    <i class="fa-solid fa-cookie-bite w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> <span data-i18n="menu_cookies">Cookievoorkeuren</span>
                 </button>
 
                 <button id="btnOpenDiagnostics" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
-                    <i class="fa-solid fa-bug w-6 text-center text-amber-500 text-lg"></i> Diagnose &amp; Logs
+                    <i class="fa-solid fa-bug w-6 text-center text-amber-500 text-lg"></i> <span data-i18n="menu_diag">Diagnose &amp; Logs</span>
                 </button>
 
                 <button id="btnResetApp" class="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl shadow-sm border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-all font-bold text-sm mt-4">
-                    <i class="fa-solid fa-rotate-right w-6 text-center text-lg"></i> Formulier Wissen
+                    <i class="fa-solid fa-rotate-right w-6 text-center text-lg"></i> <span data-i18n="menu_reset">Formulier Wissen</span>
                 </button>
             </div>
         </div>
@@ -489,14 +495,14 @@
     <!-- QR SCANNER MODAL -->
     <div id="qrModal" class="fixed inset-0 bg-black/80 z-[80] hidden flex flex-col">
         <div class="flex justify-between items-center p-4 bg-slate-900 text-white">
-            <h3 class="font-bold">Scan QR Code</h3>
+            <h3 class="font-bold" data-i18n="qr_scan_title">Scan QR Code</h3>
             <button id="btnCloseQR" class="text-slate-300 hover:text-white p-2">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
         </div>
         <div class="flex-1 flex flex-col justify-center bg-black">
             <div id="qrReader" class="w-full max-w-md mx-auto overflow-hidden"></div>
-            <p class="text-center text-slate-400 text-sm mt-4 px-4">Richt de camera op een asset QR-code.</p>
+            <p class="text-center text-slate-400 text-sm mt-4 px-4" data-i18n="qr_scan_hint">Richt de camera op een asset QR-code.</p>
         </div>
     </div>
 
@@ -520,12 +526,12 @@
                     telefoon, dan staat de locatie meteen in het formulier.
                 </p>
 
-                <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Namen (één per regel)</label>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1" data-i18n="qr_labels">Namen (één per regel)</label>
                 <textarea id="qrGenLabels" rows="5" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-3 text-sm dark:text-white font-mono" placeholder="E-Motor 401&#10;Pomp P-12&#10;Schakelkast MCC-3&#10;Ketelhuis"></textarea>
 
                 <div class="grid grid-cols-2 gap-3 mt-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1">Formaat</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-1" data-i18n="qr_size">Formaat</label>
                         <select id="qrGenSize" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 text-sm dark:text-white">
                             <option value="20">20 mm - heel klein</option>
                             <option value="25" selected>25 mm - klein (motor)</option>
@@ -535,7 +541,7 @@
                     </div>
                     <div class="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-2">
                         <canvas id="qrGenPreview" width="160" height="160" class="w-[110px] h-[110px]"></canvas>
-                        <span class="text-[10px] text-slate-400 mt-1">Voorbeeld</span>
+                        <span class="text-[10px] text-slate-400 mt-1" data-i18n="qr_preview">Voorbeeld</span>
                     </div>
                 </div>
 
@@ -547,7 +553,7 @@
                 <p id="qrGenInfo" class="text-[11px] text-slate-500 dark:text-slate-400 mt-3"></p>
 
                 <button type="button" id="btnQrGenPdf" class="w-full mt-4 bg-[#00447c] text-white font-bold py-3 rounded-lg shadow-lg hover:bg-[#003366] transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-file-pdf"></i> Stickerblad downloaden
+                    <i class="fa-solid fa-file-pdf"></i> <span data-i18n="qr_download">Stickerblad downloaden</span>
                 </button>
             </div>
         </div>
