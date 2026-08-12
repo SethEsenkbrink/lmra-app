@@ -8,8 +8,10 @@
 // anders verschijnt de popup bij iedere start van de app.
 
 export const RELEASE_INFO = {
-    title: "v10.1.0 Stabiliteit, Diagnose & Vindbaarheid",
+    title: "v10.1.1 Snellere start & correcte PDF",
     features: [
+        "PDF-rapport: vinkjes en kruisjes werden onleesbare tekens in de PDF, dat is nu opgelost. Foto's houden hun verhouding en het bestand is kleiner",
+        "Sneller opstarten: de app laadt nu ruim vier keer minder code bij de start, de PDF-motor komt op de achtergrond binnen",
         "GPS & Weer: werkt nu betrouwbaar in fabriekshallen. Geen satellietfix? Dan netwerklocatie of coordinaten, en het weer komt los binnen",
         "Spraak-naar-tekst: geen dubbele tekst meer bij langer inspreken",
         "Handtekening: scherper, blijft staan als het toetsenbord opent en is altijd leesbaar in de PDF. Nieuwe Herstel-knop",
