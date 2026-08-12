@@ -8,15 +8,15 @@
 // anders verschijnt de popup bij iedere start van de app.
 
 export const RELEASE_INFO = {
-    title: "v10.1.1 Snellere start & correcte PDF",
+    title: "v10.2.0 Soort werk, QR-stickers & hitte-advies",
     features: [
-        "PDF-rapport: vinkjes en kruisjes werden onleesbare tekens in de PDF, dat is nu opgelost. Foto's houden hun verhouding en het bestand is kleiner",
-        "Sneller opstarten: de app laadt nu ruim vier keer minder code bij de start, de PDF-motor komt op de achtergrond binnen",
-        "GPS & Weer: werkt nu betrouwbaar in fabriekshallen. Geen satellietfix? Dan netwerklocatie of coordinaten, en het weer komt los binnen",
-        "Spraak-naar-tekst: geen dubbele tekst meer bij langer inspreken",
-        "Handtekening: scherper, blijft staan als het toetsenbord opent en is altijd leesbaar in de PDF. Nieuwe Herstel-knop",
-        "Diagnose & Logs: nieuw menu-item om fouten, netwerk en GPS ter plaatse te controleren en te exporteren",
-        "Cookievoorkeuren: je keuze is nu altijd te wijzigen via het menu"
+        "Soort werk kiezen: naast de basisvragen krijg je extra vragen voor werken op hoogte, besloten ruimte, heet werk, elektrotechniek of hijsen",
+        "Weer denkt mee: bij hitte krijg je advies over pauzes en drinken, bij wind een waarschuwing bij de vraag waar het over gaat. Alles komt ook in het PDF-rapport",
+        "QR-stickers maken: print kleine stickers (vanaf 20 mm) voor motoren, kasten en ruimtes. Scannen vult de locatie direct in",
+        "Back-up en herstel: zet al je rapporten in een bestand en terug op een nieuwe telefoon",
+        "Handschoenmodus: veel grotere knoppen en velden, met werkhandschoenen aan",
+        "Nu ook in Duits en Pools, naast Nederlands en Engels",
+        "Thema en instellingen blijven nu bewaard na het afsluiten"
     ],
     forceShow: false
 };
