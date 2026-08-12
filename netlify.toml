@@ -27,11 +27,10 @@
   to = "/voorwaarden.html"
   status = 200
 
-# 3. Default: Alle andere verzoeken naar landingspagina (index.html)
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# 3. Kennisbank en contentpaginas worden door Netlify automatisch zonder
+#    .html-extensie geserveerd. Er staat GEEN catch-all naar index.html meer:
+#    die slokte nieuwe paginas op en leverde soft-404s op voor Google.
+#    Onbekende URLs komen op 404.html terecht.
 
 [[headers]]
   for = "/*"

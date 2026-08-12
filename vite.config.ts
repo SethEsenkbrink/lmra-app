@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { resolve } from 'path';
 
 // Lees de versie direct uit package.json
@@ -14,12 +14,14 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-        app: resolve(__dirname, 'app.html'),
-        privacy: resolve(__dirname, 'privacy.html'),
-        voorwaarden: resolve(__dirname, 'voorwaarden.html')
-      }
+      // Elke .html in de projectmap is een pagina. De losse content-paginas
+      // worden door scripts/build-pages.mjs gegenereerd (npm run prebuild),
+      // dus ze staan hier al voordat Vite gaat bouwen.
+      input: Object.fromEntries(
+        readdirSync(__dirname)
+          .filter((file) => file.endsWith('.html'))
+          .map((file) => [file.replace(/\.html$/, ''), resolve(__dirname, file)])
+      )
     }
   }
 });

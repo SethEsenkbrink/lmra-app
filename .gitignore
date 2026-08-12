@@ -33,3 +33,13 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Door scripts/build-pages.mjs gegenereerd (npm run prebuild)
+/lmra-*.html
+/verschil-rie-tra-lmra.html
+/wat-controleer-je-bij-een-lmra.html
+/werken-bij-hitte.html
+/kennisbank.html
+/404.html
+public/lmra-formulier-blanco.pdf
+public/sitemap.xml
