@@ -201,7 +201,12 @@
         <div class="mt-6 bg-white dark:bg-cardbg rounded-xl shadow-sm p-4 transition-colors">
             <div class="flex justify-between items-center mb-2">
                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-400 uppercase" data-i18n="sign_label">Handtekening Monteur *</label>
-                <button type="button" id="btnClearSignature" class="text-xs text-red-500 hover:text-red-700 font-bold" data-i18n="btn_clear_sign">Wis</button>
+                <div class="flex items-center gap-3">
+                    <button type="button" id="btnUndoSignature" class="text-xs text-slate-500 hover:text-[#00447c] dark:hover:text-blue-400 font-bold" title="Laatste streek ongedaan maken">
+                        <i class="fa-solid fa-rotate-left mr-1"></i>Herstel
+                    </button>
+                    <button type="button" id="btnClearSignature" class="text-xs text-red-500 hover:text-red-700 font-bold" data-i18n="btn_clear_sign">Wis</button>
+                </div>
             </div>
             <canvas id="signatureCanvas" class="w-full h-32 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg cursor-crosshair touch-none"></canvas>
             <p class="text-[10px] text-slate-400 mt-1 text-center italic">Teken hierboven met je vinger of muis</p>
@@ -438,6 +443,14 @@
                 <a href="/privacy.html" target="_blank" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
                     <i class="fa-solid fa-user-shield w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> Privacyverklaring
                 </a>
+
+                <button id="btnCookieSettings" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
+                    <i class="fa-solid fa-cookie-bite w-6 text-center text-[#00447c] dark:text-blue-400 text-lg"></i> Cookievoorkeuren
+                </button>
+
+                <button id="btnOpenDiagnostics" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold text-sm">
+                    <i class="fa-solid fa-bug w-6 text-center text-amber-500 text-lg"></i> Diagnose &amp; Logs
+                </button>
 
                 <button id="btnResetApp" class="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl shadow-sm border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-all font-bold text-sm mt-4">
                     <i class="fa-solid fa-rotate-right w-6 text-center text-lg"></i> Formulier Wissen

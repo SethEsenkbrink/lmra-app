@@ -8,7 +8,8 @@ import { PDFService } from './services/pdf';
 import { SessionService } from './services/session';
 import { FormService } from './services/form';
 import { RELEASE_INFO } from './release';
-import { initCookieAndPwaManager } from './cookie-pwa-manager';
+import { initCookieAndPwaManager, showCookiePreferences } from './cookie-pwa-manager';
+import { Diagnostics } from './diagnostics';
 import { SignatureManager } from './signature-manager';
 import { ProfileManager } from './profile-manager';
 import { PhotoManager } from './photo-manager';
@@ -27,9 +28,11 @@ const state: AppState = {
 
 export const App = {
     async init(): Promise<void> {
+        // Diagnostics als eerste: vangt fouten uit alle modules die hierna starten.
+        Diagnostics.init();
         console.log(`LMRA Pro v${APP_VERSION} Open PWA Init...`);
         initCookieAndPwaManager(true);
-        SignatureManager.init('signatureCanvas', 'btnClearSignature');
+        SignatureManager.init('signatureCanvas', 'btnClearSignature', 'btnUndoSignature');
         PhotoManager.init();
         VoiceDictation.init();
         GPSWeather.init();
@@ -108,6 +111,16 @@ export const App = {
         
         document.getElementById('btnBackToInfo')?.addEventListener('click', () => {
             window.location.href = '/?info=true';
+        });
+
+        document.getElementById('btnCookieSettings')?.addEventListener('click', () => {
+            UI.toggleElement('menuModal', false);
+            showCookiePreferences();
+        });
+
+        document.getElementById('btnOpenDiagnostics')?.addEventListener('click', () => {
+            UI.toggleElement('menuModal', false);
+            Diagnostics.open();
         });
         
         document.getElementById('btnOpenArchive')?.addEventListener('click', () => this.openArchive());
@@ -527,5 +540,7 @@ export const App = {
 
     toggleTheme(): void {
         document.documentElement.classList.toggle('dark');
+        // Handtekening opnieuw tekenen zodat de inktkleur bij het thema past.
+        SignatureManager.updateThemeColor();
     }
 };
