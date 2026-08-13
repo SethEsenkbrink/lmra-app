@@ -1,7 +1,7 @@
 {
-  "name": "lmra-sentinel",
+  "name": "lmra-horizon",
   "private": true,
-  "version": "10.2.1",
+  "version": "11.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "init:tailwind": "tailwindcss init -p",
-    "version": "node scripts/sync-version.js && git add public/manifest.json public/sw.js index.html",
+    "version": "node scripts/sync-version.js && git add public/manifest.json public/sw.js index.html app.html privacy.html voorwaarden.html README.md SECURITY.md",
     "pages": "node scripts/build-pages.mjs"
   },
   "devDependencies": {

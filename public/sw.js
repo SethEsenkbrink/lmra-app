@@ -1,6 +1,6 @@
 /* public/sw.js - LMRA Pro PWA Service Worker */
 
-const CACHE_NAME = 'lmra-pwa-v10.2.1';
+const CACHE_NAME = 'lmra-pwa-v11.0.0';
 
 const ASSETS_TO_CACHE = [
   '/',

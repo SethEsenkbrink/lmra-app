@@ -4,7 +4,7 @@ import { Database, LMRAReport } from './database';
 import { Settings } from './settings';
 import { Backup } from './backup';
 import { TASK_TEMPLATES, getTemplate } from './data';
-import { APP_VERSION } from './config';
+import { APP_VERSION, APP_RELEASE_NAME, APP_FULL_LABEL } from './config';
 import DOMPurify from 'dompurify';
 
 import { SessionService } from './services/session';
@@ -43,7 +43,7 @@ export const App = {
     async init(): Promise<void> {
         // Diagnostics als eerste: vangt fouten uit alle modules die hierna starten.
         Diagnostics.init();
-        console.log(`LMRA Pro v${APP_VERSION} Open PWA Init...`);
+        console.log(`${APP_FULL_LABEL} Open PWA Init...`);
         // Voorkeuren (thema, handschoenmodus) vóór de eerste weergave toepassen.
         Settings.init();
         initCookieAndPwaManager(true);
@@ -636,7 +636,7 @@ export const App = {
         const elTitle = document.getElementById('updateTitleDisplay');
         const elList = document.getElementById('updateListDisplay');
 
-        if (elVersion) elVersion.innerText = `v${APP_VERSION}`;
+        if (elVersion) elVersion.innerText = `v${APP_VERSION} ${APP_RELEASE_NAME}`;
         if (elTitle) elTitle.innerText = RELEASE_INFO.title;
         
         if (elList) {

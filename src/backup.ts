@@ -10,7 +10,7 @@ import { Database, LMRAReport } from './database';
 import { UI } from './ui';
 import { Diagnostics } from './diagnostics';
 import { Settings } from './settings';
-import { APP_VERSION } from './config';
+import { APP_VERSION, APP_RELEASE_NAME } from './config';
 import { SETTINGS_KEY } from './config';
 
 const PROFILE_KEY = 'lmra_profile';
@@ -18,6 +18,7 @@ const PROFILE_KEY = 'lmra_profile';
 interface BackupFile {
     app: string;
     app_version: string;
+    app_series?: string;
     format: number;
     exported_at: string;
     history: LMRAReport[];
@@ -48,6 +49,7 @@ export const Backup = {
             const payload: BackupFile = {
                 app: 'LMRA Pro',
                 app_version: APP_VERSION,
+                app_series: APP_RELEASE_NAME,
                 format: 1,
                 exported_at: new Date().toISOString(),
                 history,

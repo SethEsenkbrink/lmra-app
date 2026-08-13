@@ -14,7 +14,7 @@
  * Alles blijft lokaal op het toestel. Er wordt niets verstuurd.
  */
 
-import { APP_VERSION } from './config';
+import { APP_VERSION, APP_RELEASE_NAME, APP_LABEL, APP_FULL_LABEL } from './config';
 import { fetchWithTimeout, getConnectionInfo } from './net';
 
 export type DiagLevel = 'debug' | 'info' | 'warn' | 'error';
@@ -114,7 +114,7 @@ export const Diagnostics = {
 
         this.installActivation();
 
-        this.log('info', 'app', `LMRA Pro v${APP_VERSION} gestart (${this.isStandalone() ? 'PWA standalone' : 'browser'})`);
+        this.log('info', 'app', `${APP_FULL_LABEL} gestart (${this.isStandalone() ? 'PWA standalone' : 'browser'})`);
         this.log('debug', 'net', this.describeConnection());
 
         if (this.enabled) {
@@ -353,7 +353,7 @@ export const Diagnostics = {
         panel.innerHTML = `
             <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#111c2f;border-bottom:1px solid #1f2d45;flex-shrink:0">
                 <strong style="font:700 13px system-ui,sans-serif;color:#fff">🐞 LMRA Diagnose</strong>
-                <span style="color:#64748b;font-size:11px">v${escapeHtml(APP_VERSION)}</span>
+                <span style="color:#64748b;font-size:11px">v${escapeHtml(APP_VERSION)} ${escapeHtml(APP_RELEASE_NAME)}</span>
                 <button type="button" id="diagClose" style="margin-left:auto;background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:6px 12px;cursor:pointer;font:600 12px system-ui,sans-serif">Sluiten</button>
             </div>
             <div style="display:flex;gap:6px;padding:8px 12px;background:#0f172a;border-bottom:1px solid #1f2d45;flex-shrink:0">
@@ -488,7 +488,8 @@ export const Diagnostics = {
 
     async collectSystemInfo(): Promise<Record<string, string>> {
         const info: Record<string, string> = {};
-        info['App versie'] = APP_VERSION;
+        info['App versie'] = APP_LABEL;
+        info['Serie'] = APP_RELEASE_NAME;
         info['Tijd'] = new Date().toLocaleString('nl-NL');
         info['Modus'] = this.isStandalone() ? 'PWA (standalone)' : 'Browser tab';
         info['URL'] = window.location.href;

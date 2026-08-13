@@ -12,7 +12,7 @@
  */
 import { LMRAReport } from '../database';
 import { UI } from '../ui';
-import { APP_VERSION } from '../config';
+import { APP_VERSION, APP_RELEASE_NAME } from '../config';
 import { getCategoriesFor } from '../data';
 import { Diagnostics } from '../diagnostics';
 import jsPDF from 'jspdf';
@@ -133,7 +133,7 @@ export const PDFService = {
 
             doc.setFontSize(8);
             doc.setTextColor(200, 200, 200);
-            doc.text(`v${APP_VERSION} PWA`, 200, 10, { align: 'right' });
+            doc.text(`v${APP_VERSION} ${APP_RELEASE_NAME}`, 200, 10, { align: 'right' });
             doc.text(`Datum: ${new Date().toLocaleDateString('nl-NL')}`, 200, 30, { align: 'right' });
 
             let yPos = 43;
@@ -391,7 +391,7 @@ export const PDFService = {
                 doc.setTextColor(150);
                 doc.setFont('helvetica', 'normal');
                 doc.text(toPdfText(`Rapport ID: ${report.report_id}`), MARGIN, 285);
-                doc.text(`LMRA Pro v${APP_VERSION} - Offline PWA`, 105, 285, { align: 'center' });
+                doc.text(`LMRA Pro v${APP_VERSION} ${APP_RELEASE_NAME} - Offline PWA`, 105, 285, { align: 'center' });
                 doc.text(`Pagina ${i} van ${pageCount}`, 200, 285, { align: 'right' });
             }
 

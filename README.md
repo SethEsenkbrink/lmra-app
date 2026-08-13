@@ -1,4 +1,4 @@
-# 🛡️ LMRA Pro - Open Source PWA (v10.0.0)
+# 🛡️ LMRA Pro - Open Source PWA (v11.0.0 Horizon Dawn)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()

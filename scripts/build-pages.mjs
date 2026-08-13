@@ -16,11 +16,34 @@ import { fileURLToPath } from 'url';
 import { jsPDF } from 'jspdf';
 import { SITE, TEMPLATE_PAGES, ARTICLE_PAGES, FORM_PAGE } from '../content/pages.mjs';
 
+/* Versie + Horizon-codenaam: package.json en src/config.ts zijn de bron, zodat
+ * de footer van de gegenereerde pagina's nooit achterloopt op de app. */
+function appLabel(root) {
+    try {
+        const version = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
+        const cfg = fs.readFileSync(path.join(root, 'src/config.ts'), 'utf8');
+        const series = cfg.match(/APP_SERIES\s*=\s*'([^']+)'/);
+        const table = cfg.match(/RELEASE_NAMES[^=]*=\s*\{([\s\S]*?)\}/);
+        const major = Number.parseInt(String(version).split('.')[0], 10);
+        let name = series ? series[1] : '';
+        if (series && table) {
+            for (const line of table[1].split('\n')) {
+                const m = line.match(/(\d+)\s*:\s*'([^']+)'/);
+                if (m && Number(m[1]) === major) name = series[1] + ' ' + m[2];
+            }
+        }
+        return name ? 'v' + version + ' ' + name : 'v' + version;
+    } catch {
+        return '';
+    }
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.join(__dirname, '..');
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const today = new Date().toISOString().slice(0, 10);
+const APP_LABEL = appLabel(rootDir);
 
 const MONTHS = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
 
@@ -85,7 +108,7 @@ function footer() {
                 </div>
             </div>
             <div class="border-t border-slate-800 pt-6 text-xs">
-                <p>&copy; ${new Date().getFullYear()} Brink Multimedia. Open source onder de MIT-licentie.</p>
+                <p>&copy; ${new Date().getFullYear()} Brink Multimedia. Open source onder de MIT-licentie. ${APP_LABEL ? 'LMRA Pro ' + APP_LABEL : ''}</p>
             </div>
         </div>
     </footer>`;
