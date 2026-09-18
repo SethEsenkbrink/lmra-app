@@ -239,6 +239,106 @@ export const TEMPLATE_PAGES = [
 /** Kennisbank-artikelen. */
 export const ARTICLE_PAGES = [
     {
+        slug: 'stop-en-go-lmra-herbeoordelen',
+        published: '2026-09-18',
+        modified: '2026-09-18',
+        title: 'Het STOP & GO Principe bij een LMRA - Wat Doe Je bij Rood?',
+        description:
+            'Wat doe je als je LMRA op rood stuit? Het STOP & GO principe uitgelegd: hoogwerker zonder afzetting, schijnveiligheid door regels en veilig herbeoordelen.',
+        h1: 'Het STOP & GO principe: wat doe je als je LMRA op rood stuit?',
+        intro:
+            'Je staat klaar met je gereedschap en stuit op een risico. Doordrukken omdat het snel af moet? ' +
+            'Of stoppen? Het STOP & GO principe helpt je om gevaren ter plekke op te lossen en aantoonbaar veilig te herbeoordelen.',
+        sections: [
+            {
+                h2: 'De herkenbare praktijk: even snel met de hoogwerker omhoog',
+                paragraphs: [
+                    'Iedere monteur herkent het moment: je moet "even snel" iets monteren op hoogte. Je trekt je harnas aan, haakt aan, rijdt de hoogwerker op positie en stuurt de bak omhoog.',
+                    'En dán pas, als je al op tien meter hoogte staat, kijk je naar beneden en realiseer je je: verrek... ik ben de afzetting onder de hoogwerker vergeten.',
+                    'Door de haast en de focus op de klus zie je de zone onder je over het hoofd. Laat je nu een steeksleutel of een klem vallen, dan raak je een collega of voorbijganger. Juist dit soort momenten – "ik doe het wel even snel" – leveren de gevaarlijkste situaties op de werkvloer op.',
+                ],
+            },
+            {
+                h2: 'Schijnveiligheid en het gevaar van doorgeslagen regels',
+                paragraphs: [
+                    'Tijdsdruk is er altijd. Een klant die op zijn horloge tikt, een uitvoerder die vraagt of het vandaag nog afkomt. Dan ontstaat er een gevaarlijk fenomeen: schijnveiligheid.',
+                    'Dat ontstaat door de gedachte "wat maakt het voor die twee minuten uit, ik pas wel op", maar óók door omslachtige, doorgeslagen veiligheidsregels. Als veiligheid verandert in dikke formulieren die je hersenloos moet afvinken, wordt je eigen zelfreflectie juist uitgeschakeld. Mensen gaan vinkjes zetten om van het gezeur af te zijn, in plaats van dat ze echt om zich heen kijken.',
+                    'Echte veiligheid is geen vinklijst; het is actieve zelfreflectie vóór de eerste handeling. En het nadeel van veiligheid is: het komt pas aan het licht als het al te laat is.',
+                ],
+            },
+            {
+                h2: 'Oplossingsgericht herbeoordelen: het systeem moet mét je meewerken',
+                paragraphs: [
+                    'Wat doe je als het antwoord op een vraag NEE is? Je stopt direct (STOP). Vervolgens neem je een concrete maatregel: pionnen en lint uitzetten, werkvloer droogmaken of je eigen LOTOTO-slot aanbrengen.',
+                    'En hier liep het in traditionele systemen vaak spaak: als een monteur na het oplossen wéér een heel nieuw formulier van drie kantjes moet invullen, stopt niemand meer. Dan werkt het systeem tegen je.',
+                    'In LMRA Pro klik je na de maatregel op "Herbeoordeel (GO)". Je typt in één zin wat je hebt gedaan ("Afzetting rondom werkbak geplaatst"), vinkt aan dat de situatie nu veilig is bevonden en bevestigt.',
+                ],
+                list: [
+                    'Je krijgt een gevoel van iets juist doen in plaats van formulierenstress.',
+                    'Je neemt zelf de verantwoordelijkheid over je eigen veiligheid.',
+                    'Het systeem werkt mét je mee in plaats van tegen je.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Waarom is een herbeoordeling beter dan een nieuw formulier starten?',
+                a: 'Omdat het de leercyclus vastlegt. Het PDF-rapport toont zwart-op-wit: er was een gevaar, de monteur heeft nagedacht, er is een maatregel genomen en daarna is het werk veilig hervat. Dat toont professioneel vakmanschap.',
+            },
+            {
+                q: 'Mag een uitvoerder mij dwingen door te werken bij een afgekeurde LMRA?',
+                a: 'Nee. Volgens de Arbowet (art. 29) heeft iedere werknemer het wettelijk recht om het werk te onderbreken bij ernstig en direct gevaar (het werkonderbrekingsrecht).',
+            },
+        ],
+    },
+    {
+        slug: 'is-een-lmra-wettelijk-verplicht',
+        published: '2026-09-18',
+        modified: '2026-09-18',
+        title: 'Is een LMRA Wettelijk Verplicht? Arbowet vs. VCA Uitgelegd',
+        description:
+            'Is een Laatste Minuut Risico Analyse wettelijk verplicht? Wat de Arbowet zegt, wat VCA eist en waarom de LMRA jouw persoonlijke bewijslast als monteur is.',
+        h1: 'Is een LMRA wettelijk verplicht? Dit zegt de wet en de VCA',
+        intro:
+            'De letterlijke afkorting "LMRA" staat niet met naam en toenaam in het wetboek. Toch kun je er in de praktijk ' +
+            'niet omheen. Dit is hoe de Arbowet, VCA en poorteisen in elkaar zitten, en waarom de LMRA jouw persoonlijke bewijslast is.',
+        sections: [
+            {
+                h2: 'Bekwaamheid als valkuil op de werkvloer',
+                paragraphs: [
+                    'Op de werkvloer wordt de LMRA lang niet altijd serieus genomen. En ergens is dat begrijpelijk: veel technici en monteurs zijn uiterst bekwaam. Je hebt de handeling al honderden keren gedaan, je hersenen maken in een fractie van een seconde risico-inschattingen en op de automatische piloot ga je aan de slag.',
+                    'Maar juist die bekwaamheid kan een valkuil zijn. Omdat het al zo vaak goed ging, zie je die ene afwijkende factor vandaag over het hoofd: een natte tegel, een openstaande schakelkast of een nevenaannemer die onverwacht boven je werkt.',
+                    'De LMRA is het allerbelangrijkste onderdeel van veilig werken. Belangrijker dan een TRA of een werkvergunning van kantoor. Een TRA is gisteren achter een bureau bedacht; de LMRA is jouw allerlaatste redmiddel ter plaatse, vlak vóórdat jouw gereedschap het metaal raakt.',
+                ],
+            },
+            {
+                h2: 'Wat eist de wet en wat eist de VCA aan de poort?',
+                paragraphs: [
+                    'De Arbowet noemt de term LMRA niet direct, maar artikel 5 (zorgplicht en RI&E) en artikel 11 (plichten van de werknemer) verplichten werkgever én werknemer om gevaren vóór aanvang te signaleren en direct weg te nemen.',
+                    'Op industriële terreinen, in de chemie, bouw en infra kom je bovendien de poort niet op zonder geldige VCA, paspoort, vakcertificaten (zoals hoogwerker of NEN 3140) en poortinstructie. Eenmaal binnen eist VCA 2017/6.0 (vraag 6.2) een aantoonbare risicobeoordeling ter plaatse.',
+                ],
+            },
+            {
+                h2: 'Niet alleen administratie, maar jouw eigen bewijslast',
+                paragraphs: [
+                    'Veel monteurs zien formulieren als administratieve last voor kantoor. Maar wat men vergeet: de LMRA is jouw eigen bewijslast als er onverhoopt toch iets misgaat.',
+                    'Komt de Nederlandse Arbeidsinspectie of een verzekeraar na een incident, dan is de eerste vraag altijd: hoe heeft de monteur ter plaatse gecontroleerd of het veilig was? Zonder registratie sta je met lege handen en ligt de aansprakelijkheid bij jou.',
+                    'Met een digitale LMRA inclusief datum, exacte tijd, GPS-locatie, gecontroleerde PBM\'s, foto en handtekening toon je direct aan dat jij zorgvuldig en veilig hebt gehandeld. Jezelf indekken en aantonen dat je veilig werkt maakt het hele proces voor jezelf alleen maar sterker.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Geldt dit ook voor ZZP\'ers zonder personeel?',
+                a: 'Ja. Zodra je als zzp\'er werkt in opdracht van een VCA-aannemer of op een bouw- of industrieterrein, moet je aantoonbaar voldoen aan de geldende veiligheidsprotocollen van de locatie.',
+            },
+            {
+                q: 'Waarom digitaal in plaats van een papieren kaartje?',
+                a: 'Een papieren kaartje bevat geen betrouwbare tijd, geen GPS en geen foto. Een digitaal rapport uit LMRA Pro levert direct een waterdicht PDF-bewijs dat je via WhatsApp of mail kunt overhandigen.',
+            },
+        ],
+    },
+    {
         slug: 'verschil-rie-tra-lmra',
         published: '2026-03-18',
         modified: '2026-06-02',

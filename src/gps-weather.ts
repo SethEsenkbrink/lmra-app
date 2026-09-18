@@ -390,6 +390,17 @@ export const GPSWeather = {
         btn.classList.toggle('animate-pulse', busy);
     },
 
+    reapplyWeatherForTemplate(templateId: string): void {
+        this.taskTemplateId = templateId;
+        if (!this.currentWeather) {
+            this.useCachedWeather();
+        }
+        if (this.currentWeather) {
+            this.applyWeatherWatch(this.currentWeather.temperature, this.currentWeather.windspeed);
+            this.showWeatherWarning(this.currentWeather);
+        }
+    },
+
     showWeatherWarning(weather: WeatherData, staleMinutes?: number): void {
         const container = document.getElementById('weatherWarningContainer');
         if (!container) return;
@@ -401,12 +412,22 @@ export const GPSWeather = {
         const icon = document.getElementById('weatherWarningIcon');
         if (!title || !text || !icon) return;
 
-        if (weather.isHazardous) {
+        const template = getTemplate(this.taskTemplateId);
+        const triggeredWatch = (template.weatherWatch ?? []).find((watch) => {
+            const windHit = typeof watch.windAboveKmh === 'number' && weather.windspeed > watch.windAboveKmh;
+            const hotHit = typeof watch.tempAboveC === 'number' && weather.temperature > watch.tempAboveC;
+            const coldHit = typeof watch.tempBelowC === 'number' && weather.temperature < watch.tempBelowC;
+            return windHit || hotHit || coldHit;
+        });
+
+        if (weather.isHazardous || triggeredWatch) {
             container.className =
                 'mt-4 p-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-900 transition-all';
             icon.className = 'fa-solid fa-triangle-exclamation text-red-600 dark:text-red-400 text-xl';
             title.className = 'font-bold text-red-800 dark:text-red-400 text-sm';
-            title.innerText = '⚠️ Gevaarlijke Weersomstandigheden!';
+            title.innerText = triggeredWatch
+                ? `⚠️ Weer-alert voor ${template.label}`
+                : '⚠️ Gevaarlijke Weersomstandigheden!';
         } else {
             container.className =
                 'mt-4 p-4 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-900 transition-all';
@@ -422,10 +443,15 @@ export const GPSWeather = {
                   }</span>`
                 : '';
 
+        const allAdviezen = [...(weather.adviezen ?? [])];
+        if (triggeredWatch && !allAdviezen.includes(triggeredWatch.message)) {
+            allAdviezen.unshift(`LET OP (${template.label}): ${triggeredWatch.message}`);
+        }
+
         const adviesList =
-            weather.adviezen && weather.adviezen.length > 0
+            allAdviezen.length > 0
                 ? '<ul class="mt-2 space-y-1 list-disc list-inside text-xs">' +
-                  weather.adviezen.map((a) => `<li>${a.replace(/[<>]/g, '')}</li>`).join('') +
+                  allAdviezen.map((a) => `<li>${a.replace(/[<>]/g, '')}</li>`).join('') +
                   '</ul>'
                 : '';
 

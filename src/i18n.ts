@@ -67,6 +67,89 @@ export const TABLE: Record<string, Entry> = {
     menu_backup: ['Back-up & herstel', 'Backup & restore', 'Backup & Wiederherstellung', 'Kopia zapasowa'],
     menu_qr: ['QR-stickers maken', 'Create QR labels', 'QR-Aufkleber erstellen', 'Utwórz naklejki QR'],
 
+    /* --------------------------------------------------- v11.1.0 functionaliteit */
+    btn_clone_prev: [
+        'Vorige LMRA overnemen',
+        'Copy previous LMRA',
+        'Vorige LMRA übernehmen',
+        'Kopiuj poprzednią LMRA',
+    ],
+    pbm_header: [
+        'Persoonlijke Beschermingsmiddelen (PBM)',
+        'Personal Protective Equipment (PPE)',
+        'Persönliche Schutzausrüstung (PSA)',
+        'Środki Ochrony Indywidualnej (ŚOI)',
+    ],
+    pbm_sub: [
+        "Selecteer verplichte PBM's voor deze werkplek",
+        'Select required PPE for this job',
+        'Erforderliche PSA für diesen Arbeitsplatz auswählen',
+        'Wybierz wymagane ŚOI dla tego stanowiska',
+    ],
+    pbm_helm: ['Helm', 'Helmet', 'Helm', 'Kask'],
+    pbm_bril: ['Veiligheidsbril', 'Safety glasses', 'Schutzbrille', 'Okulary ochronne'],
+    pbm_gehoor: ['Gehoor', 'Hearing', 'Gehör', 'Słuch'],
+    pbm_schoenen: ['S3 Schoenen', 'S3 Boots', 'S3 Schuhe', 'Buty S3'],
+    pbm_handschoenen: ['Handschoenen', 'Gloves', 'Handschuhe', 'Rękawice'],
+    pbm_hesje: ['Hesje', 'Hi-vis vest', 'Warnweste', 'Kamizelka'],
+    pbm_harnas: ['Valharnas', 'Harness', 'Auffanggurt', 'Szelki'],
+    pbm_adem: ['Gas / Adem', 'Gas / Mask', 'Gas / Atemschutz', 'Gaz / Maska'],
+    btn_open_reassess: [
+        'Gevaar verholpen? Herbeoordeel (GO)',
+        'Hazard resolved? Reassess (GO)',
+        'Gefahr behoben? Neubewerten (GO)',
+        'Zagrożenie usunięte? Oceń ponownie (GO)',
+    ],
+    btn_share: ['Delen', 'Share', 'Teilen', 'Udostępnij'],
+    btn_duplicate: ['Dupliceer', 'Duplicate', 'Duplizieren', 'Duplikuj'],
+    btn_download_pdf: ['PDF', 'PDF', 'PDF', 'PDF'],
+    reassess_title: [
+        'STOP & GO Herbeoordeling',
+        'STOP & GO Reassessment',
+        'STOP & GO Neubewertung',
+        'STOP & GO Ponowna ocena',
+    ],
+    reassess_sub: [
+        'Verifieer dat het gevaar ter plaatse is weggenomen',
+        'Verify that the hazard has been resolved on site',
+        'Überprüfen Sie, dass die Gefahr vor Ort behoben wurde',
+        'Upewnij się, że zagrożenie na miejscu zostało usunięte',
+    ],
+    reassess_hazard_title: [
+        'Oorspronkelijk geconstateerd gevaar:',
+        'Originally detected hazard:',
+        'Ursprünglich festgestellte Gefahr:',
+        'Pierwotnie wykryte zagrożenie:',
+    ],
+    reassess_action_label: [
+        'Welke beheersmaatregel is uitgevoerd? *',
+        'What control measure was implemented? *',
+        'Welche Schutzmaßnahme wurde durchgeführt? *',
+        'Jaki środek kontrolny został wdrożony? *',
+    ],
+    reassess_action_ph: [
+        "Omschrijf concreet hoe het gevaar is opgelost (bijv. 'Alsnog valharnas aangelijnd')...",
+        "Describe concretely how the hazard was resolved (e.g. 'Safety harness attached')...",
+        "Beschreiben Sie konkret, wie die Gefahr behoben wurde (z. B. 'Auffanggurt angelegt')...",
+        "Opisz konkretnie, jak usunięto zagrożenie (np. 'Założono szelki asekuracyjne')...",
+    ],
+    reassess_disclaimer: [
+        'Let op: LMRA Pro is een hulpmiddel ter ondersteuning. De feitelijke beoordeling van de werkomgeving en de verantwoordelijkheid voor het veilig uitvoeren van de werkzaamheden berusten te allen tijde bij de uitvoerende monteur en werkgever.',
+        'Note: LMRA Pro is a supportive tool. The actual assessment of the work environment and the responsibility for working safely remain at all times with the technician and employer.',
+        'Hinweis: LMRA Pro ist ein Hilfsmittel zur Unterstützung. Die tatsächliche Beurteilung der Arbeitsumgebung und die Verantwortung für sicheres Arbeiten verbleiben stets beim Monteur und Arbeitgeber.',
+        'Uwaga: LMRA Pro jest narzędziem pomocniczym. Rzeczywista ocena środowiska pracy i odpowiedzialność za bezpieczne wykonywanie pracy spoczywają zawsze na monterze i pracodawcy.',
+    ],
+    reassess_declaration: [
+        'Ik verklaar dat de maatregel ter plaatse daadwerkelijk is uitgevoerd en de situatie door mij persoonlijk veilig is bevonden om het werk te hervatten. *',
+        'I declare that the measure has actually been implemented on site and the situation has been personally verified safe by me to resume work. *',
+        'Ich erkläre, dass die Maßnahme vor Ort tatsächlich durchgeführt wurde und die Situation von mir persönlich als sicher für die Wiederaufnahme der Arbeit befunden wurde. *',
+        'Oświadczam, że środek został faktycznie wdrożony na miejscu, a sytuacja została przeze mnie osobiście uznana za bezpieczną do wznowienia pracy. *',
+    ],
+    btn_cancel: ['Annuleren', 'Cancel', 'Abbrechen', 'Anuluj'],
+    btn_confirm_reassess: ['Bevestig & GO', 'Confirm & GO', 'Bestätigen & GO', 'Zatwierdź & GO'],
+    update_understand: ['Ik begrijp het', 'I understand', 'Verstanden', 'Rozumiem'],
+    update_title: ['Update', 'Update', 'Aktualisierung', 'Aktualizacja'],
+
     /* --------------------------------------------- formulier & modals */
     hdr_work: ['Werk- & Bedrijfsgegevens', 'Work & Company details', 'Arbeits- & Firmendaten', 'Dane pracy i firmy'],
     hint_extra: ['Extra vragen per klus', 'Extra questions per job', 'Zusatzfragen je Auftrag', 'Dodatkowe pytania'],
@@ -352,11 +435,22 @@ export const I18n = {
             const key = el.getAttribute('data-i18n');
             if (!key) return;
             const value = this.t(key);
-            if (value === key) return;
+            if (value === key && !TABLE[key]) return;
             if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
                 (el as HTMLInputElement).placeholder = value;
             } else {
-                el.textContent = value;
+                const icon = el.querySelector(':scope > i, :scope > svg');
+                if (icon) {
+                    const span = el.querySelector(':scope > span');
+                    if (span) {
+                        span.textContent = value;
+                    } else {
+                        const iconHtml = icon.outerHTML;
+                        el.innerHTML = `${iconHtml} ${value}`;
+                    }
+                } else {
+                    el.textContent = value;
+                }
             }
         });
     },

@@ -19,6 +19,7 @@ import { VoiceDictation } from './voice-dictation';
 import { GPSWeather } from './gps-weather';
 import { QRScanner } from './qr-scanner';
 import { I18n } from './i18n';
+import { PbmManager } from './pbm-manager';
 
 interface AppState {
     viewingReport: LMRAReport | null;
@@ -52,21 +53,6 @@ export const App = {
         VoiceDictation.init();
         GPSWeather.init();
         QRScanner.init();
-        I18n.init();
-        
-        this.attachEventListeners();
-        this.checkChangelog();
-        this.updateConnectionStatus();
-
-        // Check for Profile & Disclaimer
-        await ProfileManager.checkAndShowDisclaimerIfNeeded();
-
-        // Taal wijzigen betekent de vragenlijst opnieuw opbouwen.
-        I18n.onChange = () => {
-            FormService.render();
-            Settings.updateIcons();
-        };
-
         // Soort werk: uit de URL (QR-sticker of landingspagina) of de laatste keuze.
         const params = new URLSearchParams(window.location.search);
         const urlTemplate = params.get('template');
@@ -76,6 +62,23 @@ export const App = {
         FormService.init('questions-container', startTemplate);
         this.renderTemplateChips(startTemplate);
         GPSWeather.taskTemplateId = startTemplate;
+        PbmManager.init();
+        
+        // Taal wijzigen betekent de vragenlijst, template chips en PBM-labels opnieuw opbouwen.
+        I18n.onChange = () => {
+            FormService.render();
+            this.renderTemplateChips(FormService.templateId);
+            PbmManager.render();
+            Settings.updateIcons();
+        };
+        I18n.init();
+        
+        this.attachEventListeners();
+        this.checkChangelog();
+        this.updateConnectionStatus();
+
+        // Check for Profile & Disclaimer
+        await ProfileManager.checkAndShowDisclaimerIfNeeded();
 
         // Locatie uit een gescande QR-sticker: /app?loc=E-Motor%20401
         const urlLoc = params.get('loc');
@@ -243,6 +246,11 @@ export const App = {
             Diagnostics.open();
         });
         
+        // Klonen vorige LMRA
+        document.getElementById('btnClonePrevious')?.addEventListener('click', () => {
+            void this.clonePreviousLMRA();
+        });
+
         document.getElementById('btnOpenArchive')?.addEventListener('click', () => this.openArchive());
         document.getElementById('btnCloseArchive')?.addEventListener('click', () => UI.toggleElement('archiveModal', false));
         document.getElementById('btnClearArchive')?.addEventListener('click', () => this.clearArchive());
@@ -256,6 +264,54 @@ export const App = {
                 UI.showToast('❌ PDF-onderdeel niet beschikbaar. Ga even online en probeer opnieuw.');
                 UI.setLoading('btnGeneratePDF', false, 'Download PDF');
             }
+        });
+
+        // Delen en downloaden in resultModal & detailModal
+        document.getElementById('btnShareResult')?.addEventListener('click', async () => {
+            if (!state.viewingReport) return;
+            try {
+                const service = await loadPdfService();
+                await service.share(state.viewingReport);
+            } catch (err) {
+                Diagnostics.log('error', 'pdf', `Delen via ResultModal mislukt: ${String(err)}`);
+                UI.showToast('❌ Deel-onderdeel niet beschikbaar.');
+            }
+        });
+
+        document.getElementById('btnDownloadResultPdf')?.addEventListener('click', async () => {
+            if (!state.viewingReport) return;
+            try {
+                const service = await loadPdfService();
+                await service.generate(state.viewingReport);
+            } catch (err) {
+                Diagnostics.log('error', 'pdf', `Downloaden via ResultModal mislukt: ${String(err)}`);
+                UI.showToast('❌ PDF-onderdeel niet beschikbaar.');
+            }
+        });
+
+        document.getElementById('btnShareDetail')?.addEventListener('click', async () => {
+            if (!state.viewingReport) return;
+            try {
+                const service = await loadPdfService();
+                await service.share(state.viewingReport);
+            } catch (err) {
+                Diagnostics.log('error', 'pdf', `Delen via DetailModal mislukt: ${String(err)}`);
+                UI.showToast('❌ Deel-onderdeel niet beschikbaar.');
+            }
+        });
+
+        // STOP & GO Herbeoordeling modal events
+        document.getElementById('btnOpenReassess')?.addEventListener('click', () => {
+            this.openReassessModal();
+        });
+        document.getElementById('btnCloseReassessModal')?.addEventListener('click', () => {
+            UI.toggleElement('reassessModal', false);
+        });
+        document.getElementById('btnCancelReassess')?.addEventListener('click', () => {
+            UI.toggleElement('reassessModal', false);
+        });
+        document.getElementById('btnConfirmReassess')?.addEventListener('click', () => {
+            void this.confirmReassess();
         });
 
         document.getElementById('btnCloseModal')?.addEventListener('click', () => {
@@ -362,6 +418,7 @@ export const App = {
             werkorder: elWorkOrder ? (sanitizer(elWorkOrder.value.trim()) || 'N.v.t.') : 'N.v.t.',
             template: FormService.templateId,
             template_label: getTemplate(FormService.templateId).label,
+            pbm: PbmManager.getSelected(),
             is_veilig: isSafe,
             opmerkingen: elComments ? sanitizer(elComments.value.trim()) : "",
             afkeurpunten: JSON.stringify(failedPoints),
@@ -422,7 +479,11 @@ export const App = {
                 let statusText = 'Afgekeurd';
                 let borderColor = 'border-red-500';
 
-                if (h.is_veilig) {
+                if (h.herbeoordeling?.is_herbeoordeeld) {
+                    statusDot = 'bg-amber-500';
+                    statusText = 'Go (Maatregel)';
+                    borderColor = 'border-amber-500';
+                } else if (h.is_veilig) {
                     const validUntil = h.valid_until ? new Date(h.valid_until) : null;
                     if (validUntil && now > validUntil) {
                         statusDot = 'bg-slate-400';
@@ -481,14 +542,15 @@ export const App = {
 
         const statusBox = document.getElementById('detailStatusBox');
         if(statusBox) {
-            if(report.is_veilig) {
+            if (report.herbeoordeling?.is_herbeoordeeld) {
+                statusBox.innerHTML = `<div class="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 p-4 rounded-xl text-center border border-amber-200 dark:border-amber-800"><i class="fa-solid fa-triangle-exclamation text-3xl mb-1 text-amber-600"></i><br><span class="font-bold uppercase tracking-wide">VEILIG NA MAATREGEL (GO)</span><p class="text-xs mt-1 text-amber-700 dark:text-amber-300 font-normal">Maatregel: ${report.herbeoordeling.toelichting}</p></div>`;
+            } else if(report.is_veilig) {
                 statusBox.innerHTML = `<div class="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 p-4 rounded-xl text-center border border-green-200 dark:border-green-800"><i class="fa-solid fa-check-circle text-3xl mb-1 text-green-600"></i><br><span class="font-bold uppercase tracking-wide">VEILIG / GOEDGEKEURD</span></div>`;
             } else {
                 statusBox.innerHTML = `<div class="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 p-4 rounded-xl text-center border border-red-200 dark:border-red-800"><i class="fa-solid fa-hand text-3xl mb-1 text-red-600"></i><br><span class="font-bold uppercase tracking-wide">ONVEILIG / AFGEKEURD - STOP!</span></div>`;
             }
         }
 
-        
         const dDate = document.getElementById('detailDate');
         const dTimeRange = document.getElementById('detailTimeRange');
         const dStatusBox = document.getElementById('detailStatusBox');
@@ -512,7 +574,10 @@ export const App = {
         }
         
         if (dStatusBox) {
-            if (report.is_veilig) {
+            if (report.herbeoordeling?.is_herbeoordeeld) {
+                dStatusBox.className = "mb-6 p-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl flex items-center gap-3";
+                dStatusBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-2xl text-amber-600 dark:text-amber-400"></i><div><h4 class="font-bold text-amber-800 dark:text-amber-400 uppercase text-sm tracking-wide">Veilig na Maatregel (GO)</h4><p class="text-xs text-amber-600 dark:text-amber-500">STOP &amp; GO herbeoordeling</p></div>';
+            } else if (report.is_veilig) {
                 dStatusBox.className = "mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center gap-3";
                 dStatusBox.innerHTML = '<i class="fa-solid fa-shield-halved text-2xl text-emerald-600 dark:text-emerald-400"></i><div><h4 class="font-bold text-emerald-800 dark:text-emerald-400 uppercase text-sm tracking-wide">Goedgekeurd</h4><p class="text-xs text-emerald-600 dark:text-emerald-500">Veilig gewerkt</p></div>';
             } else {
@@ -579,7 +644,8 @@ export const App = {
         const title = document.getElementById('resultTitle');
         const msg = document.getElementById('resultMessage');
         const log = document.getElementById('logText');
-        
+        const btnReassess = document.getElementById('btnOpenReassess');
+
         state.viewingReport = report;
         UI.toggleElement('resultModal', true);
 
@@ -587,26 +653,164 @@ export const App = {
 
         if(!header || !iconContainer || !title || !msg || !log) return;
 
-        if (isSafe) {
+        const isHerbeoordeeld = report.herbeoordeling?.is_herbeoordeeld === true;
+
+        if (isHerbeoordeeld) {
+            header.className = "p-8 text-center text-white shrink-0 bg-amber-600";
+            iconContainer.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            title.innerText = "GO (NA MAATREGEL)";
+            msg.innerText = "Beheersmaatregel vastgelegd. Werkzaamheden mogen veilig starten.";
+            if (btnReassess) btnReassess.classList.add('hidden');
+        } else if (isSafe) {
             header.className = "p-8 text-center text-white shrink-0 bg-emerald-600";
             iconContainer.innerHTML = '<i class="fa-solid fa-shield-halved"></i>'; 
             title.innerText = "VEILIG";
             msg.innerText = "Werkzaamheden mogen veilig starten.";
+            if (btnReassess) btnReassess.classList.add('hidden');
         } else {
             header.className = "p-8 text-center text-white shrink-0 bg-red-600";
             iconContainer.innerHTML = '<i class="fa-solid fa-hand"></i>';
             title.innerText = "STOP!";
             msg.innerText = "Risico's gedetecteerd! Pas eerst maatregelen toe.";
+            if (btnReassess) btnReassess.classList.remove('hidden');
         }
 
         const afkeurPoints = JSON.parse(report.afkeurpunten || "[]");
-        log.innerHTML = `<strong>STATUS: ${statusText}</strong><br>---------------------------<br>Datum: ${new Date().toLocaleString('nl-NL')}<br>Bedrijf: ${report.bedrijf_naam || 'N.v.t.'}<br>Monteur: ${report.monteur_naam}<br>Locatie: ${report.locatie}<br>WO: ${report.werkorder}<br>---------------------------<br>${isSafe ? '✅ Geen afkeurpunten' : '⚠️ <strong>AFKEURPUNTEN:</strong><br>' + afkeurPoints.join('<br>')}`;
+        const herbeoordeelLog = isHerbeoordeeld && report.herbeoordeling
+            ? `<br>---------------------------<br>⚡ <strong>HERBEOORDELING (STOP &amp; GO):</strong><br>Maatregel: ${report.herbeoordeling.toelichting}<br>Verklaard door: ${report.herbeoordeling.verklaard_door} om ${new Date(report.herbeoordeling.tijdstip).toLocaleTimeString('nl-NL').slice(0, 5)}`
+            : '';
+
+        log.innerHTML = `<strong>STATUS: ${statusText}</strong><br>---------------------------<br>Datum: ${new Date().toLocaleString('nl-NL')}<br>Bedrijf: ${report.bedrijf_naam || 'N.v.t.'}<br>Monteur: ${report.monteur_naam}<br>Locatie: ${report.locatie}<br>WO: ${report.werkorder}<br>Taak: ${report.template_label || 'Algemeen'}<br>---------------------------<br>${isSafe && !isHerbeoordeeld ? '✅ Geen afkeurpunten' : '⚠️ <strong>AFKEURPUNTEN:</strong><br>' + afkeurPoints.join('<br>')}${herbeoordeelLog}`;
+    },
+
+    openReassessModal(): void {
+        const report = state.viewingReport;
+        if (!report) return;
+
+        const failsList = document.getElementById('reassessFailsList');
+        if (failsList) {
+            const afkeur = JSON.parse(report.afkeurpunten || '[]');
+            if (afkeur.length > 0) {
+                failsList.innerHTML = afkeur.map((item: string) => `<li>${item}</li>`).join('');
+            } else {
+                failsList.innerHTML = '<li>Geen specifieke afkeurpunten geregistreerd.</li>';
+            }
+        }
+
+        const actionInput = document.getElementById('reassessActionInput') as HTMLTextAreaElement | null;
+        if (actionInput) actionInput.value = '';
+
+        const declCheck = document.getElementById('reassessDeclarationCheck') as HTMLInputElement | null;
+        if (declCheck) declCheck.checked = false;
+
+        UI.toggleElement('reassessModal', true);
+    },
+
+    async confirmReassess(): Promise<void> {
+        const report = state.viewingReport;
+        if (!report) return;
+
+        const actionInput = document.getElementById('reassessActionInput') as HTMLTextAreaElement | null;
+        const actionText = actionInput ? DOMPurify.sanitize(actionInput.value.trim()) : '';
+
+        if (!actionText || actionText.length < 5) {
+            UI.showToast('⚠️ Beschrijf concreet welke maatregel is uitgevoerd om het gevaar te verhelpen.');
+            actionInput?.focus();
+            return;
+        }
+
+        const declCheck = document.getElementById('reassessDeclarationCheck') as HTMLInputElement | null;
+        if (!declCheck || !declCheck.checked) {
+            UI.showToast('⚠️ Vink de verklaring aan dat de situatie veilig is bevonden.');
+            return;
+        }
+
+        const now = new Date();
+        report.herbeoordeling = {
+            is_herbeoordeeld: true,
+            toelichting: actionText,
+            tijdstip: now.toISOString(),
+            verklaard_door: report.monteur_naam,
+        };
+        report.status_label = 'VEILIG NA MAATREGEL (GO)';
+        report.is_veilig = true;
+
+        try {
+            const history = await Database.getHistory();
+            const index = history.findIndex((h) => h.report_id === report.report_id);
+            if (index !== -1) {
+                history[index] = report;
+                await Database.updateHistory(history);
+            }
+
+            await SessionService.startSession(
+                report.monteur_naam,
+                report.locatie,
+                report.werkorder,
+                report.report_id,
+                report.valid_until
+            );
+
+            UI.toggleElement('reassessModal', false);
+            this.showResult(true, report, 'reassessed');
+            UI.showToast('✅ Herbeoordeling vastgelegd! Status: GO na maatregel.');
+            Diagnostics.log('info', 'reassess', `Rapport ${report.report_id} herbeoordeeld met maatregel: ${actionText}`);
+        } catch (err) {
+            Diagnostics.log('error', 'reassess', `Herbeoordeling opslaan mislukt: ${String(err)}`);
+            UI.showToast('❌ Fout bij opslaan van de herbeoordeling.');
+        }
+    },
+
+    async clonePreviousLMRA(): Promise<void> {
+        const history = await Database.getHistory();
+        if (!history || history.length === 0) {
+            UI.showToast('ℹ️ Geen eerdere LMRA gevonden om te klonen.');
+            return;
+        }
+        const prev = history[0];
+
+        const elCompany = document.getElementById('companyName') as HTMLInputElement | null;
+        const elUser = document.getElementById('userName') as HTMLInputElement | null;
+        const elLoc = document.getElementById('taskLocation') as HTMLInputElement | null;
+        const elWO = document.getElementById('workOrder') as HTMLInputElement | null;
+
+        if (elCompany && prev.bedrijf_naam) elCompany.value = prev.bedrijf_naam;
+        if (elUser && prev.monteur_naam) {
+            const cleanName = prev.monteur_naam.split('(Buddy:')[0].trim();
+            elUser.value = cleanName;
+        }
+        if (elLoc && prev.locatie) elLoc.value = prev.locatie;
+        if (elWO && prev.werkorder && prev.werkorder !== 'N.v.t.') elWO.value = prev.werkorder;
+
+        if (prev.template) {
+            this.setTemplate(prev.template);
+        }
+
+        if (prev.pbm && prev.pbm.length > 0) {
+            PbmManager.setSelected(prev.pbm);
+        }
+
+        // Bewust checklist, handtekening, foto's en opmerkingen leegmaken voor een verse keuring!
+        FormService.reset();
+        FormService.render('questions-container');
+        SignatureManager.clear();
+        PhotoManager.clear();
+
+        const comm = document.getElementById('comments') as HTMLTextAreaElement | null;
+        if (comm) comm.value = '';
+        const decl = document.getElementById('declarationCheck') as HTMLInputElement | null;
+        if (decl) decl.checked = false;
+
+        UI.showToast('📋 Vorige LMRA gekloond! Beoordeel de risicovragen opnieuw.');
+        Diagnostics.log('info', 'form', `Vorige LMRA gekloond van rapport ${prev.report_id}`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
     resetForm(askConfirm: boolean): void {
         if(askConfirm && !confirm("Formulier wissen?")) return;
         
         FormService.reset();
+        PbmManager.clear();
         
         const comp = document.getElementById('companyName') as HTMLInputElement;
         const loc = document.getElementById('taskLocation') as HTMLInputElement;
@@ -641,10 +845,19 @@ export const App = {
         
         if (elList) {
             elList.innerHTML = '';
-            RELEASE_INFO.features.forEach(feature => {
-                const li = document.createElement('li');
-                li.textContent = feature;
-                elList.appendChild(li);
+            RELEASE_INFO.features.forEach(feat => {
+                const card = document.createElement('div');
+                card.className = 'flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/60 shadow-sm text-left';
+                card.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg ${feat.bgColor} flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                        <i class="fa-solid ${feat.icon} ${feat.iconColor} text-sm"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs font-bold text-slate-800 dark:text-white leading-tight mb-0.5">${feat.title}</div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">${feat.description}</div>
+                    </div>
+                `;
+                elList.appendChild(card);
             });
         }
 
@@ -706,8 +919,7 @@ export const App = {
         this.renderTemplateChips(tpl.id);
 
         // Weeradvies opnieuw beoordelen voor de nieuwe vragenlijst.
-        const weather = GPSWeather.currentWeather;
-        if (weather) GPSWeather.applyWeatherWatch(weather.temperature, weather.windspeed);
+        GPSWeather.reapplyWeatherForTemplate(tpl.id);
 
         const extra = tpl.extra.reduce((acc, cat) => acc + cat.questions.length, 0);
         UI.showToast(extra > 0 ? `${I18n.t(tpl.key)}: ${extra} extra vragen` : I18n.t(tpl.key));

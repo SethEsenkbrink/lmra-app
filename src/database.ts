@@ -14,6 +14,14 @@ export const LMRAReportSchema = z.object({
     template: z.string().optional().default('algemeen'),
     template_label: z.string().optional().default('Algemeen'),
     is_veilig: z.boolean(),
+    status_label: z.string().optional(),
+    pbm: z.array(z.string()).optional().default([]),
+    herbeoordeling: z.object({
+        is_herbeoordeeld: z.boolean(),
+        toelichting: z.string(),
+        verklaard_door: z.string(),
+        tijdstip: z.string(),
+    }).optional(),
     opmerkingen: z.string(),
     afkeurpunten: z.string(), // JSON string van afgekeurde vragen + acties
     handtekening: z.string().nullable().optional(),

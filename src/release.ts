@@ -3,19 +3,60 @@
 // Release notes die in het update-scherm van de app worden getoond.
 // Versienummer en codenaam komen uit config.ts, dus die hoeven hier niet hard
 // in de tekst.
-//
-// forceShow: alleen op true zetten als je wilt dat ELKE gebruiker het scherm
-// opnieuw ziet, ook wanneer hij deze versie al heeft weggeklikt. Standaard false,
-// anders verschijnt de popup bij iedere start van de app.
+
+export interface ReleaseFeature {
+    icon: string;
+    iconColor: string;
+    bgColor: string;
+    title: string;
+    description: string;
+}
 
 export const RELEASE_INFO = {
-    title: 'v11.0.0 "Horizon Dawn" - start van een nieuwe serie',
+    title: 'Nieuwe functies & verbeteringen',
     features: [
-        'Nieuwe serie: van versie 0.0.0 tot 10.2.1 heette LMRA Pro "Sentinel Safe". Vanaf nu loopt de Horizon-serie, waarin elke grote versie een eigen naam en thema krijgt',
-        'Deze periode heet Horizon Dawn: het eerste licht. De basis is opnieuw op orde gezet, zodat de grote uitbreidingen hierna soepel kunnen landen',
-        'Versienummer en serienaam staan nu op één plek in de code en lopen automatisch door naar de app, het PDF-rapport, het diagnoserapport en de website',
-        'In het menu, in je rapport en in de diagnose zie je altijd precies welke versie en welke periode je gebruikt. Handig als je een probleem doorgeeft',
-        'Alles wat je gewend was blijft werken: je rapporten, instellingen, back-ups en QR-stickers gaan onveranderd mee'
-    ],
-    forceShow: false
+        {
+            icon: 'fa-shield-halved',
+            iconColor: 'text-amber-600 dark:text-amber-400',
+            bgColor: 'bg-amber-100 dark:bg-amber-950/50',
+            title: 'STOP & GO Herbeoordelen',
+            description: 'Gevaar opgelost? Vul je maatregel in en geef alsnog een veilige GO ter plaatse.',
+        },
+        {
+            icon: 'fa-helmet-safety',
+            iconColor: 'text-blue-600 dark:text-blue-400',
+            bgColor: 'bg-blue-100 dark:bg-blue-950/50',
+            title: 'PBM-Knoppen met 1 Tik',
+            description: 'Klik snel aan welke PBM’s (helm, bril, harnas, schoenen) gedragen worden.',
+        },
+        {
+            icon: 'fa-cloud-bolt',
+            iconColor: 'text-red-600 dark:text-red-400',
+            bgColor: 'bg-red-100 dark:bg-red-950/50',
+            title: 'Weer-Alerts per Taak',
+            description: 'Duidelijke waarschuwing bij harde wind (> 40 km/h) of hitte (> 28°C) bij jouw klus.',
+        },
+        {
+            icon: 'fa-clone',
+            iconColor: 'text-indigo-600 dark:text-indigo-400',
+            bgColor: 'bg-indigo-100 dark:bg-indigo-950/50',
+            title: 'Vorige LMRA Klonen',
+            description: 'Klant en locatie overnemen van je vorige klus. Vragen blijven vers om opnieuw te keuren.',
+        },
+        {
+            icon: 'fa-share-nodes',
+            iconColor: 'text-emerald-600 dark:text-emerald-400',
+            bgColor: 'bg-emerald-100 dark:bg-emerald-950/50',
+            title: 'Direct Delen (WhatsApp & Mail)',
+            description: 'Stuur het voltooide PDF-rapport direct vanaf je telefoon door naar je uitvoerder.',
+        },
+        {
+            icon: 'fa-bolt',
+            iconColor: 'text-yellow-600 dark:text-yellow-400',
+            bgColor: 'bg-yellow-100 dark:bg-yellow-950/50',
+            title: 'Snellere Engine in 4 Talen',
+            description: 'Razendsnel en offline in het Nederlands, Engels, Duits en Pools (NL, EN, DE, PL).',
+        },
+    ] as ReleaseFeature[],
+    forceShow: false,
 };
