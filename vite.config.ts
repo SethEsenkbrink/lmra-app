@@ -1,12 +1,16 @@
 import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
 import { readFileSync, readdirSync } from 'fs';
 import { resolve } from 'path';
 
 // Lees de versie direct uit package.json
-const packageJson = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8'));
+const packageJson = JSON.parse(readFileSync(resolve(import.meta.dirname, 'package.json'), 'utf-8'));
 const version = packageJson.version;
 
 export default defineConfig({
+  plugins: [
+    tailwindcss(),
+  ],
   define: {
     __APP_VERSION__: JSON.stringify(version),
   },
@@ -18,9 +22,9 @@ export default defineConfig({
       // worden door scripts/build-pages.mjs gegenereerd (npm run prebuild),
       // dus ze staan hier al voordat Vite gaat bouwen.
       input: Object.fromEntries(
-        readdirSync(__dirname)
+        readdirSync(import.meta.dirname)
           .filter((file) => file.endsWith('.html'))
-          .map((file) => [file.replace(/\.html$/, ''), resolve(__dirname, file)])
+          .map((file) => [file.replace(/\.html$/, ''), resolve(import.meta.dirname, file)])
       )
     }
   }

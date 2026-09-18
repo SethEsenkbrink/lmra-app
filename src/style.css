@@ -1,6 +1,18 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --color-brand-light: #005596;
+    --color-brand: #00447c;
+    --color-brand-dark: #002a4d;
+    --color-darkbg: #0f172a;
+    --color-cardbg: #1e293b;
+}
+
+@source "../*.html";
+@source "../scripts/build-pages.mjs";
+@source "../content/*.mjs";
 
 /* --- LMRA PRO CUSTOM STYLING (Horizon-serie) --- */
 
